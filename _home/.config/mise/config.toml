@@ -1,0 +1,9 @@
+[tools]
+bun = "latest"
+go = "latest"
+node = "lts"
+python = "latest"
+
+[hooks]
+preinstall = "echo 'I am about to install tools'"
+postinstall = "echo 'I just installed tools'"
