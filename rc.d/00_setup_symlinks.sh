@@ -33,5 +33,8 @@ link .zshrc
 link .zshenv
 link .zprofile
 
-ln -s "${HOME}/.config/mise/config.toml" "${DIRENV_ROOT}/mise_config.toml"
-
+# if ${DIRENV_ROOT}/mise_config.toml doesn't exist, create a symlink to ${HOME}/.config/mise/config.toml
+if [[ ! -f "${DIRENV_ROOT}/mise_config.toml" ]]; then
+  ln -s "${HOME}/.config/mise/config.toml" "${DIRENV_ROOT}/mise_config.toml"
+  echo "Linked ${HOME}/.config/mise/config.toml to ${DIRENV_ROOT}/mise_config.toml"
+fi
