@@ -106,8 +106,8 @@ The `init` command behavior depends on which shell/file is sourcing it:
 8. Move utilities to `_home/.interactive.d/`
 9. Update ~/.zshrc with managed section and header comment
 10. Update ~/.zprofile with managed section and header comment
-11. Create symlinks for .profile.d and .interactive.d
-12. Test shell initialization
+11. Create symlinks for .profile.d and .interactive.d.
+12. Test shell initialization.
 13. Clean up unused files (_home/.zshrc.d, etc.)
 
 ## Open Questions
