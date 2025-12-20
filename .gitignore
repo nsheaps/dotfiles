@@ -142,3 +142,6 @@ vite.config.ts.timestamp-*
 zshrc
 zshenv
 zprofile
+
+# Claude Code hook state
+.repo/hashes.yaml

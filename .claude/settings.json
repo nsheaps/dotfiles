@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat << 'EOF' 1>&2\nReminder: Sync all current todos to .ai/scratch/todo.md\n- Use proper markdown checkbox syntax (- [ ] for incomplete, - [x] for completed)\n- Do not delete any existing tasks - only update their status or add new tasks\n- Document any sidequests or tangential work (like setup, configuration, debugging) as separate tasks\n- When a task is completed by a git commit, add an indented line below it:\n  - [commit message first line](https://github.com/nsheaps/dotfiles/commit/COMMIT_HASH)\n- To get the commit hash: git log -1 --format='%H %s'\n- After updating, consider using /commit to checkpoint changes\nEOF\n"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/PostToolUse/check-questions.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat << EOF 1>&2\nDon't forget to keep these files up to date:\n- .ai/scratch/questions.md\n- .ai/scratch/todo.md\n- .ai/scratch/questions.md\nEOF\n"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Write(.ai/scratch/**)"
+    ]
+  }
+}
