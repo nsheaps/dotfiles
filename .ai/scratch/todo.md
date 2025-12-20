@@ -26,6 +26,15 @@
 - [x] Create todo-reminder.sh script for todo.md updates
 - [x] Add todo reminder hook for Edit/Write on todo.md
 - [x] Update hook messaging to clarify todo.md vs TodoWrite relationship
+- [x] Behavior correction: Add workflow rule about following hook reminders
+- [x] Refactor CLAUDE.md into modular .claude/rules/ files
+  - [refactor: split CLAUDE.md into modular rules files](https://github.com/nsheaps/dotfiles/commit/f09c68a)
+- [x] Commit all hook improvements and push to remote
+  - [fix: improve hook visibility with exit 2 and system tags](https://github.com/nsheaps/dotfiles/commit/bfd714a)
+  - [feat: add debounced reminders and hash update hooks](https://github.com/nsheaps/dotfiles/commit/1936e19)
+  - [feat: configure hooks for Stop, UserPromptSubmit, and SessionEnd](https://github.com/nsheaps/dotfiles/commit/30f2dd0)
+  - [refactor: split CLAUDE.md into modular rules files](https://github.com/nsheaps/dotfiles/commit/f09c68a)
+  - [docs: update project management files with hook improvements](https://github.com/nsheaps/dotfiles/commit/a8ace21)
 
 ## Main Dotfiles Refactoring Tasks
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (lines 27-32)
