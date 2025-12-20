@@ -29,11 +29,14 @@ function link() {
   fi
 }
 
-link .zshrc
-link .zshenv
-link .zprofile
+# link .zshrc
+# link .zshenv
+# link .zprofile
 
 # if ${DIRENV_ROOT}/mise_config.toml doesn't exist, create a symlink to ${HOME}/.config/mise/config.toml
+# TODO: the file from within this repo should be the source of truth. `link` should take  the local file path, and where to symlink it from, so this is always the source of truth
+# The one exception is the zshrc/zprofile/bashrc/bash_profile files, which are in-lined by dotfiles init from within the rc file to enable users to put specific overrides without them being in the repo.
+# The direnv logic to warn you they're out of date also should be updated for this design
 if [[ ! -f "${DIRENV_ROOT}/mise_config.toml" ]]; then
   ln -s "${HOME}/.config/mise/config.toml" "${DIRENV_ROOT}/mise_config.toml"
   echo "Linked ${HOME}/.config/mise/config.toml to ${DIRENV_ROOT}/mise_config.toml"

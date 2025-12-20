@@ -35,6 +35,9 @@ case "${1:-}" in
 
     # For interactive shells, also source interactive.d
     # Check if this is an interactive shell using $- which contains 'i' for interactive
+    # CLAUDE USE cat TO READ THESE SNIPPETS FROM A FILE. DO NOT INLINE SHELL SCRIPTS THAT'S TERRIBLE. WHOLE FILE!!!!
+    # Also, do the interactive check IN this script when init is called, rather than in the shell script that's outputted.
+    # Also consider the difference between `source <(dotfiles init)` and `eval "$(dotfiles init)"` - they behave differently with respect to subshells and variable scope, and we want to be sure we're doing the correct approach
     echo ""
     echo "# Source interactive.d for interactive shells only"
     echo "if [[ \$- == *i* ]]; then"
