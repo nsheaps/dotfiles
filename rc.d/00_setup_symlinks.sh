@@ -4,40 +4,64 @@
 # The dotfile symlinks are ignored by default to avoid issues with different users on multiple machines
 
 
+# New link() function: Repo is source of truth
+# Usage: link <repo_file_path> <destination_path>
+# Creates symlink from destination → repo file
+# Example: link "_home/profile.d/00-env.sh" "$HOME/.config/myapp/env.sh"
 function link() {
-  local file="$1"
-  local source="${HOME}/${file}"
-  local from="${DIRENV_ROOT}/_home/${file}"
-  local name="$(basename "${source}")"
-  local name_no_dot="${name#.}"
-  local destination="${DIRENV_ROOT}/${name_no_dot}"
+  local repo_file="$1"  # Path relative to repo root (e.g., "_home/config/foo.conf")
+  local dest_path="$2"  # Absolute destination path (e.g., "$HOME/.config/foo.conf")
+
+  local source="${DIRENV_ROOT}/${repo_file}"
+
+  # Verify source exists in repo
   if [[ ! -f "${source}" ]]; then
-    if [[ -f "${from}" ]]; then
-      cp "${from}" "${source}"
-      echo "[nsheaps/dotfiles] Wrote ${source}"
-    else
-      echo "Warning: ${source} does not exist, skipping link"
-    fi
-  # if the contents of ${from} and ${source} differ, print a warning
-  elif [[ -f "${from}" ]] && ! diff "${from}" "${source}" > /dev/null; then
-    echo "Warning: ${source} differs from ${from}, please reconcile manually"
+    echo "Error: Source file ${repo_file} does not exist in repo"
+    return 1
   fi
-  # Create symlink if it doesn't already exist
-  if [[ ! -f ${destination} ]]; then
-    ln -s "${source}" "${destination}"
-    echo "Linked ${source} to ${destination}"
+
+  # Create destination directory if needed
+  local dest_dir="$(dirname "${dest_path}")"
+  if [[ ! -d "${dest_dir}" ]]; then
+    mkdir -p "${dest_dir}"
+    echo "Created directory: ${dest_dir}"
+  fi
+
+  # Create or update symlink
+  if [[ -L "${dest_path}" ]]; then
+    # Already a symlink - check if it points to the right place
+    local current_target="$(readlink "${dest_path}")"
+    if [[ "${current_target}" != "${source}" ]]; then
+      echo "Warning: ${dest_path} points to ${current_target}, expected ${source}"
+      echo "  Run: ln -sfn \"${source}\" \"${dest_path}\" to fix"
+    fi
+  elif [[ -f "${dest_path}" ]]; then
+    # Regular file exists - warn about potential overwrite
+    echo "Warning: ${dest_path} exists as a regular file (not a symlink)"
+    echo "  Backup and replace with: mv \"${dest_path}\" \"${dest_path}.bak\" && ln -s \"${source}\" \"${dest_path}\""
+  else
+    # Doesn't exist - would create symlink (but not auto-executing)
+    echo "Would create: ln -s \"${source}\" \"${dest_path}\""
+    echo "  (Not auto-executing - run manually if desired)"
   fi
 }
 
-# link .zshrc
-# link .zshenv
-# link .zprofile
+# Old link() function (deprecated - kept for reference)
+# function link() {
+#   local file="$1"
+#   local source="${HOME}/${file}"
+#   local from="${DIRENV_ROOT}/_home/${file}"
+#   ...
+# }
 
-# if ${DIRENV_ROOT}/mise_config.toml doesn't exist, create a symlink to ${HOME}/.config/mise/config.toml
-# TODO: the file from within this repo should be the source of truth. `link` should take  the local file path, and where to symlink it from, so this is always the source of truth
-# The one exception is the zshrc/zprofile/bashrc/bash_profile files, which are in-lined by dotfiles init from within the rc file to enable users to put specific overrides without them being in the repo.
-# The direnv logic to warn you they're out of date also should be updated for this design
-if [[ ! -f "${DIRENV_ROOT}/mise_config.toml" ]]; then
-  ln -s "${HOME}/.config/mise/config.toml" "${DIRENV_ROOT}/mise_config.toml"
-  echo "Linked ${HOME}/.config/mise/config.toml to ${DIRENV_ROOT}/mise_config.toml"
-fi
+# RC files (zshrc, zprofile, bashrc, bash_profile) are NOT symlinked
+# They're managed by bin/wire which copies _home/ versions to ~/
+# This allows user customizations in the user-customizable sections
+
+# Configuration files that SHOULD be symlinked (repo is source of truth):
+# Commented out - no auto-linking for now, review PR first
+# link "mise_config.toml" "${HOME}/.config/mise/config.toml"
+
+# Note: mise_config.toml in repo root is currently a symlink TO ~/.config/mise/config.toml
+# In the new design, we might want to reverse this: store config in repo, symlink from ~/
+echo "Dotfiles directory initialized (no auto-linking enabled)"
