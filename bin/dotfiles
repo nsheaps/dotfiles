@@ -3,7 +3,10 @@
 
 set -euo pipefail
 
-DOTFILES_DIR="$HOME/src/nsheaps/dotfiles"
+# Dynamically determine dotfiles directory from script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 PROFILE_D="$HOME/.profile.d"  # Symlink to _home/profile.d
 INTERACTIVE_D="$HOME/.interactive.d"  # Symlink to _home/interactive.d
 

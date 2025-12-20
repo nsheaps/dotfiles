@@ -62,6 +62,7 @@
   - [fix: pass arguments correctly in cc-resume wrapper](https://github.com/nsheaps/dotfiles/commit/826c258)
 - [x] Remove empty _home/.zshrc.d/00_zshconfig.zsh file
   - [chore: remove empty zshrc.d configuration file](https://github.com/nsheaps/dotfiles/commit/11119ba)
+- [x] Make bin scripts portable using dynamic path resolution
 - [ ] Run bin/wire to create symlinks and sync RC files
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)

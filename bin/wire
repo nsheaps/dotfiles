@@ -2,7 +2,7 @@
 # Wiring script to sync _home/ files to ~/ and create necessary symlinks
 
 set -euo pipefail
-
+exit 1
 DOTFILES_DIR="$HOME/src/nsheaps/dotfiles"
 HOME_DIR="$HOME"
 
