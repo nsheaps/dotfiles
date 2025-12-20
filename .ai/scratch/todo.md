@@ -64,9 +64,11 @@
   - [chore: remove empty zshrc.d configuration file](https://github.com/nsheaps/dotfiles/commit/11119ba)
 - [x] Make bin scripts portable using dynamic path resolution
 - [x] Remove dot prefix from _home/ RC files for visibility
+- [x] Research and choose between source <(...) vs eval "$(...)" (agent running: a2aa915)
+- [x] review rc files in $HOME and in this file, provide a comprehensive review in .ai/scratch/review.md about what is broken/missing in this implementation, and what it does better than the one in the $HOME dir. (agent running: ae4588f)
+==== AGENTS RUNNING - WAITING FOR RESULTS ====
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
-- [ ] Research and choose between source <(...) vs eval "$(...)"
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
 - [ ] Update rc.d/00_setup_symlinks.sh link() to make repo source of truth
 - [ ] Update direnv logic in rc.d/ for new RC file design
