@@ -2,7 +2,7 @@
 # Resumes existing Claude workspace sessions
 
 cc-resume () {
-	cc-resumesession
+	cc-resumesession "$*"
 }
 
 cc-resumesession () {
