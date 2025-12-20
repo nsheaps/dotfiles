@@ -6,5 +6,5 @@
 # Add your personal customizations here
 
 ### managed by automation ###
-source <($HOME/src/nsheaps/dotfiles/bin/dotfiles init)
+eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
 ### end managed by automation ###
