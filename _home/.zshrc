@@ -1,21 +1,18 @@
 #!/bin/zsh
-#
-# .zshrc - Zsh file loaded on interactive shell sessions.
-#
+# sourced when an interactive shell is spawned. Use to customize the feel of
+# your terminal, but scripts run outside the terminal may not use this setup
 
 # .zshenv is loaded before anything else, including macos path setup using /etc/paths (which then trump stuff in zshenv)
 # .zprofile is loaded at login shells (when macos boots)
 # .zshrc is loaded at non-login interactive shells (when you open a terminal)
 #   in vscode, zshrc may be loaded again
 
-# Source anything in .zshrc.d.
-for _rc in ${ZDOTDIR:-$HOME}/.zshrc.d/*.zsh; do
-  # Ignore tilde files.
-  if [[ $_rc:t != '~'* ]]; then
-    source "$_rc"
-  fi
-done
-unset _rc
+# User-customizable section
+# Add your personal customizations here
+
+### managed by automation ###
+source <($HOME/src/nsheaps/dotfiles/bin/dotfiles init)
+### end managed by automation ###
 
 # Lazy-load (autoload) Zsh function files from a directory.
 ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
