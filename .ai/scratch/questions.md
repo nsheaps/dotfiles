@@ -32,6 +32,21 @@ Answer: Yes! The hooks are working perfectly. I was notified via the check-quest
 USER question: Is this hook working now? Still testing...
 Answer: Absolutely! The UserPromptSubmit hook just fired when you sent your message, detected the change to questions.md (you added "Still testing..."), and I got the notification wrapped in <system> tags. The `exit 2` in the script ensures I see the stderr output. All hooks are working perfectly across PostToolUse, Stop, and UserPromptSubmit!
 ===
+AI Question: What should we do with _home/.zshrc.d/00_zshconfig.zsh?
+Answer: ...
+Supporting data: This file exists in _home/.zshrc.d/ but the plan says .zshrc.d should be removed and replaced by profile.d and interactive.d. Should we:
+1. Migrate its content to the new structure (profile.d or interactive.d)?
+2. Just delete it?
+3. Review it first to see what it contains?
+===
+AI Question: Where should we edit RC files - ~/.zshrc or _home/.zshrc?
+Answer: ...
+Supporting data: The plan mentions editing "dotfiles/zshrc" but it's unclear if that means _home/.zshrc or the ~/.zshrc file. Are these symlinked? Should we edit the file in _home/ and let the symlink handle it, or edit ~/.zshrc directly?
+===
+AI Question: Should the plan.md be updated to reflect completed cleanup?
+Answer: ...
+Supporting data: The plan's "Next Steps" still lists "Remove ~/shellrc.d symlink and dotfiles/shellrc.d/ directory" but these were already removed at the start of the conversation. Should I update plan.md to remove these items or leave it as historical record?
+===
 [USER|AI] Question: ...
 Answer: ...
 ===
