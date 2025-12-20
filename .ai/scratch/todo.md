@@ -77,3 +77,4 @@
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
 - [ ] Design improvements for hook reminders to prevent duplicate firing (requires Plan agent + claude-code-guide agent to research Claude Code hooks documentation and architect a better design)
+- [ ] Note: Use AskUserQuestion when you need to block and wait for user input - it's preferred over questions.md for blocking questions. questions.md is for async communication that doesn't block progress.
