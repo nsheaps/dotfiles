@@ -78,14 +78,19 @@
   - [fix: update gitignore to only ignore root symlinks](https://github.com/nsheaps/dotfiles/commit/9612bd0)
 - [x] Switch all RC files from source to eval per research findings
   - [refactor: switch from source to eval for dotfiles init](https://github.com/nsheaps/dotfiles/commit/602a6eb)
+- [x] Run dotfiles-implementation-reviewer agent
+- [ ] Fix security issue: Quote $CLAUDE_ARGS in claude-cc-runclaude.sh
+- [ ] Consider: Resolve NVM vs mise conflict for node management
+- [ ] Consider: Prompt before auto-installing gum in cc-resume
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
 - [ ] Update rc.d/00_setup_symlinks.sh link() to make repo source of truth
 - [ ] Update direnv logic in rc.d/ for new RC file design
-- [ ] Run bin/wire to create symlinks and sync RC files
+- [ ] Remove exit 1 from bin/wire and run it to activate configuration
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
+- [ ] Update README to reflect new architecture
 - [ ] Design improvements for hook reminders to prevent duplicate firing (requires Plan agent + claude-code-guide agent to research Claude Code hooks documentation and architect a better design)
 - [ ] Note: Use AskUserQuestion when you need to block and wait for user input - it's preferred over questions.md for blocking questions. questions.md is for async communication that doesn't block progress.
