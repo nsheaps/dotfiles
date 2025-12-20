@@ -2,8 +2,14 @@
 # Wiring script to sync _home/ files to ~/ and create necessary symlinks
 
 set -euo pipefail
+
+# Safety: Remove this exit 1 when ready to run the script
 exit 1
-DOTFILES_DIR="$HOME/src/nsheaps/dotfiles"
+
+# Dynamically determine dotfiles directory from script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 HOME_DIR="$HOME"
 
 echo "Wiring dotfiles from $DOTFILES_DIR/_home to $HOME_DIR..."
