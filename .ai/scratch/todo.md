@@ -49,7 +49,7 @@
 - [x] Create _home/.interactive.d/ directory
 - [x] Create bin/ directory
 - [x] Create bin/dotfiles script with init and sync subcommands
-- [ ] Create _home/.profile.d/00-env.sh with environment variables
+- [x] Create _home/.profile.d/00-env.sh with environment variables
 - [ ] Create interactive.d scripts (claude-*.sh, kpup.sh)
 - [ ] Update ~/.zshrc with managed section and header comment
 - [ ] Update ~/.zprofile with managed section and header comment
