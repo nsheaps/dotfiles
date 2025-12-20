@@ -66,8 +66,9 @@
 - [x] Remove dot prefix from _home/ RC files for visibility
 - [x] Research and choose between source <(...) vs eval "$(...)" → Use eval "$(...)"
   - Research saved to docs/research/eval-vs-source.md
-- [x] review rc files in $HOME and in this file, provide a comprehensive review in .ai/scratch/review.md about what is broken/missing in this implementation, and what it does better than the one in the $HOME dir. (agent still running: ae4588f)
-==== WAITING FOR REVIEW AGENT ====
+- [x] Comprehensive review completed - 3 critical issues found
+  - Review saved to .ai/scratch/review.md
+==== REVIEW COMPLETE - CRITICAL ISSUES FOUND ====
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
