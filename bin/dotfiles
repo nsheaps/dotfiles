@@ -6,58 +6,40 @@ set -euo pipefail
 # Dynamically determine dotfiles directory from script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEMPLATES_DIR="$SCRIPT_DIR/templates"
 
-PROFILE_D="$HOME/.profile.d"  # Symlink to _home/profile.d
-INTERACTIVE_D="$HOME/.interactive.d"  # Symlink to _home/interactive.d
-
-# Helper function to source all .sh files in a directory
-source_dir() {
-  local dir="$1"
-  if [[ -d "$dir" ]]; then
-    for file in "$dir"/*.sh; do
-      if [[ -f "$file" ]]; then
-        source "$file"
-      fi
-    done
-  fi
-}
+# Export these for use in templates
+export PROFILE_D="$HOME/.profile.d"  # Symlink to _home/profile.d
+export INTERACTIVE_D="$HOME/.interactive.d"  # Symlink to _home/interactive.d
 
 case "${1:-}" in
   init)
-    # Output shell code to be sourced via: source <(dotfiles init)
-    # Detects if called from login or interactive shell based on $SHLVL
+    # Output shell code to be sourced via: eval "$(dotfiles init)"
+    # Check if the calling shell is interactive and output appropriate code
 
-    # Always source profile.d for both login and interactive shells
-    echo "# Sourcing profile.d scripts"
-    echo "for file in \"$PROFILE_D\"/*.sh; do"
-    echo "  [[ -f \"\$file\" ]] && source \"\$file\""
-    echo "done"
+    # Always source profile.d for all shells
+    cat "$TEMPLATES_DIR/source-profile.sh"
 
-    # For interactive shells, also source interactive.d
-    # Check if this is an interactive shell using $- which contains 'i' for interactive
-    # CLAUDE USE cat TO READ THESE SNIPPETS FROM A FILE. DO NOT INLINE SHELL SCRIPTS THAT'S TERRIBLE. WHOLE FILE!!!!
-    # Also, do the interactive check IN this script when init is called, rather than in the shell script that's outputted.
-    # Also consider the difference between `source <(dotfiles init)` and `eval "$(dotfiles init)"` - they behave differently with respect to subshells and variable scope, and we want to be sure we're doing the correct approach
-    echo ""
-    echo "# Source interactive.d for interactive shells only"
-    echo "if [[ \$- == *i* ]]; then"
-    echo "  for file in \"$INTERACTIVE_D\"/*.sh; do"
-    echo "    [[ -f \"\$file\" ]] && source \"\$file\""
-    echo "  done"
-    echo "fi"
+    # Only source interactive.d for interactive shells
+    # The $- variable contains 'i' for interactive shells
+    # Note: This check happens here in the script, not in the output
+    if [[ "${-}" == *i* ]] || [[ "${PS1:-}" ]]; then
+      echo ""
+      cat "$TEMPLATES_DIR/source-interactive.sh"
+    fi
     ;;
 
   sync)
     # TODO: Sync managed sections of RC files
-    echo "sync command not yet implemented"
+    echo "sync command not yet implemented" >&2
     exit 1
     ;;
 
   *)
-    echo "Usage: dotfiles {init|sync}"
-    echo ""
-    echo "  init  - Output shell code for sourcing (use: source <(dotfiles init))"
-    echo "  sync  - Sync managed sections of RC files"
+    echo "Usage: dotfiles {init|sync}" >&2
+    echo "" >&2
+    echo "  init  - Output shell code for sourcing (use: eval \"\$(dotfiles init)\")" >&2
+    echo "  sync  - Sync managed sections of RC files" >&2
     exit 1
     ;;
 esac
