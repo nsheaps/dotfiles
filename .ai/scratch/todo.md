@@ -57,7 +57,12 @@
 - [x] Create _home/.bashrc with managed section
 - [x] Create _home/.bash_profile with managed section
 - [x] Create bin/wire script to sync _home/ files to ~/
+  - [feat: add wiring script to sync dotfiles to home directory](https://github.com/nsheaps/dotfiles/commit/136e3b1)
+- [x] Fix argument passing in cc-resume wrapper
+  - [fix: pass arguments correctly in cc-resume wrapper](https://github.com/nsheaps/dotfiles/commit/826c258)
+- [x] Remove empty _home/.zshrc.d/00_zshconfig.zsh file
+  - [chore: remove empty zshrc.d configuration file](https://github.com/nsheaps/dotfiles/commit/11119ba)
 - [ ] Run bin/wire to create symlinks and sync RC files
 - [ ] Test shell initialization in new terminal
-- [ ] Clean up unused files (_home/.zshrc.d)
+- [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
