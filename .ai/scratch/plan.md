@@ -84,31 +84,44 @@ The `init` command behavior depends on which shell/file is sourcing it:
 
 ## Current State / Cleanup Needed
 
-### Created and Need Removal
-- `~/shellrc.d` symlink
-- `/Users/nathan.heaps/src/nsheaps/dotfiles/shellrc.d/` directory
-- Modified `dotfiles/zshrc` sourcing logic
+### Already Completed
+- ✅ `~/shellrc.d` symlink - removed
+- ✅ `/Users/nathan.heaps/src/nsheaps/dotfiles/shellrc.d/` directory - removed
+
+### Still Need Cleanup
+- `~/.zshrc` lines 27-32 - Remove shellrc.d sourcing logic (dead code)
 
 ### Existing _home Structure (review needed)
 - `_home/.zshrc` - Has antidote setup, may need update
-- `_home/.zshrc.d/` - Can be removed (replaced by profile.d and interactive.d)
+- `_home/.zshrc.d/00_zshconfig.zsh` - Review first, then migrate or remove
 - `_home/.zprofile`, `_home/.zshenv`, `_home/.zsh_plugins.txt`
+
+### Important: Edit _home/ not ~/
+- All RC file edits should be made to `_home/` versions
+- DO NOT edit files in `~/` directly during refactoring
+- After refactoring is complete, create a wiring script to sync _home/ to ~/
 
 ## Next Steps
 
-1. Remove `~/shellrc.d` symlink and `dotfiles/shellrc.d/` directory
-2. Revert changes to `dotfiles/zshrc`
-3. Create `_home/.profile.d/` directory
-4. Create `_home/.interactive.d/` directory
-5. Create `bin/dotfiles` script with `init` and `sync` subcommands
-6. Move/create environment setup in `_home/.profile.d/00-env.sh`
-7. Move Claude functions to `_home/.interactive.d/claude-*.sh`
-8. Move utilities to `_home/.interactive.d/`
-9. Update ~/.zshrc with managed section and header comment
-10. Update ~/.zprofile with managed section and header comment
-11. Create symlinks for .profile.d and .interactive.d.
-12. Test shell initialization.
-13. Clean up unused files (_home/.zshrc.d, etc.)
+1. Review `_home/.zshrc.d/00_zshconfig.zsh` contents
+2. Create `_home/.profile.d/` directory
+3. Create `_home/.interactive.d/` directory
+4. Create `bin/dotfiles` script with `init` and `sync` subcommands
+5. Move/create environment setup in `_home/.profile.d/00-env.sh`
+6. Migrate recovered Claude functions to `_home/.interactive.d/claude-*.sh`:
+   - cc-runclaude → claude-cc-runclaude.sh
+   - cc-newsession → claude-cc-newsession.sh
+   - cc-tmp → claude-cc-tmp.sh (wrapper)
+   - cc-resume/cc-resumesession → claude-cc-resume.sh
+7. Move utilities to `_home/.interactive.d/` (e.g., kpup.sh if exists)
+8. Update _home/.zshrc with managed section and header comment
+9. Update _home/.zprofile with managed section and header comment
+10. Update _home/.bashrc with managed section and header comment
+11. Update _home/.bash_profile with managed section and header comment (create if needed)
+12. Create symlinks for .profile.d and .interactive.d
+13. Test shell initialization
+14. Clean up unused files (_home/.zshrc.d) - SAFELY (backup first!)
+15. Create wiring script to sync _home/ to ~/ (after refactor complete)
 
 ## Open Questions
 - Should we keep the antidote setup in the `dotfiles init` output or in the managed section directly?

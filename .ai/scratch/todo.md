@@ -35,6 +35,12 @@
   - [feat: configure hooks for Stop, UserPromptSubmit, and SessionEnd](https://github.com/nsheaps/dotfiles/commit/30f2dd0)
   - [refactor: split CLAUDE.md into modular rules files](https://github.com/nsheaps/dotfiles/commit/f09c68a)
   - [docs: update project management files with hook improvements](https://github.com/nsheaps/dotfiles/commit/a8ace21)
+- [x] Review plan/todos for accuracy and add clarifying questions
+  - [docs: add clarifying questions about refactoring plan](https://github.com/nsheaps/dotfiles/commit/59519cf)
+- [x] Behavior correction: Add safe file deletion rule for migrations
+  - [docs: add safe file deletion rule for migrations](https://github.com/nsheaps/.ai/commit/f974978)
+- [x] Document user answers and recovered shell functions
+  - [docs: add user answers and recovered shell functions to questions](https://github.com/nsheaps/dotfiles/commit/fc8e8c2)
 
 ## Main Dotfiles Refactoring Tasks
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (lines 27-32)
@@ -50,3 +56,4 @@
 - [ ] Create symlinks ~/.profile.d and ~/.interactive.d
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d)
+- [ ] Create wiring script to sync _home/ files to ~/.  (after refactor complete)
