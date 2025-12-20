@@ -79,6 +79,8 @@
 - [x] Switch all RC files from source to eval per research findings
   - [refactor: switch from source to eval for dotfiles init](https://github.com/nsheaps/dotfiles/commit/602a6eb)
 - [x] Run dotfiles-implementation-reviewer agent
+- [x] Create migration guide and correct review.md assumptions
+  - [docs: add migration guide and correct review assumptions](https://github.com/nsheaps/dotfiles/commit/d47c55f)
 - [ ] Fix security issue: Quote $CLAUDE_ARGS in claude-cc-runclaude.sh
 - [ ] Consider: Resolve NVM vs mise conflict for node management
 - [ ] Consider: Prompt before auto-installing gum in cc-resume
