@@ -18,47 +18,37 @@ The new implementation in `_home/` represents a significant architectural improv
 
 ## 1. Critical Issues (MUST FIX Before Deployment)
 
-### 1.1 Missing OrbStack Integration
+### ~~1.1 Missing OrbStack Integration~~ - NOT A REPO ISSUE
 
 **Current Implementation** (`~/.zprofile`):
 ```zsh
-# Added by OrbStack: command-line tools and integration
-# This won't be added again if you remove it.
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 ```
 
-**New Implementation**: ❌ **MISSING ENTIRELY**
+**New Implementation**: Not included (INTENTIONAL)
 
-**Impact**:
-- OrbStack command-line tools will not be available
-- Docker/container integrations will fail
-- OrbStack VM management commands will be unavailable
+**Clarification**: OrbStack is a user customization, not repo content. Users should add this to the user-customizable section of `_home/zprofile` if needed. The repo provides a clean baseline; user tools are added separately.
 
-**Fix Required**: Add OrbStack initialization to `_home/profile.d/00-env.sh` or create a dedicated `_home/profile.d/10-orbstack.sh` file.
+**Not a critical issue for the repo.**
 
 ---
 
-### 1.2 Missing rbenv Integration
+### ~~1.2 Missing rbenv Integration~~ - NOT A REPO ISSUE
 
 **Current Implementation** (`~/.bashrc`):
 ```bash
-# Added by `rbenv init` on Tue Dec  2 14:04:50 CST 2025
 eval "$(rbenv init - --no-rehash bash)"
 ```
 
-**New Implementation**: ❌ **MISSING ENTIRELY**
+**New Implementation**: Not included (INTENTIONAL)
 
-**Impact**:
-- Ruby version management will not work
-- Global Ruby version switching will fail
-- Ruby shims will not be in PATH
-- Any scripts or tools depending on rbenv-managed Ruby versions will break
+**Clarification**: rbenv is a user customization, not repo content. Users should add this to the user-customizable section if needed.
 
-**Fix Required**: Add rbenv initialization to `_home/profile.d/00-env.sh` or create `_home/profile.d/20-rbenv.sh`. Note that rbenv initialization differs between zsh and bash, so this needs shell-aware handling.
+**Not a critical issue for the repo.**
 
 ---
 
-### 1.3 Antidote Plugin Loading Method Change
+### 1.3 Antidote Plugin Loading Method Change (ACTUAL CRITICAL ISSUE - FIXED)
 
 **Current Implementation** (`~/.zshrc`):
 ```zsh
