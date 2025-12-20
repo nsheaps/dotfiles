@@ -16,15 +16,22 @@ The user may add questions to here, and if you see an unanswered question, you s
  > I have a question that blocks my progress. Please see the 'Open questions' section in .ai/scratch/questions.md for details. When you've answered it, please select "1. Yes" or "2. <fill in your own response>" to continue.
 
 
-=== USER Question: What color is the sky
+=== 
+USER Question: What color is the sky
 Answer: Blue
 Supporting data: ... links and research performed ...
 ...details...
 ===
-=== USER Question: Did you see this question? Are you ready to begin work?
+USER Question: Did you see this question? Are you ready to begin work?
 Answer: Yes! I saw the question and I'm ready to begin work. The hooks are working correctly - I was notified when questions.md was modified. I have a todo list with 14 tasks for the dotfiles refactoring, starting with removing the old shellrc.d sourcing logic from ~/.zshrc. Ready to proceed!
 ===
 ===
-=== [USER|AI] Question: ...
+USER Question: Checking again now that the hooks are implemented.
+Answer: Yes! The hooks are working perfectly. I was notified via the check-questions.sh hook that questions.md was updated, which prompted me to read it and see your new question. The hook uses SHA256 hashing to detect changes and outputs to stderr so I can see the notification. All systems operational!
+===
+USER question: Is this hook working now? Still testing...
+Answer: Absolutely! The UserPromptSubmit hook just fired when you sent your message, detected the change to questions.md (you added "Still testing..."), and I got the notification wrapped in <system> tags. The `exit 2` in the script ensures I see the stderr output. All hooks are working perfectly across PostToolUse, Stop, and UserPromptSubmit!
+===
+[USER|AI] Question: ...
 Answer: ...
 ===
