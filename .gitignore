@@ -145,3 +145,4 @@ zprofile
 
 # Claude Code hook state
 .repo/hashes.yaml
+.repo/last-reminder-time
