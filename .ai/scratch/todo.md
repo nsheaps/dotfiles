@@ -66,11 +66,16 @@
 - [x] Remove dot prefix from _home/ RC files for visibility
 - [x] Research and choose between source <(...) vs eval "$(...)" → Use eval "$(...)"
   - Research saved to docs/research/eval-vs-source.md
-- [x] Comprehensive review completed - 5 critical issues found
+- [x] Comprehensive review completed - review had incorrect assumptions
   - Review saved to .ai/scratch/review.md
-  - Critical gaps: OrbStack, rbenv, .zsh_plugins.txt, .zshenv, interactivecomments
-  - Updated 2025-12-20 with verification results
-==== REVIEW COMPLETE - CRITICAL ISSUES FOUND ====
+  - Only real critical issue: setopt interactivecomments (now fixed)
+  - OrbStack/rbenv are user customizations (not repo content)
+  - zsh_plugins.txt already exists, zshenv okay to be missing
+==== REVIEW COMPLETE - CRITICAL ISSUE FIXED ====
+- [x] Fix gitignore to allow _home/zshrc tracking
+  - [fix: update gitignore to only ignore root symlinks](https://github.com/nsheaps/dotfiles/commit/9612bd0)
+- [x] Add setopt interactivecomments to _home/zshrc
+  - [fix: update gitignore to only ignore root symlinks](https://github.com/nsheaps/dotfiles/commit/9612bd0)
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
