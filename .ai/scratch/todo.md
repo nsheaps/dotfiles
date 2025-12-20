@@ -95,9 +95,14 @@
 ==== PAUSED FOR PR REVIEW ====
 PR: https://github.com/nsheaps/dotfiles/pull/1
 
+Recent updates:
+- [x] Update rc.d/00_setup_symlinks.sh with new link() function
+  - [refactor: update link() function for repo-as-source-of-truth](https://github.com/nsheaps/dotfiles/commit/b4cb0ad)
+  - Repo is now source of truth
+  - No auto-execution (safe, manual only)
+  - RC files explicitly excluded (managed by bin/wire)
+
 Tasks on hold until after review:
-- [ ] Update rc.d/00_setup_symlinks.sh (NO auto-linking in .envrc)
-- [ ] Update direnv logic in rc.d/ for new RC file design
 - [ ] Remove exit 1 from bin/wire and run it to activate configuration
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
