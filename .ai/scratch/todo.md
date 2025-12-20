@@ -91,7 +91,12 @@
 - [x] Move interactive shell check into bin/dotfiles script itself
   - [refactor: use cat/templates and move interactive check into script](https://github.com/nsheaps/dotfiles/commit/743c6e6)
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
-- [ ] Update rc.d/00_setup_symlinks.sh link() to make repo source of truth
+
+==== PAUSED FOR PR REVIEW ====
+PR: https://github.com/nsheaps/dotfiles/pull/1
+
+Tasks on hold until after review:
+- [ ] Update rc.d/00_setup_symlinks.sh (NO auto-linking in .envrc)
 - [ ] Update direnv logic in rc.d/ for new RC file design
 - [ ] Remove exit 1 from bin/wire and run it to activate configuration
 - [ ] Test shell initialization in new terminal
