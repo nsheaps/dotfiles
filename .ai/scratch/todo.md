@@ -48,7 +48,7 @@
 - [x] Create _home/.profile.d/ directory
 - [x] Create _home/.interactive.d/ directory
 - [x] Create bin/ directory
-- [ ] Create bin/dotfiles script with init and sync subcommands
+- [x] Create bin/dotfiles script with init and sync subcommands
 - [ ] Create _home/.profile.d/00-env.sh with environment variables
 - [ ] Create interactive.d scripts (claude-*.sh, kpup.sh)
 - [ ] Update ~/.zshrc with managed section and header comment

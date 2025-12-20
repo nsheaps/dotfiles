@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Dotfiles management script for shell configuration
+
+set -euo pipefail
+
+DOTFILES_DIR="$HOME/src/nsheaps/dotfiles"
+PROFILE_D="$HOME/.profile.d"
+INTERACTIVE_D="$HOME/.interactive.d"
+
+# Helper function to source all .sh files in a directory
+source_dir() {
+  local dir="$1"
+  if [[ -d "$dir" ]]; then
+    for file in "$dir"/*.sh; do
+      if [[ -f "$file" ]]; then
+        source "$file"
+      fi
+    done
+  fi
+}
+
+case "${1:-}" in
+  init)
+    # Output shell code to be sourced via: source <(dotfiles init)
+    # Detects if called from login or interactive shell based on $SHLVL
+
+    # Always source profile.d for both login and interactive shells
+    echo "# Sourcing profile.d scripts"
+    echo "for file in \"$PROFILE_D\"/*.sh; do"
+    echo "  [[ -f \"\$file\" ]] && source \"\$file\""
+    echo "done"
+
+    # For interactive shells, also source interactive.d
+    # Check if this is an interactive shell using $- which contains 'i' for interactive
+    echo ""
+    echo "# Source interactive.d for interactive shells only"
+    echo "if [[ \$- == *i* ]]; then"
+    echo "  for file in \"$INTERACTIVE_D\"/*.sh; do"
+    echo "    [[ -f \"\$file\" ]] && source \"\$file\""
+    echo "  done"
+    echo "fi"
+    ;;
+
+  sync)
+    # TODO: Sync managed sections of RC files
+    echo "sync command not yet implemented"
+    exit 1
+    ;;
+
+  *)
+    echo "Usage: dotfiles {init|sync}"
+    echo ""
+    echo "  init  - Output shell code for sourcing (use: source <(dotfiles init))"
+    echo "  sync  - Sync managed sections of RC files"
+    exit 1
+    ;;
+esac
