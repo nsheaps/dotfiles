@@ -64,6 +64,12 @@
   - [chore: remove empty zshrc.d configuration file](https://github.com/nsheaps/dotfiles/commit/11119ba)
 - [x] Make bin scripts portable using dynamic path resolution
 - [x] Remove dot prefix from _home/ RC files for visibility
+- [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
+- [ ] Move interactive shell check into bin/dotfiles script itself
+- [ ] Research and choose between source <(...) vs eval "$(...)"
+- [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
+- [ ] Update rc.d/00_setup_symlinks.sh link() to make repo source of truth
+- [ ] Update direnv logic in rc.d/ for new RC file design
 - [ ] Run bin/wire to create symlinks and sync RC files
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
