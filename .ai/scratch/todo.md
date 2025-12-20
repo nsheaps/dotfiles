@@ -56,7 +56,8 @@
 - [x] Update _home/.zprofile with managed section and header comment
 - [x] Create _home/.bashrc with managed section
 - [x] Create _home/.bash_profile with managed section
-- [ ] Create symlinks ~/.profile.d and ~/.interactive.d
+- [x] Create bin/wire script to sync _home/ files to ~/
+- [ ] Run bin/wire to create symlinks and sync RC files
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d)
-- [ ] Create wiring script to sync _home/ files to ~/.  (after refactor complete)
+- [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
