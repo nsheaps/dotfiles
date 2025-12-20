@@ -81,7 +81,9 @@
 - [x] Run dotfiles-implementation-reviewer agent
 - [x] Create migration guide and correct review.md assumptions
   - [docs: add migration guide and correct review assumptions](https://github.com/nsheaps/dotfiles/commit/d47c55f)
-- [ ] Fix security issue: Quote $CLAUDE_ARGS in claude-cc-runclaude.sh
+- [x] Create feature branch and draft PR
+- [x] Fix security issue: Quote $CLAUDE_ARGS in claude-cc-runclaude.sh
+  - [security: fix argument handling in claude-cc-runclaude](https://github.com/nsheaps/dotfiles/commit/f707258)
 - [ ] Consider: Resolve NVM vs mise conflict for node management
 - [ ] Consider: Prompt before auto-installing gum in cc-resume
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
