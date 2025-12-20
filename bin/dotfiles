@@ -4,8 +4,8 @@
 set -euo pipefail
 
 DOTFILES_DIR="$HOME/src/nsheaps/dotfiles"
-PROFILE_D="$HOME/.profile.d"
-INTERACTIVE_D="$HOME/.interactive.d"
+PROFILE_D="$HOME/.profile.d"  # Symlink to _home/profile.d
+INTERACTIVE_D="$HOME/.interactive.d"  # Symlink to _home/interactive.d
 
 # Helper function to source all .sh files in a directory
 source_dir() {

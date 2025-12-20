@@ -51,10 +51,11 @@
 - [x] Create bin/dotfiles script with init and sync subcommands
 - [x] Create _home/.profile.d/00-env.sh with environment variables
 - [x] Create interactive.d scripts (claude-*.sh)
-- [ ] Update ~/.zshrc with managed section and header comment
-- [ ] Update ~/.zprofile with managed section and header comment
-- [ ] Update ~/.bashrc with managed section
-- [ ] Update ~/.bash_profile with managed section
+- [x] Refactor to use non-hidden directories (profile.d not .profile.d)
+- [ ] Update _home/.zshrc with managed section and header comment
+- [ ] Update _home/.zprofile with managed section and header comment
+- [ ] Create _home/.bashrc with managed section
+- [ ] Create _home/.bash_profile with managed section
 - [ ] Create symlinks ~/.profile.d and ~/.interactive.d
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d)

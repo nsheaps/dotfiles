@@ -11,9 +11,9 @@ dotfiles/
 ├── bin/
 │   └── dotfiles           # Script that handles init and sync operations
 └── _home/
-    ├── .profile.d/        # Login shell scripts (sourced by zprofile, bash_profile)
+    ├── profile.d/         # Login shell scripts (NOT dotfiles in repo)
     │   └── 00-env.sh      # Environment variables (Java, .NET, NVM)
-    ├── .interactive.d/    # Interactive shell scripts (sourced by zshrc, bashrc)
+    ├── interactive.d/     # Interactive shell scripts (NOT dotfiles in repo)
     │   ├── claude-cc-runclaude.sh
     │   ├── claude-cc-newsession.sh
     │   ├── claude-cc-resume.sh
@@ -26,9 +26,12 @@ dotfiles/
 - All scripts use bash internally with `#!/usr/bin/env bash` shebang
 - This ensures compatibility across shells
 
-### Home Directory Symlinks
-- `~/.profile.d` → `dotfiles/_home/.profile.d`
-- `~/.interactive.d` → `dotfiles/_home/.interactive.d`
+### Home Directory Symlinks (created by wiring script)
+- `~/.profile.d` → `dotfiles/_home/profile.d`
+- `~/.interactive.d` → `dotfiles/_home/interactive.d`
+
+Note: The directories in the repo do NOT have leading dots to keep them
+visible in file explorers. The wiring script creates the dotfile symlinks.
 
 ### Sourcing Order
 **~/.zprofile (and ~/.bash_profile):**
