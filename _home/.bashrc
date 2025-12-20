@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# sourced when an interactive shell is spawned. Use to customize the feel of
+# your terminal, but scripts run outside the terminal may not use this setup
+
+# User-customizable section
+# Add your personal customizations here
+
+### managed by automation ###
+source <($HOME/src/nsheaps/dotfiles/bin/dotfiles init)
+### end managed by automation ###

@@ -54,8 +54,8 @@
 - [x] Refactor to use non-hidden directories (profile.d not .profile.d)
 - [x] Update _home/.zshrc with managed section and header comment
 - [x] Update _home/.zprofile with managed section and header comment
-- [ ] Create _home/.bashrc with managed section
-- [ ] Create _home/.bash_profile with managed section
+- [x] Create _home/.bashrc with managed section
+- [x] Create _home/.bash_profile with managed section
 - [ ] Create symlinks ~/.profile.d and ~/.interactive.d
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d)

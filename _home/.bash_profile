@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# sourced when you login to your computer. Changes here need a restart to take
+# effect. These commands should never print output, as it may cause issues with
+# automation running the script.
+
+# Load brew, which adds the brew bin to PATH
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# User-customizable section
+# Add your personal customizations here
+
+### managed by automation ###
+source <($HOME/src/nsheaps/dotfiles/bin/dotfiles init)
+### end managed by automation ###
