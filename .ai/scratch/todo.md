@@ -76,6 +76,8 @@
   - [fix: update gitignore to only ignore root symlinks](https://github.com/nsheaps/dotfiles/commit/9612bd0)
 - [x] Add setopt interactivecomments to _home/zshrc
   - [fix: update gitignore to only ignore root symlinks](https://github.com/nsheaps/dotfiles/commit/9612bd0)
+- [x] Switch all RC files from source to eval per research findings
+  - [refactor: switch from source to eval for dotfiles init](https://github.com/nsheaps/dotfiles/commit/602a6eb)
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
