@@ -74,3 +74,4 @@
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
+- [ ] Design improvements for hook reminders to prevent duplicate firing (requires Plan agent + claude-code-guide agent to research Claude Code hooks documentation and architect a better design)
