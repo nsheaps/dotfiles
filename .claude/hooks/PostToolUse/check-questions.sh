@@ -40,11 +40,17 @@ if [[ "$CURRENT_HASH" != "$PREV_HASH" ]]; then
   fi
 
   # Output to stderr so Claude sees it
-  cat >&2 <<EOF
+  cat >&2 << EOF
+<system>
 The questions file at .ai/scratch/questions.md has been updated. Please read it using the Read tool to check for:
 1. New questions from the user that need answers
 2. User answers to your previous questions
 
 Read the file at: .ai/scratch/questions.md
+</system>
 EOF
+
+  # Claude needs exit 2 to see the stderr
+  exit 2
 fi
+
