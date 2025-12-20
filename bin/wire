@@ -38,15 +38,15 @@ sync_file() {
   fi
 }
 
-# Sync zsh files
-sync_file "$DOTFILES_DIR/_home/.zshrc" "$HOME_DIR/.zshrc"
-sync_file "$DOTFILES_DIR/_home/.zprofile" "$HOME_DIR/.zprofile"
-sync_file "$DOTFILES_DIR/_home/.zshenv" "$HOME_DIR/.zshenv"
-sync_file "$DOTFILES_DIR/_home/.zsh_plugins.txt" "$HOME_DIR/.zsh_plugins.txt"
+# Sync zsh files (add dot prefix when copying to home)
+sync_file "$DOTFILES_DIR/_home/zshrc" "$HOME_DIR/.zshrc"
+sync_file "$DOTFILES_DIR/_home/zprofile" "$HOME_DIR/.zprofile"
+sync_file "$DOTFILES_DIR/_home/zshenv" "$HOME_DIR/.zshenv"
+sync_file "$DOTFILES_DIR/_home/zsh_plugins.txt" "$HOME_DIR/.zsh_plugins.txt"
 
-# Sync bash files
-sync_file "$DOTFILES_DIR/_home/.bashrc" "$HOME_DIR/.bashrc"
-sync_file "$DOTFILES_DIR/_home/.bash_profile" "$HOME_DIR/.bash_profile"
+# Sync bash files (add dot prefix when copying to home)
+sync_file "$DOTFILES_DIR/_home/bashrc" "$HOME_DIR/.bashrc"
+sync_file "$DOTFILES_DIR/_home/bash_profile" "$HOME_DIR/.bash_profile"
 
 echo ""
 echo "✓ Wiring complete!"
