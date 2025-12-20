@@ -66,8 +66,10 @@
 - [x] Remove dot prefix from _home/ RC files for visibility
 - [x] Research and choose between source <(...) vs eval "$(...)" → Use eval "$(...)"
   - Research saved to docs/research/eval-vs-source.md
-- [x] Comprehensive review completed - 3 critical issues found
+- [x] Comprehensive review completed - 5 critical issues found
   - Review saved to .ai/scratch/review.md
+  - Critical gaps: OrbStack, rbenv, .zsh_plugins.txt, .zshenv, interactivecomments
+  - Updated 2025-12-20 with verification results
 ==== REVIEW COMPLETE - CRITICAL ISSUES FOUND ====
 - [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
 - [ ] Move interactive shell check into bin/dotfiles script itself
