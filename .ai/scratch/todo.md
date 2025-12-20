@@ -86,8 +86,8 @@
   - [security: fix argument handling in claude-cc-runclaude](https://github.com/nsheaps/dotfiles/commit/f707258)
 - [ ] Consider: Resolve NVM vs mise conflict for node management
 - [ ] Consider: Prompt before auto-installing gum in cc-resume
-- [ ] Refactor bin/dotfiles init to use cat/files instead of echo strings
-- [ ] Move interactive shell check into bin/dotfiles script itself
+- [x] Refactor bin/dotfiles init to use cat/files instead of echo strings (in progress)
+- [x] Move interactive shell check into bin/dotfiles script itself (in progress)
 - [x] Review rc.d/00_setup_symlinks.sh changes (RC symlinks commented out)
 - [ ] Update rc.d/00_setup_symlinks.sh link() to make repo source of truth
 - [ ] Update direnv logic in rc.d/ for new RC file design
