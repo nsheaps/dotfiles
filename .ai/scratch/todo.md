@@ -43,9 +43,11 @@
   - [docs: add user answers and recovered shell functions to questions](https://github.com/nsheaps/dotfiles/commit/fc8e8c2)
 
 ## Main Dotfiles Refactoring Tasks
+- [x] Review _home/.zshrc.d/00_zshconfig.zsh contents (empty file, can be removed)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (lines 27-32)
-- [ ] Create _home/.profile.d/ directory
-- [ ] Create _home/.interactive.d/ directory
+- [x] Create _home/.profile.d/ directory
+- [x] Create _home/.interactive.d/ directory
+- [x] Create bin/ directory
 - [ ] Create bin/dotfiles script with init and sync subcommands
 - [ ] Create _home/.profile.d/00-env.sh with environment variables
 - [ ] Create interactive.d scripts (claude-*.sh, kpup.sh)
