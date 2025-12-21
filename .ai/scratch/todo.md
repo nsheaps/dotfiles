@@ -101,6 +101,9 @@ Recent updates:
   - Repo is now source of truth
   - No auto-execution (safe, manual only)
   - RC files explicitly excluded (managed by bin/wire)
+- [x] Clean up unused files (_home/.zshrc.d directory) - Already removed
+- [x] Update README to reflect new architecture
+  - [docs: update README for new modular architecture](https://github.com/nsheaps/dotfiles/commit/f139c91)
 
 Tasks on hold until after review:
 - [ ] Remove exit 1 from bin/wire and run it to activate configuration
