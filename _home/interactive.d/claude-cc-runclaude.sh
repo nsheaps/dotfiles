@@ -11,6 +11,7 @@ cc-runclaude () {
 		is_temp='true'
 		shift
 	fi
+	CLAUDE_ARGS="$@"
 	back_to_cwd () {
 		cd "$CURRENT_DIR"
 	}
@@ -36,5 +37,5 @@ EOPROMPT
 	mkdir -p "$WS_DIR"
 	cd "$WS_DIR"
 	printf "Launching Claude...\n" "$WS_DIR"
-	claude --add-dir="$PWD" --append-system-prompt="$append_system_prompt" "$@"
+	claude --add-dir="$PWD" --append-system-prompt="$append_system_prompt" $CLAUDE_ARGS
 }
