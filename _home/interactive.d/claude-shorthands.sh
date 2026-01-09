@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
+
 claude() {
-  CLAUDE_BIN="$(command -v claude)"
+  CLAUDE_BIN=(command claude)
   local FLAGS=("--allow-dangerously-skip-permissions" "$@")
   echo "Launching claude with flags:"
   for flag in "${FLAGS[@]}"; do
     echo "  $flag"
   done
-  exec "$CLAUDE_BIN" "${FLAGS[@]}"
+  exec $CLAUDE_BIN "${FLAGS[@]}"
 }
+
 
 ccagent() {
   CLAUDE_BIN="$(command -v claude-agent)"

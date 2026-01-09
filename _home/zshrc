@@ -41,3 +41,9 @@ fi
 # Source your static plugins file.
 source ${zsh_plugins}.zsh
 
+
+if [[ -d "/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d" ]]; then
+  for file in $(find -L "/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d" -type f -name "*.sh" | sort); do
+    source "$file"
+  done
+fi
