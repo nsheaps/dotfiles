@@ -8,7 +8,7 @@ claude() {
   for flag in "${FLAGS[@]}"; do
     echo "  $flag"
   done
-  exec $CLAUDE_BIN "${FLAGS[@]}"
+  $CLAUDE_BIN "${FLAGS[@]}"
 }
 
 
