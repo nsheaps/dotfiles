@@ -4,13 +4,12 @@
 claude() {
   CLAUDE_BIN=(command claude)
   local FLAGS=("--allow-dangerously-skip-permissions" "$@")
-  echo "Launching claude with flags:"
+  echo "Launching claude with flags:" >&2
   for flag in "${FLAGS[@]}"; do
-    echo "  $flag"
+    echo "  $flag" >&2
   done
   $CLAUDE_BIN "${FLAGS[@]}"
 }
-
 
 ccagent() {
   CLAUDE_BIN="$(command -v claude-agent)"
