@@ -1,0 +1,44 @@
+{
+  "Profiles": [
+    {
+      "Name": "stainless-api",
+      "Guid": "stainless-api-profile-001",
+      "Background Color": {
+        "Red Component": 0.93,
+        "Green Component": 0.93,
+        "Blue Component": 0.93
+      },
+      "Foreground Color": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0
+      },
+      "Badge Text": "stainless-api",
+      "Use Bold Font": true,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false
+    },
+    {
+      "Name": "nsheaps",
+      "Guid": "nsheaps-profile-001",
+      "Background Color": {
+        "Red Component": 1.0,
+        "Green Component": 0.894,
+        "Blue Component": 0.882
+      },
+      "Foreground Color": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0
+      },
+      "Badge Text": "nsheaps",
+      "Use Bold Font": true,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false
+    }
+  ]
+}
