@@ -7,7 +7,7 @@
   "gitdoc.commitValidationLevel": "none",
   "gitdoc.enabled": true,
   "gitdoc.noVerify": true,
-  "gitdoc.autoCommitDelay": 1000,
+  "gitdoc.autoCommitDelay": 15000,
   "gitdoc.pushMode": "forcePushWithLease",
   "gitdoc.timeZone": "America/New_York",
   "gitdoc.filePattern": "**/*",
