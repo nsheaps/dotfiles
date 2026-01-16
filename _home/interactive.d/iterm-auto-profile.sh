@@ -15,10 +15,10 @@ iterm2_auto_switch_profile() {
   local current_dir="$PWD"
 
   case "$current_dir" in
-    */stainless-api*|*/stainless/*)
-      iterm2_set_profile "stainless-api"
+    */src/stainless-api*|*/src/stainless*)
+      iterm2_set_profile "stainless"
       ;;
-    */nsheaps*|*/.ai*)
+    */src/nsheaps*)
       iterm2_set_profile "nsheaps"
       ;;
     *)

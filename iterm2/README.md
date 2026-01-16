@@ -14,17 +14,19 @@ iterm2/
 
 ## Profiles
 
-### stainless-api
+### stainless
 
-- **Background**: Light gray (#EEEEEE)
-- **Purpose**: Visual indicator for stainless-api directories
-- **Auto-switch**: Activates in directories matching `*/stainless-api*` or `*/stainless/*`
+- **Light Mode Background**: Light blue (#E3F2FD)
+- **Dark Mode Background**: Dark blue (#1E3A5F)
+- **Purpose**: Visual indicator for stainless directories
+- **Auto-switch**: Activates in directories matching `*/src/stainless-api*` or `*/src/stainless*`
 
 ### nsheaps
 
-- **Background**: Light pink (#FFE4E1)
+- **Light Mode Background**: Light purple (#F3E5F5)
+- **Dark Mode Background**: Dark purple (#3E2A47)
 - **Purpose**: Visual indicator for nsheaps personal directories
-- **Auto-switch**: Activates in directories matching `*/nsheaps*` or `*/.ai*`
+- **Auto-switch**: Activates in directories matching `*/src/nsheaps*`
 
 ## Installation
 
@@ -72,10 +74,12 @@ esac
 
 Colors are defined using decimal RGB values (0-1 scale):
 
-| Color      | Hex     | RGB (0-1)         |
-| ---------- | ------- | ----------------- |
-| Light Gray | #EEEEEE | 0.93, 0.93, 0.93  |
-| Light Pink | #FFE4E1 | 1.0, 0.894, 0.882 |
+| Profile   | Mode       | Color       | Hex     | RGB (0-1)        |
+| --------- | ---------- | ----------- | ------- | ---------------- |
+| stainless | Light Mode | Light Blue  | #E3F2FD | 0.89, 0.95, 0.99 |
+| stainless | Dark Mode  | Dark Blue   | #1E3A5F | 0.12, 0.23, 0.37 |
+| nsheaps   | Light Mode | Light Purple| #F3E5F5 | 0.95, 0.90, 0.96 |
+| nsheaps   | Dark Mode  | Dark Purple | #3E2A47 | 0.24, 0.16, 0.28 |
 
 To convert hex to decimal: `Decimal = Hex / 255`
 

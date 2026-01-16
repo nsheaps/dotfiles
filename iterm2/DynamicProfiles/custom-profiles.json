@@ -1,19 +1,29 @@
 {
   "Profiles": [
     {
-      "Name": "stainless-api",
-      "Guid": "stainless-api-profile-001",
-      "Background Color": {
-        "Red Component": 0.93,
-        "Green Component": 0.93,
-        "Blue Component": 0.93
+      "Name": "stainless",
+      "Guid": "stainless-profile-001",
+      "Background Color (Light)": {
+        "Red Component": 0.89,
+        "Green Component": 0.95,
+        "Blue Component": 0.99
       },
-      "Foreground Color": {
+      "Background Color (Dark)": {
+        "Red Component": 0.12,
+        "Green Component": 0.23,
+        "Blue Component": 0.37
+      },
+      "Foreground Color (Light)": {
         "Red Component": 0.0,
         "Green Component": 0.0,
         "Blue Component": 0.0
       },
-      "Badge Text": "stainless-api",
+      "Foreground Color (Dark)": {
+        "Red Component": 0.9,
+        "Green Component": 0.9,
+        "Blue Component": 0.9
+      },
+      "Badge Text": "stainless",
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
@@ -23,15 +33,25 @@
     {
       "Name": "nsheaps",
       "Guid": "nsheaps-profile-001",
-      "Background Color": {
-        "Red Component": 1.0,
-        "Green Component": 0.894,
-        "Blue Component": 0.882
+      "Background Color (Light)": {
+        "Red Component": 0.95,
+        "Green Component": 0.9,
+        "Blue Component": 0.96
       },
-      "Foreground Color": {
+      "Background Color (Dark)": {
+        "Red Component": 0.24,
+        "Green Component": 0.16,
+        "Blue Component": 0.28
+      },
+      "Foreground Color (Light)": {
         "Red Component": 0.0,
         "Green Component": 0.0,
         "Blue Component": 0.0
+      },
+      "Foreground Color (Dark)": {
+        "Red Component": 0.9,
+        "Green Component": 0.9,
+        "Blue Component": 0.9
       },
       "Badge Text": "nsheaps",
       "Use Bold Font": true,
