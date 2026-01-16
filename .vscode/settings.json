@@ -1,2 +1,19 @@
 {
+  "gitdoc.ai.enabled": true,
+  "gitdoc.ai.customInstructions": "use conventional commits for the title. Add optional scopes if possible, gathering context from the file path. Make sure the body is filled out describing the why and how behind the changes",
+  // model must be accepted by copilot, but doesn't necessarily have to be supported by gitdoc
+  "gitdoc.ai.model": "claude-opus-4.5",
+  "gitdoc.autoPull": "onPush",
+  "gitdoc.commitValidationLevel": "none",
+  "gitdoc.enabled": true,
+  "gitdoc.noVerify": true,
+  "gitdoc.autoCommitDelay": 15000,
+  "gitdoc.pushMode": "forcePushWithLease",
+  "gitdoc.timeZone": "America/New_York",
+  "gitdoc.filePattern": "**/*",
+  // make sure we're not autosaving often so that we're not committing all the freaking time
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "chat.useNestedAgentsMdFiles": true,
+  "chat.useAgentSkills": true
 }
