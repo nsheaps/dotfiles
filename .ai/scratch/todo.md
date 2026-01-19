@@ -121,6 +121,10 @@ Tasks on hold until after review:
   - [feat(wire): create ~/.dotfiles symlink to repo location](https://github.com/nsheaps/dotfiles/commit/a8e2e5c)
 - [x] Consolidate antidote plugin config in _home/zsh_plugins.txt
   - [refactor(antidote): consolidate plugin config in _home](https://github.com/nsheaps/dotfiles/commit/44c038c)
+- [x] Fix zfunctions autoload when directory doesn't exist
+  - [fix(zshrc): make zfunctions autoload conditional](https://github.com/nsheaps/dotfiles/commit/0791f36)
+- [x] Fix interactive.d sourcing (source directly, not via bash subprocess)
+  - [fix(zshrc): source interactive.d directly instead of via subprocess](https://github.com/nsheaps/dotfiles/commit/31e154b)
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
