@@ -146,3 +146,6 @@ vite.config.ts.timestamp-*
 # Claude Code hook state
 .repo/hashes.yaml
 .repo/last-reminder-time
+
+# worktrees
+.dev/

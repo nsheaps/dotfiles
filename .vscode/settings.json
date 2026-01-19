@@ -16,4 +16,8 @@
   "files.autoSaveDelay": 500,
   "chat.useNestedAgentsMdFiles": true,
   "chat.useAgentSkills": true
+  // don't show the .dev folder, it has worktrees
+  ,"files.exclude": {
+    ".dev": true
+  }
 }
