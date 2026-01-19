@@ -70,8 +70,8 @@
   "extraKnownMarketplaces": {
     "nsheaps-claude-plugins": {
       "source": {
-        "source": "directory",
-        "path": "/Users/nathan.heaps/src/nsheaps/ai"
+        "source": "github",
+        "repo": "nsheaps/.ai"
       }
     }
   }
