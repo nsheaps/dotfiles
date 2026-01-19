@@ -205,12 +205,14 @@ copy_config_file() {
 echo ""
 echo "Copying .config files..."
 
-# Find all files in _home/.config and process them
-while IFS= read -r -d '' file; do
+# Collect files into array first (avoids stdin redirection issues with interactive prompts)
+mapfile -d '' config_files < <(find "$DOTFILES_DIR/_home/.config" -type f -print0)
+
+for file in "${config_files[@]}"; do
   # Get relative path from _home/.config/
   rel_path="${file#$DOTFILES_DIR/_home/.config/}"
   copy_config_file "$rel_path"
-done < <(find "$DOTFILES_DIR/_home/.config" -type f -print0)
+done
 
 # =============================================================================
 # Summary
