@@ -113,3 +113,13 @@ Tasks on hold until after review:
 - [ ] Update README to reflect new architecture
 - [ ] Design improvements for hook reminders to prevent duplicate firing (requires Plan agent + claude-code-guide agent to research Claude Code hooks documentation and architect a better design)
 - [ ] Note: Use AskUserQuestion when you need to block and wait for user input - it's preferred over questions.md for blocking questions. questions.md is for async communication that doesn't block progress.
+
+## Dynamic iTerm Config and update.d Scripts
+
+- [x] Explore current iTerm configuration and directory structure
+- [x] Create bin/source-scripts.sh for DRY script sourcing from directories
+- [x] Create bin/run-updates.sh for login item usage (runs update.d scripts)
+- [x] Create _home/update.d/ folder structure
+- [x] Create update.d/00-iterm-profiles.sh for iTerm configuration setup/cleanup
+- [x] Refactor bin/dotfiles templates to use new source-scripts.sh pattern
+- [x] Test the implementation

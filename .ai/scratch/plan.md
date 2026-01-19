@@ -130,3 +130,40 @@ The `init` command behavior depends on which shell/file is sourcing it:
 - Should we keep the antidote setup in the `dotfiles init` output or in the managed section directly?
 - Should `.zshenv` also be managed?
 - How does the dotfiles init script detect whether it's being called from a login shell vs interactive shell?
+
+## Dynamic iTerm Config and update.d Scripts
+
+### Goal
+Create an `update.d/` directory of scripts that run on repo update and machine start. One script sets up iTerm configuration and cleans up previous configs. Also create reusable bin scripts to DRY up directory sourcing.
+
+### New Directory Structure
+```
+dotfiles/
+├── bin/
+│   ├── dotfiles              # Existing - manages init/sync
+│   ├── source-scripts.sh     # NEW - source all *.sh from a directory
+│   └── run-updates.sh        # NEW - run all update.d scripts (login item)
+└── _home/
+    ├── profile.d/            # Existing - login shell scripts
+    ├── interactive.d/        # Existing - interactive shell scripts
+    └── update.d/             # NEW - scripts run on update/startup
+        └── 00-iterm-profiles.sh  # iTerm profile setup/cleanup
+```
+
+### bin/source-scripts.sh
+Generic script to source all *.sh files from a directory:
+- Takes directory path as argument
+- Iterates through *.sh files in sorted order
+- Sources each file
+- Used by profile.d, interactive.d sourcing to DRY up code
+
+### bin/run-updates.sh
+Script for Mac login item usage:
+- Sources all scripts from update.d/ directory
+- Can be added as a login item in Mac System Settings
+- Runs on each login to keep configuration fresh
+
+### update.d/00-iterm-profiles.sh
+- Cleans up any previous iTerm Dynamic Profiles from dotfiles
+- Copies current profiles from iterm2/DynamicProfiles/ to ~/Library/Application Support/iTerm2/DynamicProfiles/
+- Makes iTerm configuration dynamic based on repo state
