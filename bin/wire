@@ -163,7 +163,11 @@ copy_config_file() {
   echo "  CONFLICT: ~/.config/$rel_path differs from repo version"
   echo ""
   echo "  --- Diff (repo vs home) ---"
-  diff --color=always -u "$src" "$dest" || true
+  if [[ -t 1 ]]; then
+    diff --color=always -u "$src" "$dest" || true
+  else
+    diff -u "$src" "$dest" || true
+  fi
   echo "  --- End diff ---"
   echo ""
   echo "  Options:"
@@ -194,7 +198,11 @@ copy_config_file() {
         ;;
       d|D)
         echo ""
-        diff --color=always -u "$src" "$dest" || true
+        if [[ -t 1 ]]; then
+          diff --color=always -u "$src" "$dest" || true
+        else
+          diff -u "$src" "$dest" || true
+        fi
         echo ""
         ;;
       *)
