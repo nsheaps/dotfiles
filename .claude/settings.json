@@ -2,15 +2,6 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "TodoWrite",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat << 'EOF' 1>&2\nReminder: Sync all current todos to .ai/scratch/todo.md\n- Use proper markdown checkbox syntax (- [ ] for incomplete, - [x] for completed)\n- Do not delete any existing tasks - only update their status or add new tasks\n- Document any sidequests or tangential work (like setup, configuration, debugging) as separate tasks\n- When a task is completed by a git commit, add an indented line below it:\n  - [commit message first line](https://github.com/nsheaps/dotfiles/commit/COMMIT_HASH)\n- To get the commit hash: git log -1 --format='%H %s'\n- After updating, consider using /commit to checkpoint changes. Make sure to push your changes too.\nEOF\n"
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {
@@ -29,15 +20,6 @@
           {
             "type": "command",
             "command": ".claude/hooks/PostToolUse/update-hash.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit(.ai/scratch/todo.md)|Write(.ai/scratch/todo.md)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/todo-reminder.sh"
           }
         ]
       }
@@ -81,5 +63,16 @@
     "allow": [
       "Write(.ai/scratch/**)"
     ]
+  },
+  "enabledPlugins": {
+    "todo-sync@nsheaps-claude-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "nsheaps-claude-plugins": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/nathan.heaps/src/nsheaps/ai"
+      }
+    }
   }
 }
