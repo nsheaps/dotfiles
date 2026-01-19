@@ -9,10 +9,11 @@ Inspired by https://github.com/getantidote/zdotdir
 This repository uses a modular approach with:
 - **`_home/profile.d/`** - Login shell scripts (environment variables, paths)
 - **`_home/interactive.d/`** - Interactive shell scripts (functions, aliases)
-- **`bin/dotfiles`** - Init script that sources the appropriate configs
-- **`bin/wire`** - Deployment script that syncs _home/ to ~/
+- **`_home/startup.d/`** - Safe, idempotent scripts run at Mac login
+- **`_home/update.d/`** - Potentially risky scripts run manually
+- **`bin/wire`** - Deployment script that creates symlinks and injects managed sections
 
-All files in `_home/` are visible (no leading dots) for easier editing. The `bin/wire` script adds dots when copying to `$HOME`.
+All files in `_home/` are visible (no leading dots) for easier editing. The `bin/wire` script creates symlinks and injects managed sections into shell RC files.
 
 ## Quick Start
 
@@ -32,9 +33,7 @@ cd ~/src/nsheaps/dotfiles
 # Install development tools via mise
 mise use -g node@lts bun@latest python@latest go@latest
 
-# Deploy the dotfiles (removes the safety exit first)
-# Review bin/wire before running!
-sed -i.bak '/^exit 1$/d' bin/wire
+# Deploy the dotfiles
 bin/wire
 
 # Start a new shell to test
@@ -56,7 +55,8 @@ git add .
 git commit -m "update zshrc"
 git push
 
-# Sync changes to ~/
+# Changes to profile.d/, interactive.d/ are immediate (symlinked)
+# Changes to RC file templates require re-running wire:
 bin/wire
 
 # Reload shell
@@ -68,62 +68,84 @@ source ~/.zshrc  # or open new terminal
 ```
 dotfiles/
 ├── bin/
-│   ├── dotfiles        # Init script (outputs shell code to eval)
-│   ├── wire            # Deployment script (syncs _home/ to ~/)
-│   └── templates/      # Shell code templates
+│   ├── wire              # Deployment script (creates symlinks, injects managed sections)
+│   ├── run-startup.sh    # Runs startup.d scripts (for Mac login items)
+│   ├── run-updates.sh    # Runs update.d scripts (manual)
+│   └── lib/
+│       └── source-scripts.sh  # Helper to execute scripts from a directory
+├── templates/            # Shell code templates for managed sections
+│   ├── zsh/
+│   │   ├── rc.zsh        # Template for ~/.zshrc managed section
+│   │   ├── profile.zsh   # Template for ~/.zprofile managed section
+│   │   └── env.zsh       # Template for ~/.zshenv managed section
+│   └── bash/
+│       ├── rc.bash       # Template for ~/.bashrc managed section
+│       └── profile.bash  # Template for ~/.bash_profile managed section
 ├── _home/
-│   ├── profile.d/      # Login shell scripts
-│   │   └── 00-env.sh   # Environment variables (Java, .NET, NVM)
-│   ├── interactive.d/  # Interactive shell scripts
-│   │   ├── claude-cc-runclaude.sh
-│   │   ├── claude-cc-newsession.sh
-│   │   └── claude-cc-resume.sh
-│   ├── zshrc           # Zsh interactive config
-│   ├── zprofile        # Zsh login config
-│   ├── zshenv          # Zsh environment config
-│   ├── bashrc          # Bash interactive config
-│   ├── bash_profile    # Bash login config
-│   └── zsh_plugins.txt # Antidote plugin declarations
+│   ├── profile.d/        # Login shell scripts (symlinked to ~/.profile.d)
+│   ├── interactive.d/    # Interactive shell scripts (symlinked to ~/.interactive.d)
+│   │   ├── claude.sh     # Claude CLI helper functions
+│   │   ├── iterm-auto-profile.sh
+│   │   └── open-iterm.sh
+│   ├── startup.d/        # Mac login scripts (symlinked to ~/.startup.d)
+│   ├── update.d/         # Manual update scripts (symlinked to ~/.update.d)
+│   ├── zshrc             # Zsh interactive config
+│   ├── zprofile          # Zsh login config
+│   ├── zshenv            # Zsh environment config
+│   ├── bashrc            # Bash interactive config
+│   ├── bash_profile      # Bash login config
+│   └── zsh_plugins.txt   # Antidote plugin declarations
 ├── rc.d/
 │   └── 00_setup_symlinks.sh  # Direnv setup (for repo development)
-└── .envrc              # Direnv configuration
+└── .envrc                # Direnv configuration
 ```
 
 ## How It Works
 
-### Shell Initialization
+### Wiring (bin/wire)
 
-When you start a shell, the RC files source the dotfiles init script:
+The `bin/wire` script sets up your shell environment:
 
-```bash
-# In ~/.zshrc, ~/.zprofile, etc.:
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
-```
+1. **Creates symlinks** for script directories:
+   - `~/.dotfiles` → this repo
+   - `~/.profile.d` → `_home/profile.d`
+   - `~/.interactive.d` → `_home/interactive.d`
+   - `~/.startup.d` → `_home/startup.d`
+   - `~/.update.d` → `_home/update.d`
 
-The `dotfiles init` command:
-1. Always sources `~/.profile.d/*.sh` (environment setup)
-2. For interactive shells, also sources `~/.interactive.d/*.sh` (functions, aliases)
+2. **Injects managed sections** into shell RC files (`~/.zshrc`, `~/.bashrc`, etc.):
+   ```bash
+   # BEGIN: Managed by dotfiles wire
+   export DOTFILES_DIR="/path/to/dotfiles"
+   source "$DOTFILES_DIR/_home/zshrc"
+   # END: Managed by dotfiles wire
+   ```
+
+### Shell Initialization Flow
+
+When you start a shell:
+1. Shell loads `~/.zshrc` (or `~/.bashrc`)
+2. The managed section sources `_home/zshrc`
+3. `_home/zshrc` loads antidote plugins and sources `profile.d/` and `interactive.d/`
 
 ### Configuration Management
 
 - **Edit**: Make changes in `_home/` directory
-- **Deploy**: Run `bin/wire` to sync to ~/
-- **Customize**: Add personal overrides in the user-customizable sections (above the managed block)
-
-The managed sections are clearly marked:
-```bash
-### managed by automation ###
-eval "$(dotfiles init)"
-### end managed by automation ###
-```
+- **Script directories**: Changes are immediate (symlinked)
+- **RC files**: Run `bin/wire` after changing templates
+- **Customize**: Add personal overrides above the managed section in `~/.zshrc`
 
 ## Features
 
 ### Claude Workspace Functions
 
+- `claude` - Launch claude with default flags
+- `ccresume` - Shorthand for `claude --resume`
+- `cccontinue` - Shorthand for `claude --continue`
 - `cc-newsession` - Create new Claude workspace
 - `cc-tmp` - Create temporary Claude workspace (deleted on exit)
-- `cc-resume` - Resume existing Claude workspace
+- `cc-resume` - Interactive picker to resume existing workspace
+- `claude-update` - Update claude-code via Homebrew
 
 ### Development Tools
 
@@ -131,41 +153,34 @@ eval "$(dotfiles init)"
 - **Antidote** - Zsh plugin manager (static loading for faster startup)
 - **Homebrew** - Package manager
 
+### Startup & Update Scripts
+
+- **`bin/run-startup.sh`** - Run safe, idempotent startup scripts. Add as a Mac login item.
+- **`bin/run-updates.sh`** - Run potentially risky update scripts manually.
+
 ## Customization
 
-Add your personal configurations in the user-customizable sections of RC files:
+Add your personal configurations above the managed section in `~/.zshrc`:
 
 ```bash
-# In _home/zshrc (above the managed section):
-
-# User-customizable section
+# User customizations (above managed section)
 export MY_VAR="value"
 alias myalias="command"
 
 # Add tool integrations (OrbStack, rbenv, etc.)
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+# BEGIN: Managed by dotfiles wire
+# ... (don't edit below here)
 ```
-
-After editing, run `bin/wire` to deploy changes.
-
-## Documentation
-
-See `.ai/scratch/` for detailed documentation:
-- **plan.md** - Architecture and design decisions
-- **migration.md** - Migration guide from old structure
-- **review.md** - Implementation review findings
-- **docs/research/eval-vs-source.md** - Research on shell sourcing patterns
 
 ## Maintenance
 
 ### Adding a New Profile Script
 
 ```bash
-# Create in repo
+# Create in repo (changes are immediate via symlink)
 echo '# My script' > _home/profile.d/50-myconfig.sh
-
-# Deploy
-bin/wire
 
 # Restart shell
 exec zsh
@@ -176,16 +191,14 @@ exec zsh
 ```bash
 # Create in repo
 cat > _home/interactive.d/my-function.sh << 'EOF'
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 my-function() {
   echo "Hello from my function"
 }
 EOF
 
-# Deploy
-bin/wire
-
-# Test
+# Test immediately (symlinked)
+source ~/.zshrc
 my-function
 ```
 
@@ -195,9 +208,14 @@ my-function
 # Edit plugin list
 vim _home/zsh_plugins.txt
 
-# Deploy
-bin/wire
-
 # Reload (antidote will regenerate ~/.zsh_plugins.zsh)
+source ~/.zshrc
+```
+
+### Re-wiring After Template Changes
+
+```bash
+# If you change templates/zsh/*.zsh or templates/bash/*.bash
+bin/wire
 source ~/.zshrc
 ```
