@@ -112,6 +112,11 @@ Tasks on hold until after review:
   - Wire now injects managed sections with `source "$DOTFILES_DIR/_home/..."`
   - Wire creates symlinks for profile.d, interactive.d, startup.d, update.d
 - [x] Run bin/wire to activate configuration
+- [x] Remove duplicate hardcoded interactive.d sourcing from _home/zshrc
+- [x] Simplify run-startup.sh and run-updates.sh (thin wrappers with logging)
+- [x] Remove old bin/dotfiles and source-*.sh templates
+- [x] Remove broken "managed by automation" sections from _home/zshrc and _home/zprofile
+  - [refactor: simplify scripts and remove old dotfiles init system](https://github.com/nsheaps/dotfiles/commit/04ad432)
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)
