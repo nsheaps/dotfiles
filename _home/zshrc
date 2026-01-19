@@ -13,9 +13,6 @@ setopt interactivecomments
 # User-customizable section
 # Add your personal customizations here
 
-### managed by automation ###
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
-### end managed by automation ###
 
 # Lazy-load (autoload) Zsh function files from a directory.
 ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
@@ -40,9 +37,3 @@ fi
 # Source your static plugins file.
 source ${zsh_plugins}.zsh
 
-
-if [[ -d "/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d" ]]; then
-  for file in $(find -L "/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d" -type f -name "*.sh" | sort); do
-    source "$file"
-  done
-fi

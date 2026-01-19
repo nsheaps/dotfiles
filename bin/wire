@@ -43,6 +43,7 @@ create_symlink() {
 echo ""
 echo "Creating directory symlinks..."
 
+# TODO change create `~/.dotfiles` and checkout this repo there. If being run from a checkout, move the checkout there
 create_symlink "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
 create_symlink "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
 create_symlink "$DOTFILES_DIR/_home/startup.d" "$HOME_DIR/.startup.d"
