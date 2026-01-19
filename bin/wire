@@ -194,19 +194,22 @@ copy_config_file() {
         break
         ;;
       k|K)
-        # Manual merge: let user combine both versions
-        local home_ref="${src}.HOME-reference"
-        cp "$dest" "$home_ref"
+        # Interactive merge using sdiff
+        local merged_tmp
+        merged_tmp=$(mktemp)
         echo ""
-        echo "  HOME version saved to: $home_ref"
-        echo "  Opening repo version in editor. Merge in changes from HOME as needed."
-        echo "  Press Enter to open editor..."
-        read -r
-        ${EDITOR:-vim} "$src"
-        rm -f "$home_ref"
-        git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
-        echo "  Merged and committed"
+        echo "  Interactive merge: 'l' = repo (left), 'r' = HOME (right), 'e' = edit"
+        echo ""
+        if sdiff -o "$merged_tmp" "$src" "$dest"; then
+          cp "$merged_tmp" "$src"
+          rm -f "$merged_tmp"
+          git -C "$DOTFILES_DIR" add "$src"
+          git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
+          echo "  Merged and committed"
+        else
+          rm -f "$merged_tmp"
+          echo "  Merge cancelled"
+        fi
         break
         ;;
       s|S)
