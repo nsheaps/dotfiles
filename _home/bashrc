@@ -5,6 +5,3 @@
 # User-customizable section
 # Add your personal customizations here
 
-### managed by automation ###
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
-### end managed by automation ###
