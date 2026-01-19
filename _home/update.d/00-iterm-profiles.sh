@@ -14,7 +14,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 # Navigate from _home/update.d to repo root
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-ITERM_PROFILES_SRC="$DOTFILES_DIR/iterm2/DynamicProfiles"
+ITERM_PROFILES_SRC="$DOTFILES_DIR/_home/.config/iterm2/DynamicProfiles"
 ITERM_PROFILES_DST="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
 
 # Marker file to identify dotfiles-managed profiles

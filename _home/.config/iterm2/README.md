@@ -5,10 +5,9 @@ This directory contains iTerm2 profile configurations that are version-controlle
 ## Structure
 
 ```
-iterm2/
+_home/.config/iterm2/
 ├── DynamicProfiles/
 │   └── custom-profiles.json    # Custom profile definitions
-├── setup.sh                     # Installation script
 └── README.md                    # This file
 ```
 
@@ -30,23 +29,13 @@ iterm2/
 
 ## Installation
 
-Run the setup script to install profiles:
+Profiles are automatically installed by `_home/update.d/00-iterm-profiles.sh` which runs:
+- On login (via `bin/run-updates.sh` as a Mac login item)
+- Manually via `bin/run-updates.sh`
 
-```bash
-cd ~/src/nsheaps/dotfiles/iterm2
-./setup.sh
-```
-
-Or manually:
-
-```bash
-# Create DynamicProfiles directory if it doesn't exist
-mkdir -p ~/Library/Application\ Support/iTerm2/DynamicProfiles/
-
-# Copy profile configuration
-cp DynamicProfiles/custom-profiles.json \
-   ~/Library/Application\ Support/iTerm2/DynamicProfiles/
-```
+The script:
+1. Cleans up any previous dotfiles-managed profiles
+2. Copies profiles with a `dotfiles-managed-` prefix to `~/Library/Application Support/iTerm2/DynamicProfiles/`
 
 iTerm2 will automatically detect and load the profiles.
 
