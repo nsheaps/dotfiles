@@ -13,7 +13,7 @@ set -euo pipefail
 # Dynamically determine dotfiles directory from script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-TEMPLATES_DIR="$SCRIPT_DIR/templates"
+TEMPLATES_DIR="$DOTFILES_DIR/templates"
 
 HOME_DIR="$HOME"
 

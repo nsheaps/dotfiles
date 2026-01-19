@@ -6,4 +6,3 @@
       - If it points to the wrong place, exit with error
     - Sync files from this repo (the checkout location, not necessarily where the project is checked out to) into that folder by creating any missing symlinks to files in this repository. If a file exists that was symlinked prior but no longer exists, remove the symlink (only if it points to the right place)
 - setup worktree-switcher (see https://github.com/nsheaps/.ai/pull/104)
-- gitdoc setup that supports vscode workspaces

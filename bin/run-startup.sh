@@ -8,4 +8,4 @@ DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOG_DIR="$DOTFILES_DIR/log"
 
 mkdir -p "$LOG_DIR"
-exec "$SCRIPT_DIR/source-scripts.sh" "${STARTUP_D:-$HOME/.startup.d}" 2>&1 | tee -a "$LOG_DIR/startup.log"
+exec "$SCRIPT_DIR/lib/source-scripts.sh" "${STARTUP_D:-$HOME/.startup.d}" 2>&1 | tee -a "$LOG_DIR/startup.log"

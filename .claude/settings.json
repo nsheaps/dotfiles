@@ -4,68 +4,9 @@
   },
   "includeCoAuthoredBy": false,
   "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/check-questions.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/reminder.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit(.ai/scratch/questions.md)|Write(.ai/scratch/questions.md)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/update-hash.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/check-questions.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/check-questions.sh || true"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/PostToolUse/reminder.sh || true"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rm .repo/hashes.yaml; rm .repo/last-reminder-time"
-          }
-        ]
-      }
-    ]
   },
   "permissions": {
     "allow": [
-      "Write(.ai/scratch/**)"
     ]
   },
   "enabledPlugins": {
