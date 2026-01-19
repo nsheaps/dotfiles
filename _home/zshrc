@@ -16,9 +16,10 @@ setopt interactivecomments
 
 # Lazy-load (autoload) Zsh function files from a directory.
 ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
-fpath=($ZFUNCDIR $fpath)
-autoload -Uz $ZFUNCDIR/*(.:t)
-
+if [[ -d "$ZFUNCDIR" ]]; then
+  fpath=($ZFUNCDIR $fpath)
+  autoload -Uz $ZFUNCDIR/*(.:t) 2>/dev/null
+fi
 
 # Antidote plugin management
 # Plugins are defined in _home/zsh_plugins.txt, compiled to ~/.zsh_plugins.zsh
