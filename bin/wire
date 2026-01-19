@@ -173,7 +173,7 @@ copy_config_file() {
   echo "  Options:"
   echo "    [r] Overwrite HOME with repo version"
   echo "    [h] Overwrite repo with HOME version (and commit)"
-  echo "    [k] Keep both: manually merge HOME into repo (opens editor)"
+  echo "    [k] Keep both: 3-way merge with empty base (auto-merges, conflicts if needed)"
   echo "    [s] Skip (keep both as-is, no sync)"
   echo "    [d] Show full diff"
   echo ""
@@ -205,8 +205,15 @@ copy_config_file() {
         else
           mv "${src}.merged" "$src"
           rm -f "$base_tmp"
-          echo "  Merge has conflicts - opening editor to resolve..."
-          ${EDITOR:-vim} "$src"
+          echo "  Merge has conflicts that need manual resolution."
+          read -rp "  Open editor to resolve? [Y/n]: " open_editor
+          if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
+            if command -v code &>/dev/null; then
+              code --wait "$src"
+            else
+              ${EDITOR:-vim} "$src"
+            fi
+          fi
         fi
         git -C "$DOTFILES_DIR" add "$src"
         git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
