@@ -194,22 +194,23 @@ copy_config_file() {
         break
         ;;
       k|K)
-        # Interactive merge using sdiff
-        local merged_tmp
-        merged_tmp=$(mktemp)
+        # 3-way merge using git merge-file with empty base
+        local base_tmp
+        base_tmp=$(mktemp)
         echo ""
-        echo "  Interactive merge: 'l' = repo (left), 'r' = HOME (right), 'e' = edit"
-        echo ""
-        if sdiff -o "$merged_tmp" "$src" "$dest"; then
-          cp "$merged_tmp" "$src"
-          rm -f "$merged_tmp"
-          git -C "$DOTFILES_DIR" add "$src"
-          git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
-          echo "  Merged and committed"
+        if git merge-file -p "$src" "$base_tmp" "$dest" > "${src}.merged"; then
+          mv "${src}.merged" "$src"
+          rm -f "$base_tmp"
+          echo "  Merged successfully (no conflicts)"
         else
-          rm -f "$merged_tmp"
-          echo "  Merge cancelled"
+          mv "${src}.merged" "$src"
+          rm -f "$base_tmp"
+          echo "  Merge has conflicts - opening editor to resolve..."
+          ${EDITOR:-vim} "$src"
         fi
+        git -C "$DOTFILES_DIR" add "$src"
+        git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
+        echo "  Merged and committed"
         break
         ;;
       s|S)
