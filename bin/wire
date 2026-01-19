@@ -173,12 +173,13 @@ copy_config_file() {
   echo "  Options:"
   echo "    [r] Overwrite HOME with repo version"
   echo "    [h] Overwrite repo with HOME version (and commit)"
-  echo "    [s] Skip (keep both as-is)"
+  echo "    [k] Keep both: manually merge HOME into repo (opens editor)"
+  echo "    [s] Skip (keep both as-is, no sync)"
   echo "    [d] Show full diff"
   echo ""
 
   while true; do
-    read -rp "  Choice [r/h/s/d]: " choice
+    read -rp "  Choice [r/h/k/s/d]: " choice
     case "$choice" in
       r|R)
         cp "$src" "$dest"
@@ -190,6 +191,22 @@ copy_config_file() {
         git -C "$DOTFILES_DIR" add "$src"
         git -C "$DOTFILES_DIR" commit -m "sync: update _home/.config/$rel_path from HOME"
         echo "  Updated repo with ~/.config/$rel_path and committed"
+        break
+        ;;
+      k|K)
+        # Manual merge: let user combine both versions
+        local home_ref="${src}.HOME-reference"
+        cp "$dest" "$home_ref"
+        echo ""
+        echo "  HOME version saved to: $home_ref"
+        echo "  Opening repo version in editor. Merge in changes from HOME as needed."
+        echo "  Press Enter to open editor..."
+        read -r
+        ${EDITOR:-vim} "$src"
+        rm -f "$home_ref"
+        git -C "$DOTFILES_DIR" add "$src"
+        git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
+        echo "  Merged and committed"
         break
         ;;
       s|S)
@@ -206,7 +223,7 @@ copy_config_file() {
         echo ""
         ;;
       *)
-        echo "  Invalid choice. Please enter r, h, s, or d."
+        echo "  Invalid choice. Please enter r, h, k, s, or d."
         ;;
     esac
   done
