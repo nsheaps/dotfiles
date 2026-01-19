@@ -165,5 +165,5 @@ Script for Mac login item usage:
 
 ### update.d/00-iterm-profiles.sh
 - Cleans up any previous iTerm Dynamic Profiles from dotfiles
-- Copies current profiles from iterm2/DynamicProfiles/ to ~/Library/Application Support/iTerm2/DynamicProfiles/
+- Copies current profiles from _home/.config/iterm2/DynamicProfiles/ to ~/Library/Application Support/iTerm2/DynamicProfiles/
 - Makes iTerm configuration dynamic based on repo state

@@ -123,3 +123,6 @@ Tasks on hold until after review:
 - [x] Create update.d/00-iterm-profiles.sh for iTerm configuration setup/cleanup
 - [x] Refactor bin/dotfiles templates to use new source-scripts.sh pattern
 - [x] Test the implementation
+- [x] Move iterm2/ to _home/.config/iterm2/ for consistent _home syncing
+- [x] Remove old setup.sh (replaced by update.d system)
+- [x] Update README and references to new location
