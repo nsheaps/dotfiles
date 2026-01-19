@@ -14,6 +14,12 @@
 #   1. Runs all *.sh scripts in ~/.update.d/ (or $UPDATE_D if set)
 #   2. Logs output to ~/.local/log/dotfiles-update.log
 
+exit 1
+# Script untested.
+# I think update.d and startup.d should be different
+# if we update at startup and it's broken, we might break all shells
+# updating should be done similar to how oh-my-zsh prompts every so often
+
 set -euo pipefail
 
 # Configuration
