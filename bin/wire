@@ -167,27 +167,29 @@ copy_config_file() {
   echo "  --- End diff ---"
   echo ""
   echo "  Options:"
-  echo "    [o] Overwrite HOME with repo version"
-  echo "    [s] Sync repo with HOME version (update repo)"
-  echo "    [k] Keep HOME version (skip)"
+  echo "    [r] Overwrite HOME with repo version"
+  echo "    [h] Overwrite repo with HOME version (and commit)"
+  echo "    [s] Skip (keep both as-is)"
   echo "    [d] Show full diff"
   echo ""
 
   while true; do
-    read -rp "  Choice [o/s/k/d]: " choice
+    read -rp "  Choice [r/h/s/d]: " choice
     case "$choice" in
-      o|O)
+      r|R)
         cp "$src" "$dest"
         echo "  Overwrote ~/.config/$rel_path with repo version"
         break
         ;;
-      s|S)
+      h|H)
         cp "$dest" "$src"
-        echo "  Synced repo with ~/.config/$rel_path"
+        git -C "$DOTFILES_DIR" add "$src"
+        git -C "$DOTFILES_DIR" commit -m "sync: update _home/.config/$rel_path from HOME"
+        echo "  Updated repo with ~/.config/$rel_path and committed"
         break
         ;;
-      k|K)
-        echo "  Kept existing ~/.config/$rel_path"
+      s|S)
+        echo "  Skipped ~/.config/$rel_path"
         break
         ;;
       d|D)
@@ -196,7 +198,7 @@ copy_config_file() {
         echo ""
         ;;
       *)
-        echo "  Invalid choice. Please enter o, s, k, or d."
+        echo "  Invalid choice. Please enter r, h, s, or d."
         ;;
     esac
   done
