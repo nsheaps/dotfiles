@@ -106,7 +106,12 @@ Recent updates:
   - [docs: update README for new modular architecture](https://github.com/nsheaps/dotfiles/commit/f139c91)
 
 Tasks on hold until after review:
-- [ ] Remove exit 1 from bin/wire and run it to activate configuration
+- [x] Refactor bin/wire to use symlinks + managed sections (not file copying)
+  - Created bin/templates/zsh/{rc,env,profile}.zsh
+  - Created bin/templates/bash/{rc,profile}.bash
+  - Wire now injects managed sections with `source "$DOTFILES_DIR/_home/..."`
+  - Wire creates symlinks for profile.d, interactive.d, startup.d, update.d
+- [x] Run bin/wire to activate configuration
 - [ ] Test shell initialization in new terminal
 - [ ] Clean up unused files (_home/.zshrc.d directory)
 - [ ] Remove shellrc.d sourcing logic from ~/.zshrc (dead code cleanup)

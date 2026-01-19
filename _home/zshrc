@@ -22,7 +22,6 @@ ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
 fpath=($ZFUNCDIR $fpath)
 autoload -Uz $ZFUNCDIR/*(.:t)
 
-# Create an amazing Zsh config using antidote plugins.
 
 # Set the root name of the plugins files (.txt and .zsh) antidote will use.
 zsh_plugins="${HOME}/.zsh_plugins"
