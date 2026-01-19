@@ -114,7 +114,7 @@ Tasks on hold until after review:
 - [ ] Design improvements for hook reminders to prevent duplicate firing (requires Plan agent + claude-code-guide agent to research Claude Code hooks documentation and architect a better design)
 - [ ] Note: Use AskUserQuestion when you need to block and wait for user input - it's preferred over questions.md for blocking questions. questions.md is for async communication that doesn't block progress.
 
-## Dynamic iTerm Config and update.d Scripts
+## Dynamic iTerm Config and update.d/startup.d Scripts
 
 - [x] Explore current iTerm configuration and directory structure
 - [x] Create bin/source-scripts.sh for DRY script sourcing from directories
@@ -126,3 +126,8 @@ Tasks on hold until after review:
 - [x] Move iterm2/ to _home/.config/iterm2/ for consistent _home syncing
 - [x] Remove old setup.sh (replaced by update.d system)
 - [x] Update README and references to new location
+- [x] Separate startup.d (safe, automatic) from update.d (prompted, manual)
+  - Created _home/startup.d/ for safe login scripts (iTerm profiles)
+  - Created bin/run-startup.sh for Mac login items
+  - Updated bin/run-updates.sh with oh-my-zsh style prompting
+  - update.d now reserved for potentially risky update scripts

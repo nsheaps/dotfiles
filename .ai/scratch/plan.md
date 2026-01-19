@@ -131,39 +131,49 @@ The `init` command behavior depends on which shell/file is sourcing it:
 - Should `.zshenv` also be managed?
 - How does the dotfiles init script detect whether it's being called from a login shell vs interactive shell?
 
-## Dynamic iTerm Config and update.d Scripts
+## Dynamic iTerm Config and startup.d/update.d Scripts
 
 ### Goal
-Create an `update.d/` directory of scripts that run on repo update and machine start. One script sets up iTerm configuration and cleans up previous configs. Also create reusable bin scripts to DRY up directory sourcing.
+Create separate directories for safe automatic scripts (startup.d) vs potentially risky prompted scripts (update.d). Also create reusable bin scripts to DRY up directory sourcing.
 
-### New Directory Structure
+### Directory Structure
 ```
 dotfiles/
 ├── bin/
 │   ├── dotfiles              # Existing - manages init/sync
-│   ├── source-scripts.sh     # NEW - source all *.sh from a directory
-│   └── run-updates.sh        # NEW - run all update.d scripts (login item)
+│   ├── source-scripts.sh     # DRY utility to source/execute *.sh from directories
+│   ├── run-startup.sh        # Mac login item - runs startup.d scripts automatically
+│   └── run-updates.sh        # Manual/prompted - runs update.d scripts with confirmation
 └── _home/
-    ├── profile.d/            # Existing - login shell scripts
-    ├── interactive.d/        # Existing - interactive shell scripts
-    └── update.d/             # NEW - scripts run on update/startup
-        └── 00-iterm-profiles.sh  # iTerm profile setup/cleanup
+    ├── .config/iterm2/       # iTerm2 profile source files
+    ├── profile.d/            # Login shell scripts
+    ├── interactive.d/        # Interactive shell scripts
+    ├── startup.d/            # Safe, idempotent scripts (run on every login)
+    │   └── 00-iterm-profiles.sh  # iTerm profile setup/cleanup
+    └── update.d/             # Risky scripts (prompted, like oh-my-zsh updates)
+        └── .gitkeep          # Reserved for future update scripts
 ```
 
 ### bin/source-scripts.sh
 Generic script to source all *.sh files from a directory:
 - Takes directory path as argument
 - Iterates through *.sh files in sorted order
-- Sources each file
-- Used by profile.d, interactive.d sourcing to DRY up code
+- `--output` mode for eval-based sourcing (profile.d/interactive.d)
+- Direct execution mode for startup.d/update.d
 
-### bin/run-updates.sh
-Script for Mac login item usage:
-- Sources all scripts from update.d/ directory
-- Can be added as a login item in Mac System Settings
-- Runs on each login to keep configuration fresh
+### bin/run-startup.sh (Mac Login Item)
+- Runs all scripts from ~/.startup.d/ automatically on login
+- Scripts must be safe, fast, and idempotent
+- Logs to ~/.local/log/dotfiles-startup.log
+- Add to: System Settings > General > Login Items
 
-### update.d/00-iterm-profiles.sh
-- Cleans up any previous iTerm Dynamic Profiles from dotfiles
-- Copies current profiles from _home/.config/iterm2/DynamicProfiles/ to ~/Library/Application Support/iTerm2/DynamicProfiles/
-- Makes iTerm configuration dynamic based on repo state
+### bin/run-updates.sh (Manual/Prompted)
+- Runs scripts from ~/.update.d/ with user confirmation
+- oh-my-zsh style: prompts every N days (default: 7)
+- Options: `--force` (skip prompt), `--check` (for shell prompts)
+- Logs to ~/.local/log/dotfiles-update.log
+
+### startup.d/00-iterm-profiles.sh
+- Cleans up previous dotfiles-managed iTerm profiles
+- Copies profiles from _home/.config/iterm2/DynamicProfiles/
+- Safe to run on every login (idempotent)
