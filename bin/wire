@@ -145,6 +145,22 @@ copy_config_file() {
     mkdir -p "$dest_dir"
   fi
 
+  # iTerm profiles should be symlinked (iTerm updates them directly)
+  if [[ "$rel_path" == iterm2/DynamicProfiles/* ]]; then
+    if [[ -L "$dest" ]]; then
+      # Already a symlink, check if correct
+      if [[ "$(readlink "$dest")" == "$src" ]]; then
+        echo "  Symlink OK: ~/.config/$rel_path"
+        return 0
+      fi
+    fi
+    # Remove existing file/symlink and create new symlink
+    rm -f "$dest"
+    ln -s "$src" "$dest"
+    echo "  Symlinked: ~/.config/$rel_path → repo"
+    return 0
+  fi
+
   # If destination doesn't exist, just copy
   if [[ ! -f "$dest" ]]; then
     cp "$src" "$dest"
