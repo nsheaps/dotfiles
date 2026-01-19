@@ -1,0 +1,5 @@
+# Managed by todo-sync plugin (plugins/todo-sync/scripts/init-gitignore.sh)
+# Ignore everything in this directory except this .gitignore
+*
+!.gitignore
+
