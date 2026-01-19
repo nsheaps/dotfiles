@@ -2,6 +2,8 @@
 bun = "latest"
 go = "latest"
 node = "lts"
+"npm:happy-coder" = "latest"
+pipx = "latest"
 python = "latest"
 
 [hooks]
