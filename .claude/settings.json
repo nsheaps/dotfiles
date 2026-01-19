@@ -65,10 +65,10 @@
     ]
   },
   "enabledPlugins": {
-    "todo-sync@nsheaps-claude-plugins": true
+    "todo-sync@nsheaps-ai-marketplace": true
   },
   "extraKnownMarketplaces": {
-    "nsheaps-claude-plugins": {
+    "nsheaps-ai-marketplace": {
       "source": {
         "source": "github",
         "repo": "nsheaps/.ai"
