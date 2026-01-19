@@ -5,14 +5,15 @@
 # 1. Cleaning up any previous dotfiles-managed profiles
 # 2. Copying current profiles from the dotfiles repo
 #
-# Run on: repo update, machine start (via run-updates.sh login item)
+# Run on: machine start (via bin/run-startup.sh as a Mac login item)
+# Safe to run on every login - idempotent and fast
 
 set -euo pipefail
 
 # Configuration
 # Resolve symlinks to get the real script location (handles symlinked parent directories)
 SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-# Navigate from _home/update.d to repo root
+# Navigate from _home/startup.d to repo root
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ITERM_PROFILES_SRC="$DOTFILES_DIR/_home/.config/iterm2/DynamicProfiles"
 ITERM_PROFILES_DST="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
