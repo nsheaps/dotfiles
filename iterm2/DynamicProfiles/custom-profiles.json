@@ -4,8 +4,8 @@
       "Name": "stainless",
       "Guid": "stainless-profile-001",
       "Background Color (Light)": {
-        "Red Component": 0.89,
-        "Green Component": 0.95,
+        "Red Component": 0.93,
+        "Green Component": 0.98,
         "Blue Component": 0.99
       },
       "Background Color (Dark)": {
@@ -28,7 +28,17 @@
       "Use Bright Bold": true,
       "Use Italic Font": false,
       "Transparency": 0,
-      "Blur": false
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.4,
+        "Green Component": 0.7,
+        "Blue Component": 1.0
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.3,
+        "Blue Component": 0.8
+      }
     },
     {
       "Name": "nsheaps",
@@ -58,7 +68,17 @@
       "Use Bright Bold": true,
       "Use Italic Font": false,
       "Transparency": 0,
-      "Blur": false
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.4,
+        "Green Component": 0.7,
+        "Blue Component": 1.0
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.3,
+        "Blue Component": 0.8
+      }
     }
   ]
 }
