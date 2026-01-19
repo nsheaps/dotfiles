@@ -2,6 +2,12 @@
 # sourced when an interactive shell is spawned. Use to customize the feel of
 # your terminal, but scripts run outside the terminal may not use this setup
 
+# Make sure dotfiles dir is set, or exit with error
+if [[ -z "${DOTFILES_DIR:-}" ]]; then
+  echo "Error: DOTFILES_DIR is not set. Cannot source zshrc." >&2
+  return 1
+fi
+
 # Enable comments in interactive shells (allows copy-pasting commands with comments)
 setopt interactivecomments
 
@@ -37,4 +43,17 @@ fi
 
 # Source the compiled plugins
 source "$zsh_plugins_compiled"
+
+
+# Source all profile.d scripts (environment setup)
+for script in "${DOTFILES_DIR}"/_home/profile.d/*.sh(N); do
+  source "$script"
+done
+
+# Source all interactive.d scripts (functions, aliases) - only for TTY
+if [[ -t 1 ]]; then
+  for script in "${DOTFILES_DIR}"/_home/interactive.d/*.sh(N); do
+    source "$script"
+  done
+fi
 
