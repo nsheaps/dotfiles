@@ -10,9 +10,9 @@
   - `interactive.d/`: Interactive shell scripts (symlinked to `~/.interactive.d`)
   - `startup.d/`: Safe, idempotent scripts for Mac login (symlinked to `~/.startup.d`)
   - `update.d/`: Potentially risky update scripts (symlinked to `~/.update.d`)
-  - `.config/`: XDG-compliant configuration directory for tools like `gh`, `karabiner`, and `mise`
+  - `.config/`: XDG-compliant configuration directory (copied to `~/.config` by wire)
 - `bin/`: Executable scripts
-  - `wire`: Deployment script that creates symlinks and injects managed sections
+  - `wire`: Deployment script that creates symlinks, injects managed sections, and copies .config
   - `run-startup.sh`: Runs startup.d scripts (for Mac login items)
   - `run-updates.sh`: Runs update.d scripts (manual)
   - `lib/source-scripts.sh`: Helper to execute scripts from a directory
@@ -20,11 +20,12 @@
   - `zsh/rc.zsh`, `zsh/profile.zsh`, `zsh/env.zsh`
   - `bash/rc.bash`, `bash/profile.bash`
 - `rc.d/`: Shell scripts sourced by direnv when entering the directory
+  - Creates convenience symlinks in repo root pointing to `$HOME` files
 - `.envrc`: Direnv configuration that sources all scripts in `rc.d/`
 
 ## Wiring System (bin/wire)
 
-The `bin/wire` script sets up the shell environment:
+The `bin/wire` script deploys dotfiles from repo to `$HOME`:
 
 1. **Creates symlinks** for script directories:
    - `~/.dotfiles` → this repo
@@ -37,6 +38,11 @@ The `bin/wire` script sets up the shell environment:
    - `~/.zshrc`, `~/.zshenv`, `~/.zprofile` (zsh)
    - `~/.bashrc`, `~/.bash_profile` (bash)
 
+3. **Copies .config files** from `_home/.config` to `~/.config`:
+   - If file doesn't exist: copies it
+   - If file matches: skips
+   - If file differs: prompts user to overwrite, sync back to repo, or keep
+
 The managed sections look like:
 ```bash
 # BEGIN: Managed by dotfiles wire
@@ -44,6 +50,19 @@ export DOTFILES_DIR="/path/to/dotfiles"
 source "$DOTFILES_DIR/_home/zshrc"
 # END: Managed by dotfiles wire
 ```
+
+## Convenience Symlinks (rc.d/00_setup_symlinks.sh)
+
+When entering the dotfiles directory (via direnv), convenience symlinks are created in the repo root pointing to actual files in `$HOME`. This allows editing deployed files directly:
+
+- `zshrc` → `~/.zshrc`
+- `zshenv` → `~/.zshenv`
+- `zprofile` → `~/.zprofile`
+- `bashrc` → `~/.bashrc`
+- `bash_profile` → `~/.bash_profile`
+- `mise_config.toml` → `~/.config/mise/config.toml`
+
+These symlinks are gitignored and machine-specific.
 
 ## Zsh Configuration Flow
 

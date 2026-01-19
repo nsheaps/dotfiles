@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Wiring script to create symlinks and inject managed sections into shell RC files
+# Wiring script to deploy dotfiles from repo to $HOME
 #
 # This script:
 # 1. Creates symlinks from ~/.<dir> to _home/<dir> for script directories
-# 2. Injects managed sections into shell RC files using sed
+# 2. Injects managed sections into shell RC files
+# 3. Copies _home/.config files to ~/.config with conflict resolution
 #
 # The managed sections contain a single source command pointing to the
 # corresponding file in _home/ (without the dot prefix).
@@ -120,6 +121,96 @@ inject_managed_section "$HOME_DIR/.zprofile" "$TEMPLATES_DIR/zsh/profile.zsh"
 # Bash files
 inject_managed_section "$HOME_DIR/.bashrc" "$TEMPLATES_DIR/bash/rc.bash"
 inject_managed_section "$HOME_DIR/.bash_profile" "$TEMPLATES_DIR/bash/profile.bash"
+
+# =============================================================================
+# .config Directory Copying
+# =============================================================================
+
+# Copy a single file from repo to HOME with conflict resolution
+# Usage: copy_config_file <relative_path>
+copy_config_file() {
+  local rel_path="$1"
+  local src="$DOTFILES_DIR/_home/.config/$rel_path"
+  local dest="$HOME_DIR/.config/$rel_path"
+  local dest_dir
+  dest_dir="$(dirname "$dest")"
+
+  # Skip README files - they're for documentation only
+  if [[ "$(basename "$rel_path")" == "README.md" ]]; then
+    return 0
+  fi
+
+  # Create destination directory if needed
+  if [[ ! -d "$dest_dir" ]]; then
+    mkdir -p "$dest_dir"
+  fi
+
+  # If destination doesn't exist, just copy
+  if [[ ! -f "$dest" ]]; then
+    cp "$src" "$dest"
+    echo "  Created: ~/.config/$rel_path"
+    return 0
+  fi
+
+  # If files are identical, skip
+  if diff -q "$src" "$dest" > /dev/null 2>&1; then
+    echo "  Unchanged: ~/.config/$rel_path"
+    return 0
+  fi
+
+  # Files differ - prompt user
+  echo ""
+  echo "  CONFLICT: ~/.config/$rel_path differs from repo version"
+  echo ""
+  echo "  --- Diff (repo vs home) ---"
+  diff -u "$src" "$dest" | head -50 || true
+  echo "  --- End diff ---"
+  echo ""
+  echo "  Options:"
+  echo "    [o] Overwrite HOME with repo version"
+  echo "    [s] Sync repo with HOME version (update repo)"
+  echo "    [k] Keep HOME version (skip)"
+  echo "    [d] Show full diff"
+  echo ""
+
+  while true; do
+    read -rp "  Choice [o/s/k/d]: " choice
+    case "$choice" in
+      o|O)
+        cp "$src" "$dest"
+        echo "  Overwrote ~/.config/$rel_path with repo version"
+        break
+        ;;
+      s|S)
+        cp "$dest" "$src"
+        echo "  Synced repo with ~/.config/$rel_path"
+        break
+        ;;
+      k|K)
+        echo "  Kept existing ~/.config/$rel_path"
+        break
+        ;;
+      d|D)
+        echo ""
+        diff -u "$src" "$dest" || true
+        echo ""
+        ;;
+      *)
+        echo "  Invalid choice. Please enter o, s, k, or d."
+        ;;
+    esac
+  done
+}
+
+echo ""
+echo "Copying .config files..."
+
+# Find all files in _home/.config and process them
+while IFS= read -r -d '' file; do
+  # Get relative path from _home/.config/
+  rel_path="${file#$DOTFILES_DIR/_home/.config/}"
+  copy_config_file "$rel_path"
+done < <(find "$DOTFILES_DIR/_home/.config" -type f -print0)
 
 # =============================================================================
 # Summary
