@@ -20,20 +20,20 @@ fpath=($ZFUNCDIR $fpath)
 autoload -Uz $ZFUNCDIR/*(.:t)
 
 
-# Set the root name of the plugins files (.txt and .zsh) antidote will use.
-zsh_plugins="${HOME}/.zsh_plugins"
-# Ensure the .zsh_plugins.txt file exists so you can add plugins.
-[[ -f ${zsh_plugins}.txt ]] || touch ${zsh_plugins}.txt
+# Antidote plugin management
+# Plugins are defined in _home/zsh_plugins.txt, compiled to ~/.zsh_plugins.zsh
+zsh_plugins_src="${DOTFILES_DIR}/_home/zsh_plugins.txt"
+zsh_plugins_compiled="${HOME}/.zsh_plugins.zsh"
 
-# Lazy-load antidote from its functions directory.
+# Lazy-load antidote from its functions directory
 fpath=(/opt/homebrew/opt/antidote/share/antidote/functions $fpath)
 autoload -Uz antidote
 
-# Generate a new static file whenever .zsh_plugins.txt is updated.
-if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
-  antidote bundle <${zsh_plugins}.txt >|${zsh_plugins}.zsh
+# Generate compiled plugins file when source changes
+if [[ ! -f "$zsh_plugins_compiled" ]] || [[ "$zsh_plugins_src" -nt "$zsh_plugins_compiled" ]]; then
+  antidote bundle <"$zsh_plugins_src" >"$zsh_plugins_compiled"
 fi
 
-# Source your static plugins file.
-source ${zsh_plugins}.zsh
+# Source the compiled plugins
+source "$zsh_plugins_compiled"
 
