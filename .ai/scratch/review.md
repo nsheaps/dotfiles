@@ -4,107 +4,172 @@
 **Merge Base:** `e485be96936b4f5cbe093c78609316f40733f44c`
 **Review Date:** 2026-01-19
 
+---
+
 ## Implementation Summary
 
-This branch introduces a significant architectural refactoring of the dotfiles system, moving from:
-- An `eval`-based init script approach (`bin/dotfiles init`)
-- To a managed-sections approach with `bin/wire` that injects source commands into RC files
+This branch refactors the dotfiles system from an eval-based initialization approach to a managed-sections architecture using `bin/wire`. The new system:
 
-The new system creates symlinks for script directories (`profile.d`, `interactive.d`, `startup.d`, `update.d`) and injects managed sections into shell RC files that source canonical files from the repository.
+1. Creates symlinks for script directories (`profile.d`, `interactive.d`, `startup.d`, `update.d`)
+2. Injects managed sections into shell RC files that source canonical files from `_home/`
+3. Consolidates Claude CLI functions into a single `interactive.d/claude.sh` file
+4. Adds iTerm2 dynamic profile management with automatic switching
+5. Removes old hook scripts that are no longer needed
 
 ---
 
 ## Critical Findings
 
-### 1. Missing ~/.dotfiles Symlink
+### 1. [ADDRESSED] Bash RC Files No Longer Reference Deleted Script
 
-**Location:** `bin/wire:47`
-**Issue:** The wire script creates `~/.dotfiles` symlink (line 47), but verification shows it does not exist in the deployed state.
+**Previous Status:** `_home/bashrc` and `_home/bash_profile` referenced deleted `bin/dotfiles init`
+**Current Status:** Files now contain minimal shell configuration - the old eval reference is gone.
 
-```bash
-$ ls -la ~/.dotfiles
-# No such file or directory
+**Verification:**
+- `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/bashrc` - Now contains only user-customizable section placeholder
+- `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/bash_profile` - Sources Homebrew correctly
+
+**Result:** FIXED
+
+### 2. [ADDRESSED] Missing ~/.dotfiles Symlink
+
+**Previous Status:** `~/.dotfiles` symlink was missing
+**Current Status:** Symlink exists and points correctly
+
+**Verification:**
+```
+~/.dotfiles -> /Users/nathan.heaps/src/nsheaps/dotfiles
 ```
 
-The symlink should point to `/Users/nathan.heaps/src/nsheaps/dotfiles` but is missing. This is a **deployment state issue** - either `bin/wire` was not run, or the command failed silently.
+**Result:** FIXED
 
-**Impact:** Any scripts or documentation referencing `~/.dotfiles` will fail.
+### 3. [ADDRESSED] Hardcoded Homebrew Path for Antidote
 
-### 2. Bash RC Files Reference Deleted Script
-
-**Location:** `_home/bashrc:9`, `_home/bash_profile:13`
-**Issue:** Both files contain:
-```bash
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
+**Previous Status:** Hardcoded `/opt/homebrew/opt/antidote/share/antidote/functions`
+**Current Status:** Now uses dynamic detection:
+```zsh
+if (( $+commands[brew] )); then
+  _antidote_dir="$(brew --prefix antidote 2>/dev/null)/share/antidote"
+  if [[ -d "$_antidote_dir/functions" ]]; then
+    fpath=("$_antidote_dir/functions" $fpath)
+    autoload -Uz antidote
+  fi
+  unset _antidote_dir
+fi
 ```
 
-But `bin/dotfiles` has been **deleted** in this branch (shown in git diff as `-63 lines`). The bash templates source files correctly, but the canonical bash files in `_home/` still reference the old system.
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:36-43`
 
-**Impact:** Bash shells will error when sourcing these files because `bin/dotfiles` no longer exists.
+**Result:** FIXED - Works on both Apple Silicon and Intel Macs
 
-### 3. Inconsistent Documentation References
+### 4. [NEW] Bash Sources Zsh File - Causes Errors
 
-**Location:** `README.md:100-101`, `README.md:116-118`
-**Issue:** The README still documents the old `eval "$(dotfiles init)"` pattern:
+**Location:** `~/.bashrc:2`
+**Issue:** The deployed `~/.bashrc` contains:
 ```bash
-# In ~/.zshrc, ~/.zprofile, etc.:
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
+#!/usr/bin/env bash
+\. "$HOME/.zshrc"
 ```
 
-But the actual system now uses managed sections with direct source commands. The README needs updating to reflect the new `bin/wire` approach.
+This sources `.zshrc` from Bash, which causes errors because `.zshrc` uses zsh-specific syntax:
+- `setopt interactivecomments` - Zsh builtin, not available in Bash
+- `*(.:t)` glob qualifiers - Zsh-only syntax
 
-### 4. Antidote Plugin Source Missing from HOME
-
-**Location:** `_home/zshrc:32-33`
-**Issue:** The zshrc references `${DOTFILES_DIR}/_home/zsh_plugins.txt` as the source, but there is no `~/.zsh_plugins.txt` file:
-
-```bash
-$ ls ~/.zsh_plugins.txt
-# No such file or directory (only ~/.zsh_plugins.zsh exists)
+**Verification Output:**
+```
+/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc: line 12: setopt: command not found
+/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc: line 27: syntax error near unexpected token `('
 ```
 
-This works because the code reads from `DOTFILES_DIR` directly, but the `.claude/rules/architecture.md` documentation incorrectly states plugins should be in `~/.zsh_plugins.txt`.
+**Impact:** Bash shells will see errors on startup (though the managed section still loads correctly after)
+
+**Recommendation:** Remove the `. "$HOME/.zshrc"` line from `~/.bashrc` since the managed section already handles loading the correct configuration.
+
+### 5. [NEW] Mise Config Drift Between Repo and HOME
+
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/.config/mise/config.toml` vs `~/.config/mise/config.toml`
+
+**Repository Version:**
+```toml
+[tools]
+bun = "latest"
+go = "latest"
+node = "lts"
+python = "latest"
+
+[hooks]
+preinstall = "echo 'I am about to install tools'"
+postinstall = "echo 'I just installed tools'"
+
+[settings]
+verbose = true
+jobs = 4
+```
+
+**HOME Version:**
+```toml
+[tools]
+bun = "latest"
+go = "latest"
+node = "lts"
+"npm:happy-coder" = "latest"
+pipx = "latest"
+python = "latest"
+```
+
+**Issue:** The symlink in repo root (`mise_config.toml -> ~/.config/mise/config.toml`) means HOME is the source of truth, but the `_home/.config/mise/config.toml` file in the repo is NOT symlinked - they are separate files.
+
+**Impact:** Changes in HOME are not tracked; repo copy is outdated and missing `npm:happy-coder` and `pipx`.
+
+**Recommendation:** Either:
+1. Remove `_home/.config/mise/config.toml` from tracking and use only the symlink, OR
+2. Change `bin/wire` to symlink `.config/mise/` to track the repo version
+
+### 6. [NEW] iTerm README Documentation Error
+
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/.config/iterm2/README.md:32`
+
+**Issue:** States profiles are installed by `_home/update.d/00-iterm-profiles.sh` but the actual script is at `_home/startup.d/00-iterm-profiles.sh`.
+
+**Recommendation:** Update line 32 to reference the correct path.
 
 ---
 
 ## Opportunities for Improvement
 
-### 1. Simplify source-scripts.sh --output Mode
+### 1. Zfunctions Autoload Conditional Works Correctly
 
-**Location:** `bin/source-scripts.sh:66-78`
-**Issue:** The `--output` mode generates shell code for eval, but this mode is not used anywhere in the codebase. The zshrc sources scripts directly with a simple for loop.
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:24-28`
+**Status:** The conditional directory check prevents errors when `~/.zfunctions` doesn't exist. Well implemented.
 
-**Recommendation:** Remove the `--output` mode unless there's a planned use case. It adds complexity without current utility.
+### 2. Interactive.d TTY Check Works as Designed
 
-### 2. Remove Duplicate Claude CLI Functions
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:60-64`
 
-**Location:** `_home/interactive.d/`
-**Issue:** Multiple files define similar Claude-related functions:
-- `claude-shorthands.sh` - defines `claude()`, `ccresume()`, `cccontinue()`
-- `claude-cc-runclaude.sh`, `claude-cc-newsession.sh`, `claude-cc-resume.sh` - likely older implementations
+The `[[ -t 1 ]]` check ensures interactive.d scripts only run in true TTY sessions:
+- Functions like `open-iterm`, `claude`, `cc-tmp` are correctly available in interactive shells
+- They are correctly NOT loaded in non-interactive contexts (scripts, cron, etc.)
 
-**Recommendation:** Consolidate into a single file to avoid confusion and potential shadowing.
+**Verification:** Using `script -q /dev/null zsh -ic 'type open-iterm'` confirms functions load in interactive mode.
 
-### 3. Hardcoded Homebrew Path
+### 3. rc.d/00_setup_symlinks.sh Simplified
 
-**Location:** `_home/zshrc:36`
-```zsh
-fpath=(/opt/homebrew/opt/antidote/share/antidote/functions $fpath)
+**Previous Status:** Had unused `link()` function
+**Current Status:** Now just outputs informational message:
+```bash
+echo "Dotfiles directory loaded. Run 'bin/wire' to set up symlinks."
 ```
 
-**Issue:** This assumes Apple Silicon Mac (`/opt/homebrew`). Intel Macs use `/usr/local`.
+**Assessment:** Simplified appropriately - no dead code.
 
-**Recommendation:** Use `$(brew --prefix)` or detect dynamically:
-```zsh
-fpath=("$(brew --prefix antidote)/share/antidote/functions" $fpath)
-```
+### 4. Claude Functions Consolidated
 
-### 4. rc.d/00_setup_symlinks.sh is Orphaned
+**Previous Status:** Multiple files for Claude-related functions
+**Current Status:** Single `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d/claude.sh` with all functions:
+- `claude`, `ccresume`, `cccontinue`, `claude-update` (shorthands)
+- `cc-runclaude`, `cc-newsession`, `cc-tmp`, `cc-resume`, `cc-resumesession` (workspace management)
 
-**Location:** `rc.d/00_setup_symlinks.sh`
-**Issue:** This file has a sophisticated `link()` function that's never called. The actual symlinking is done by `bin/wire`. The file only outputs a message: "Dotfiles directory initialized (no auto-linking enabled)"
-
-**Recommendation:** Either enable the link functionality or remove the dead code.
+**Assessment:** Good consolidation. Clear organization with section headers.
 
 ---
 
@@ -112,67 +177,82 @@ fpath=("$(brew --prefix antidote)/share/antidote/functions" $fpath)
 
 ### Update Flow
 **How updates are pulled:**
-1. User runs `git pull` in the dotfiles repo
-2. Changes to `_home/` files are immediately reflected via symlinks (for `.profile.d`, `.interactive.d`, etc.)
-3. Changes to RC file templates require re-running `bin/wire`
+1. `git pull` in the dotfiles repo
+2. Script directory changes (`profile.d/`, `interactive.d/`, etc.) are immediate via symlinks
+3. Template changes require re-running `bin/wire`
+4. New shell sessions pick up changes automatically
 
-**Assessment:** Partially automatic. Script directory changes propagate instantly, but template changes require manual action.
+**Assessment:** Efficient. The symlink approach means most changes are live immediately.
 
 ### Push Flow
 **How changes are committed:**
 1. Edit files in `_home/` directory
-2. Run `git add`, `git commit`, `git push`
+2. Standard git workflow: `git add`, `git commit`, `git push`
 3. No special tooling required
 
-**Assessment:** Simple and standard Git workflow. No issues.
+**Assessment:** Simple and standard.
 
 ### Discovery
 **How users know where to edit:**
-- Documentation points to `_home/` as the canonical location
-- Symlinks in repo root (`zshrc`, `zprofile`, `zshenv`) point to HOME versions
-- This creates ambiguity: editing the symlink edits HOME, not the repo
+- README clearly documents `_home/` as the canonical location
+- Documentation updated to reflect wire-based architecture
+- `.claude/rules/architecture.md` accurately describes the system
 
-**Assessment:** The bidirectional symlinks could cause confusion. Editing `~/src/nsheaps/dotfiles/zshrc` actually edits `~/.zshrc`, not `_home/zshrc`.
+**Potential Confusion:**
+- Repo-root symlinks (`zshrc`, `zprofile`, `zshenv`) point to HOME, not `_home/`
+- `mise_config.toml` symlink points to HOME, which diverges from pattern
+
+**Assessment:** Mostly clear, but the two different symlink patterns could confuse users.
 
 ### Modularity
 **Assessment of shareability:**
-- Script directories (`profile.d`, `interactive.d`) are well-modularized
-- Individual scripts can be shared or removed independently
-- However, paths are hardcoded to this specific user's directory structure
+- Script directories are well-modularized (one function/feature per file)
+- Each interactive.d script is self-contained
+- Path dependencies are minimal (uses `$DOTFILES_DIR` environment variable)
+- Could be shared to other machines with minimal adaptation
 
 ### Environment Impact
 **Effect on other repositories:**
-- The `.envrc` sources `rc.d/*.sh` when entering the dotfiles directory
-- This creates the `link()` function in the shell environment
-- No impact on other repositories since direnv only affects the dotfiles directory
+- `.envrc` only affects the dotfiles directory itself
+- No direnv pollution in other repos
+- Mise shims work globally via `.zprofile` activation
+- iTerm profile switching is based on directory path, non-invasive
+
+**Assessment:** Clean separation. No unexpected side effects.
 
 ---
 
 ## Architectural Concerns
 
-### 1. Two Competing Initialization Systems
+### 1. Two Symlink Patterns Coexist
 
-The branch contains remnants of two different systems:
-1. **Old system:** `bin/dotfiles init` with eval (documented in README, referenced in bash files)
-2. **New system:** `bin/wire` with managed sections and symlinks
+The repository has two different approaches to file management:
 
-This creates confusion and potential for errors. The old system references should be completely removed.
+| Pattern | Example | Source of Truth |
+|---------|---------|-----------------|
+| Managed Section | `~/.zshrc` sources `_home/zshrc` | Repo (`_home/`) |
+| Convenience Symlink | `./mise_config.toml` -> `~/.config/mise/config.toml` | HOME |
+| Convenience Symlink | `./zshrc` -> `~/.zshrc` | HOME (which sources repo) |
 
-### 2. Symlink Direction Inconsistency
+This creates cognitive overhead. Users might expect all canonical files to be in `_home/`, but mise config is tracked differently.
 
-- **Script directories:** `~/.profile.d` -> `_home/profile.d` (repo is source of truth)
-- **RC files:** `~/.zshrc` <- managed section sources `_home/zshrc` (HOME has the actual file)
-- **Repo convenience symlinks:** `./zshrc` -> `~/.zshrc` (points to HOME)
-- **mise config:** `./mise_config.toml` -> `~/.config/mise/config.toml` (HOME is source of truth)
+**Recommendation:** Document this explicitly in the README or consider unifying the approach.
 
-This inconsistency makes it unclear which location is canonical for different file types.
+### 2. iTerm Profile Installation Location
 
-### 3. Startup vs Update Separation
+The `00-iterm-profiles.sh` script is in `startup.d/` (run at login) which is appropriate. However:
+- It copies files rather than symlinking
+- Uses a marker prefix (`dotfiles-managed-`) for cleanup
 
-The separation between `startup.d` (idempotent, run at login) and `update.d` (risky, run manually) is well-designed but:
-- `update.d/` is empty except for a `.gitkeep` with documentation
-- No actual update scripts exist yet
-- The distinction is documented but not demonstrated
+This is a reasonable approach since iTerm may not handle symlinked dynamic profiles well.
+
+### 3. Claude Function Complexity
+
+The `_home/interactive.d/claude.sh` file is 167 lines with complex workspace management logic. While well-organized, it might benefit from:
+- Separating core shorthands from workspace management
+- Adding unit tests for the workspace functions
+
+This is a minor concern - the current implementation works.
 
 ---
 
@@ -183,39 +263,55 @@ The separation between `startup.d` (idempotent, run at login) and `update.d` (ri
 | ~/.zshrc | `_home/zshrc` | Contains managed section | OK |
 | ~/.zprofile | `_home/zprofile` | Contains managed section | OK |
 | ~/.zshenv | `_home/zshenv` | Contains managed section | OK |
-| ~/.bashrc | `_home/bashrc` (refs deleted script) | Contains managed section | **MISMATCH** |
-| ~/.bash_profile | `_home/bash_profile` (refs deleted script) | Contains managed section | **MISMATCH** |
-| ~/.dotfiles | Created by `bin/wire` | Missing | **MISSING** |
+| ~/.bashrc | `_home/bashrc` | Contains managed section + zsh source | **ISSUE** |
+| ~/.bash_profile | `_home/bash_profile` | Contains managed section | OK |
+| ~/.dotfiles | Created by `bin/wire` | Symlink to repo | OK |
 | ~/.profile.d | Symlink target | Symlink to repo | OK |
 | ~/.interactive.d | Symlink target | Symlink to repo | OK |
 | ~/.startup.d | Symlink target | Symlink to repo | OK |
 | ~/.update.d | Symlink target | Symlink to repo | OK |
-| ~/.zsh_plugins.txt | Not created | Not present | N/A (not needed) |
-| ~/.zsh_plugins.zsh | Generated by antidote | Present | OK |
+| ~/.config/mise/config.toml | Different content | Has extra tools | **DRIFT** |
+| ~/Library/.../DynamicProfiles/ | Source profiles | Copied with prefix | OK |
+
+---
+
+## Previous Critical Issues - Resolution Status
+
+| Issue | Previous Status | Current Status |
+|-------|----------------|----------------|
+| Missing ~/.dotfiles symlink | BROKEN | FIXED |
+| Bash files reference deleted bin/dotfiles | BROKEN | FIXED |
+| Hardcoded Homebrew path for antidote | BROKEN on Intel | FIXED |
+| Documentation references old eval pattern | OUTDATED | FIXED |
+| Orphaned link() function in rc.d/ | DEAD CODE | REMOVED |
+| Duplicate Claude functions | CONFUSING | CONSOLIDATED |
 
 ---
 
 ## Remaining Work
 
-Based on the stated goals of the refactoring:
+Based on the stated goals and current implementation:
 
-1. **Fix `_home/bashrc` and `_home/bash_profile`** - Remove references to deleted `bin/dotfiles`, align with new wire-based system
+1. **Remove stray zsh source from ~/.bashrc** - The line `\. "$HOME/.zshrc"` in the deployed `~/.bashrc` should be removed as it causes errors. This appears to be a pre-existing line that wasn't cleaned up during wiring.
 
-2. **Re-run `bin/wire`** - Deploy the missing `~/.dotfiles` symlink
+2. **Reconcile mise config drift** - Either sync `_home/.config/mise/config.toml` with HOME, or change the tracking approach to use symlinks consistently.
 
-3. **Update README.md** - Replace references to `eval "$(dotfiles init)"` with the new managed section pattern
-
-4. **Update `.claude/rules/architecture.md`** - Fix documentation about `~/.zsh_plugins.txt` (it's sourced from DOTFILES_DIR, not HOME)
-
-5. **Clean up rc.d/00_setup_symlinks.sh** - Either use the `link()` function or remove the dead code
+3. **Fix iTerm README path** - Update `_home/.config/iterm2/README.md:32` to reference `startup.d/` instead of `update.d/`.
 
 ---
 
 ## Summary
 
-The refactoring achieves its core goals of:
-- Moving to a cleaner managed-sections approach
-- Creating direct symlinks for script directories
-- Consolidating antidote configuration in `_home/`
+The refactoring has achieved its core goals:
+- Clean managed-sections approach replaces eval-based init
+- Symlinks for script directories work correctly
+- Antidote plugin loading is properly configured with dynamic Homebrew detection
+- Claude functions are consolidated
+- iTerm profile management is functional
 
-However, the branch has **incomplete cleanup** of the old system, resulting in broken bash shell initialization and documentation inconsistencies. These issues should be addressed before merging.
+**Critical issues from previous review are resolved.** The remaining issues are minor:
+- Bash/Zsh source conflict in deployed ~/.bashrc (user-specific cleanup needed)
+- Configuration drift in mise config
+- Minor documentation error in iTerm README
+
+The implementation is solid and maintainable. The architecture is clear and well-documented.

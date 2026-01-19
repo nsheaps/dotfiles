@@ -29,9 +29,9 @@ _home/.config/iterm2/
 
 ## Installation
 
-Profiles are automatically installed by `_home/update.d/00-iterm-profiles.sh` which runs:
-- On login (via `bin/run-updates.sh` as a Mac login item)
-- Manually via `bin/run-updates.sh`
+Profiles are automatically installed by `_home/startup.d/00-iterm-profiles.sh` which runs:
+- On login (via `bin/run-startup.sh` as a Mac login item)
+- Manually via `bin/run-startup.sh`
 
 The script:
 1. Cleans up any previous dotfiles-managed profiles
