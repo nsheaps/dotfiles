@@ -83,19 +83,23 @@ $MARKER_END"
 
   # Check if managed section already exists
   if grep -q "$MARKER_BEGIN" "$target" 2>/dev/null; then
-    # Replace existing managed section using sed
-    # Create a temp file for the replacement
-    local tmpfile
+    # Replace existing managed section
+    local tmpfile content_file
     tmpfile=$(mktemp)
+    content_file=$(mktemp)
 
-    # Use awk to replace the section (more reliable than sed for multiline)
-    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v content="$section_content" '
-      $0 ~ begin { skip=1; print content; next }
+    # Write content to temp file (awk can't handle newlines in -v)
+    echo "$section_content" > "$content_file"
+
+    # Use awk to replace the section, reading replacement from file
+    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v cfile="$content_file" '
+      $0 ~ begin { skip=1; while ((getline line < cfile) > 0) print line; close(cfile); next }
       $0 ~ end { skip=0; next }
       !skip { print }
     ' "$target" > "$tmpfile"
 
     mv "$tmpfile" "$target"
+    rm -f "$content_file"
     echo "  Updated managed section in $target"
   else
     # Append managed section to end of file
