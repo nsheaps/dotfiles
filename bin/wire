@@ -1,57 +1,129 @@
 #!/usr/bin/env bash
-# Wiring script to sync _home/ files to ~/ and create necessary symlinks
+# Wiring script to create symlinks and inject managed sections into shell RC files
+#
+# This script:
+# 1. Creates symlinks from ~/.<dir> to _home/<dir> for script directories
+# 2. Injects managed sections into shell RC files using sed
+#
+# The managed sections contain a single source command pointing to the
+# corresponding file in _home/ (without the dot prefix).
 
 set -euo pipefail
-
-# Safety: Remove this exit 1 when ready to run the script
-exit 1
 
 # Dynamically determine dotfiles directory from script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEMPLATES_DIR="$SCRIPT_DIR/templates"
 
 HOME_DIR="$HOME"
 
-echo "Wiring dotfiles from $DOTFILES_DIR/_home to $HOME_DIR..."
+# Managed section markers
+MARKER_BEGIN="# BEGIN: Managed by dotfiles wire"
+MARKER_END="# END: Managed by dotfiles wire"
 
-# Create symlinks for profile.d and interactive.d directories
-echo ""
-echo "Creating directory symlinks..."
-ln -sfn "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
-echo "  ~/.profile.d → $DOTFILES_DIR/_home/profile.d"
+echo "Wiring dotfiles from $DOTFILES_DIR to $HOME_DIR..."
+echo "Dotfiles directory: $DOTFILES_DIR"
 
-ln -sfn "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
-echo "  ~/.interactive.d → $DOTFILES_DIR/_home/interactive.d"
+# =============================================================================
+# Directory Symlinks
+# =============================================================================
 
-# Sync RC files from _home/ to ~/
-echo ""
-echo "Syncing RC files..."
-
-# Function to sync a file
-sync_file() {
+create_symlink() {
   local src="$1"
   local dest="$2"
 
-  if [[ -f "$src" ]]; then
-    cp "$src" "$dest"
-    echo "  Copied $src → $dest"
+  if [[ -d "$src" ]]; then
+    ln -sfn "$src" "$dest"
+    echo "  $dest → $src"
+  else
+    echo "  Warning: Source directory does not exist: $src"
   fi
 }
 
-# Sync zsh files (add dot prefix when copying to home)
-sync_file "$DOTFILES_DIR/_home/zshrc" "$HOME_DIR/.zshrc"
-sync_file "$DOTFILES_DIR/_home/zprofile" "$HOME_DIR/.zprofile"
-sync_file "$DOTFILES_DIR/_home/zshenv" "$HOME_DIR/.zshenv"
-sync_file "$DOTFILES_DIR/_home/zsh_plugins.txt" "$HOME_DIR/.zsh_plugins.txt"
+echo ""
+echo "Creating directory symlinks..."
 
-# Sync bash files (add dot prefix when copying to home)
-sync_file "$DOTFILES_DIR/_home/bashrc" "$HOME_DIR/.bashrc"
-sync_file "$DOTFILES_DIR/_home/bash_profile" "$HOME_DIR/.bash_profile"
+create_symlink "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
+create_symlink "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
+create_symlink "$DOTFILES_DIR/_home/startup.d" "$HOME_DIR/.startup.d"
+create_symlink "$DOTFILES_DIR/_home/update.d" "$HOME_DIR/.update.d"
+
+# =============================================================================
+# Managed Sections in Shell RC Files
+# =============================================================================
+
+# Inject or update a managed section in a file
+# Usage: inject_managed_section <target_file> <template_file>
+inject_managed_section() {
+  local target="$1"
+  local template="$2"
+
+  if [[ ! -f "$template" ]]; then
+    echo "  Warning: Template not found: $template"
+    return 1
+  fi
+
+  # Build the managed section content with DOTFILES_DIR expanded
+  local section_content
+  section_content="$MARKER_BEGIN
+export DOTFILES_DIR=\"$DOTFILES_DIR\"
+$(cat "$template")
+$MARKER_END"
+
+  # Create target file if it doesn't exist
+  if [[ ! -f "$target" ]]; then
+    echo "$section_content" > "$target"
+    echo "  Created $target with managed section"
+    return 0
+  fi
+
+  # Check if managed section already exists
+  if grep -q "$MARKER_BEGIN" "$target" 2>/dev/null; then
+    # Replace existing managed section using sed
+    # Create a temp file for the replacement
+    local tmpfile
+    tmpfile=$(mktemp)
+
+    # Use awk to replace the section (more reliable than sed for multiline)
+    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v content="$section_content" '
+      $0 ~ begin { skip=1; print content; next }
+      $0 ~ end { skip=0; next }
+      !skip { print }
+    ' "$target" > "$tmpfile"
+
+    mv "$tmpfile" "$target"
+    echo "  Updated managed section in $target"
+  else
+    # Append managed section to end of file
+    echo "" >> "$target"
+    echo "$section_content" >> "$target"
+    echo "  Appended managed section to $target"
+  fi
+}
 
 echo ""
-echo "✓ Wiring complete!"
+echo "Injecting managed sections into shell RC files..."
+
+# Zsh files
+inject_managed_section "$HOME_DIR/.zshrc" "$TEMPLATES_DIR/zsh/rc.zsh"
+inject_managed_section "$HOME_DIR/.zshenv" "$TEMPLATES_DIR/zsh/env.zsh"
+inject_managed_section "$HOME_DIR/.zprofile" "$TEMPLATES_DIR/zsh/profile.zsh"
+
+# Bash files
+inject_managed_section "$HOME_DIR/.bashrc" "$TEMPLATES_DIR/bash/rc.bash"
+inject_managed_section "$HOME_DIR/.bash_profile" "$TEMPLATES_DIR/bash/profile.bash"
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+echo ""
+echo "Wiring complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Review the changes in ~/"
-echo "  2. Test with: source ~/.zshrc (or open a new terminal)"
-echo "  3. Verify functions work: cc-tmp, cc-newsession, cc-resume"
+echo "  1. Open a new terminal to test the changes"
+echo "  2. Verify functions work: cc-tmp, cc-newsession, cc-resume"
+echo "  3. Check iTerm profile switching when changing directories"
+echo ""
+echo "To run startup scripts manually:"
+echo "  $DOTFILES_DIR/bin/run-startup.sh"
