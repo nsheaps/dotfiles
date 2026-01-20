@@ -123,12 +123,12 @@ inject_managed_section "$HOME_DIR/.bashrc" "$TEMPLATES_DIR/bash/rc.bash"
 inject_managed_section "$HOME_DIR/.bash_profile" "$TEMPLATES_DIR/bash/profile.bash"
 
 # =============================================================================
-# .config Directory Copying
+# .config Directory Symlinking
 # =============================================================================
 
-# Copy a single file from repo to HOME with conflict resolution
-# Usage: copy_config_file <relative_path>
-copy_config_file() {
+# Symlink a single file from repo to HOME with conflict resolution
+# Usage: link_config_file <relative_path>
+link_config_file() {
   local rel_path="$1"
   local src="$DOTFILES_DIR/_home/.config/$rel_path"
   local dest="$HOME_DIR/.config/$rel_path"
@@ -145,32 +145,33 @@ copy_config_file() {
     mkdir -p "$dest_dir"
   fi
 
-  # iTerm profiles should be symlinked (iTerm updates them directly)
-  if [[ "$rel_path" == iterm2/DynamicProfiles/* ]]; then
-    if [[ -L "$dest" ]]; then
-      # Already a symlink, check if correct
-      if [[ "$(readlink "$dest")" == "$src" ]]; then
-        echo "  Symlink OK: ~/.config/$rel_path"
-        return 0
-      fi
-    fi
-    # Remove existing file/symlink and create new symlink
+  # Already a correct symlink
+  if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$src" ]]; then
+    echo "  Symlink OK: ~/.config/$rel_path"
+    return 0
+  fi
+
+  # If destination doesn't exist, just symlink
+  if [[ ! -e "$dest" ]]; then
+    ln -s "$src" "$dest"
+    echo "  Symlinked: ~/.config/$rel_path"
+    return 0
+  fi
+
+  # If it's a symlink pointing elsewhere, update it
+  if [[ -L "$dest" ]]; then
     rm -f "$dest"
     ln -s "$src" "$dest"
-    echo "  Symlinked: ~/.config/$rel_path → repo"
+    echo "  Updated symlink: ~/.config/$rel_path"
     return 0
   fi
 
-  # If destination doesn't exist, just copy
-  if [[ ! -f "$dest" ]]; then
-    cp "$src" "$dest"
-    echo "  Created: ~/.config/$rel_path"
-    return 0
-  fi
-
-  # If files are identical, skip
+  # It's a regular file - check if it matches
   if diff -q "$src" "$dest" > /dev/null 2>&1; then
-    echo "  Unchanged: ~/.config/$rel_path"
+    # Files match - replace with symlink
+    rm -f "$dest"
+    ln -s "$src" "$dest"
+    echo "  Converted to symlink: ~/.config/$rel_path"
     return 0
   fi
 
@@ -198,15 +199,18 @@ copy_config_file() {
     read -rp "  Choice [r/h/k/s/d]: " choice
     case "$choice" in
       r|R)
-        cp "$src" "$dest"
-        echo "  Overwrote ~/.config/$rel_path with repo version"
+        rm -f "$dest"
+        ln -s "$src" "$dest"
+        echo "  Symlinked ~/.config/$rel_path to repo version"
         break
         ;;
       h|H)
         cp "$dest" "$src"
+        rm -f "$dest"
+        ln -s "$src" "$dest"
         git -C "$DOTFILES_DIR" add "$src"
         git -C "$DOTFILES_DIR" commit -m "sync: update _home/.config/$rel_path from HOME"
-        echo "  Updated repo with ~/.config/$rel_path and committed"
+        echo "  Updated repo and symlinked ~/.config/$rel_path"
         break
         ;;
       k|K)
@@ -231,9 +235,11 @@ copy_config_file() {
             fi
           fi
         fi
+        rm -f "$dest"
+        ln -s "$src" "$dest"
         git -C "$DOTFILES_DIR" add "$src"
         git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
-        echo "  Merged and committed"
+        echo "  Merged, committed, and symlinked"
         break
         ;;
       s|S)
@@ -257,7 +263,7 @@ copy_config_file() {
 }
 
 echo ""
-echo "Copying .config files..."
+echo "Symlinking .config files..."
 
 # Collect files into array first (avoids stdin redirection issues with interactive prompts)
 mapfile -d '' config_files < <(find "$DOTFILES_DIR/_home/.config" -type f -print0)
@@ -265,7 +271,7 @@ mapfile -d '' config_files < <(find "$DOTFILES_DIR/_home/.config" -type f -print
 for file in "${config_files[@]}"; do
   # Get relative path from _home/.config/
   rel_path="${file#$DOTFILES_DIR/_home/.config/}"
-  copy_config_file "$rel_path"
+  link_config_file "$rel_path"
 done
 
 # =============================================================================

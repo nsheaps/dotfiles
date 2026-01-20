@@ -11,5 +11,5 @@ preinstall = "echo 'I am about to install tools'"
 postinstall = "echo 'I just installed tools'"
 
 [settings]
-verbose = true
+# verbose = true
 jobs = 4
