@@ -10,7 +10,8 @@
 #   claude-update - Update claude-code via Homebrew
 #
 # General utilities:
-#   restart-shell - Restart the current shell (exec $SHELL -l)
+#   restart-shell         - Restart the current shell (exec $SHELL -l)
+#   claude-clean-orphaned - Kill orphaned claude processes (PPID=1)
 #
 # Workspace management (cc-* prefix):
 #   cc-tmp        - Create temporary workspace (deleted on exit)
@@ -26,7 +27,7 @@ _claudeish() {
   # Commands that only exist in claude (not happy) - always redirect to claude
   local CLAUDE_ONLY_COMMANDS=("auth" "plugin")
   # Commands that exist in both - pass through to whichever binary was requested
-  local PASSTHROUGH_COMMANDS=("doctor")
+  local PASSTHROUGH_COMMANDS=("doctor" "daemon")
   local BIN_NAME="$1"
   shift
 
@@ -123,6 +124,82 @@ claude-update() {
 
 restart-shell() {
   exec $SHELL -l
+}
+
+# Kill orphaned claude processes (PPID=1) that don't have happy in their process tree
+# Usage: claude-clean-orphaned [--dry-run]
+claude-clean-orphaned() {
+  local dry_run=false
+  [[ "$1" == "--dry-run" ]] && dry_run=true
+
+  local orphan_pids=()
+
+  # Find claude processes with PPID=1 (orphaned), excluding turbo
+  # Then filter out any that have happy as an ancestor (shouldn't happen for true orphans)
+  local candidates
+  candidates=$(pgrep -f claude | xargs -I {} sh -c 'ps -o pid,ppid,command -p {} 2>/dev/null' | grep -v turbo | awk '$2==1 && /claude/ {print $1}')
+
+  for pid in ${(f)candidates}; do
+    [[ -z "$pid" ]] && continue
+
+    # Check if this is a happy-managed session by examining the command line
+    # Happy-managed sessions have markers like .happy/ paths or mcp__happy__ tools
+    local cmd
+    cmd=$(ps -o command= -p $pid 2>/dev/null)
+    if [[ "$cmd" == *".happy/"* ]] || [[ "$cmd" == *"mcp__happy__"* ]]; then
+      continue
+    fi
+
+    # For orphans (PPID=1), check if any ancestor has happy in the name
+    # This walks up the tree but orphans only have launchd as parent
+    local dominated_by_happy=false
+    local p=$pid
+    while (( p > 1 )); do
+      local pinfo=$(ps -o ppid=,comm= -p $p 2>/dev/null)
+      [[ -z "$pinfo" ]] && break
+      local pp=${pinfo%% *}
+      local pc=${pinfo#* }
+      [[ "$pc" == *happy* ]] && { dominated_by_happy=true; break; }
+      p=$pp
+    done
+    [[ "$dominated_by_happy" == true ]] && continue
+    orphan_pids+=($pid)
+  done
+
+  if [[ ${#orphan_pids[@]} -eq 0 ]]; then
+    echo "No orphaned claude processes found."
+    return 0
+  fi
+
+  echo "Found ${#orphan_pids[@]} orphaned claude process(es):"
+  for pid in "${orphan_pids[@]}"; do
+    ps -o pid,etime,command -p "$pid" 2>/dev/null | tail -1
+  done
+
+  if [[ "$dry_run" == true ]]; then
+    echo ""
+    echo "(dry-run) Would kill: ${orphan_pids[*]}"
+  else
+    echo ""
+    echo "Sending SIGINT to ${#orphan_pids[@]} orphaned process(es)..."
+    kill -INT "${orphan_pids[@]}" 2>/dev/null
+
+    # Wait 1 second for graceful shutdown
+    sleep 1
+
+    # Check which are still alive and send SIGKILL
+    local still_alive=()
+    for pid in "${orphan_pids[@]}"; do
+      kill -0 "$pid" 2>/dev/null && still_alive+=("$pid")
+    done
+
+    if [[ ${#still_alive[@]} -gt 0 ]]; then
+      echo "Sending SIGKILL to ${#still_alive[@]} stubborn process(es)..."
+      kill -9 "${still_alive[@]}" 2>/dev/null
+    fi
+
+    echo "Done."
+  fi
 }
 
 # =============================================================================
