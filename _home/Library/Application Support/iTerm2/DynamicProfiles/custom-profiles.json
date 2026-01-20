@@ -103,7 +103,7 @@
         "Alpha Component": 0.8
       },
       "Badge Max Width": 0.75,
-      "Badge Max Height": 0.075,
+      "Badge Max Height": 0.05,
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
