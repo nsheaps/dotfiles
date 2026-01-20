@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
-# iTerm2 dynamic badge - shows owner/repo when in a git repository
-# Sets the user.gitRepo variable that iTerm2 badges can reference
+# iTerm2 dynamic badge - sets user.badge based on current directory
+# Shows owner/repo in git repos, or path when in ~/src
 
 # Only run in iTerm2
 [[ "$TERM_PROGRAM" == "iTerm.app" ]] || return 0
@@ -11,9 +11,9 @@ iterm2_set_user_var() {
   printf "\033]1337;SetUserVar=%s=%s\007" "$1" "$(echo -n "$2" | base64)"
 }
 
-# Update the gitRepo badge variable based on current directory
+# Update the badge variable based on current directory
 _update_iterm2_badge() {
-  local repo_info=""
+  local badge_text=""
 
   # Check if we're in a git repo
   if git rev-parse --is-inside-work-tree &>/dev/null; then
@@ -26,18 +26,18 @@ _update_iterm2_badge() {
       # git@github.com:owner/repo.git
       # https://github.com/owner/repo.git
       # https://github.com/owner/repo
-      repo_info=$(echo "$remote_url" | sed -E 's#^(git@|https://)([^:/]+)[:/]##; s#\.git$##')
+      badge_text=$(echo "$remote_url" | sed -E 's#^(git@|https://)([^:/]+)[:/]##; s#\.git$##')
     else
       # No remote, just show the repo name
-      repo_info=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
+      badge_text=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     fi
   elif [[ "$PWD" == "$HOME/src/"* ]]; then
     # In ~/src but not a git repo - show org/folder structure
     # e.g., ~/src/nsheaps -> "nsheaps", ~/src/nsheaps/ai -> "nsheaps/ai"
-    repo_info="${PWD#$HOME/src/}"
+    badge_text="${PWD#$HOME/src/}"
   fi
 
-  iterm2_set_user_var "gitRepo" "$repo_info"
+  iterm2_set_user_var "badge" "$badge_text"
 }
 
 # Run on directory change (zsh hook)
