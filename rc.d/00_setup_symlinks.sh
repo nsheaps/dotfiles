@@ -1,43 +1,59 @@
 #!/usr/bin/env bash
+# Dotfiles directory initialized via direnv
+#
+# This script creates convenience symlinks WITHIN the project pointing to
+# actual files in $HOME for easy editing. This is the inverse of what bin/wire
+# does (which deploys FROM repo TO $HOME).
+#
+# These symlinks are gitignored to avoid conflicts across different machines.
 
-# This script sets up necessary symlinks for the dotfiles workspace
-# The dotfile symlinks are ignored by default to avoid issues with different users on multiple machines
+set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-function link() {
-  local file="$1"
-  local source="${HOME}/${file}"
-  local from="${DIRENV_ROOT}/_home/${file}"
-  local name="$(basename "${source}")"
-  local name_no_dot="${name#.}"
-  local destination="${DIRENV_ROOT}/${name_no_dot}"
-  if [[ ! -f "${source}" ]]; then
-    if [[ -f "${from}" ]]; then
-      cp "${from}" "${source}"
-      echo "[nsheaps/dotfiles] Wrote ${source}"
+echo "Dotfiles directory loaded: $DOTFILES_DIR"
+
+# Create convenience symlinks in repo root pointing to $HOME files
+# These allow editing the actual deployed files directly from the repo
+create_convenience_symlink() {
+  local name="$1"
+  local home_file="$HOME/.$name"
+  local repo_link="$DOTFILES_DIR/$name"
+
+  if [[ -f "$home_file" ]]; then
+    if [[ -L "$repo_link" ]]; then
+      # Already a symlink, check if it points to the right place
+      local current_target
+      current_target="$(readlink "$repo_link")"
+      if [[ "$current_target" != "$home_file" ]]; then
+        ln -sfn "$home_file" "$repo_link"
+        echo "  Updated: $name → ~/.$name"
+      fi
     else
-      echo "Warning: ${source} does not exist, skipping link"
+      ln -sfn "$home_file" "$repo_link"
+      echo "  Created: $name → ~/.$name"
     fi
-  # if the contents of ${from} and ${source} differ, print a warning
-  elif [[ -f "${from}" ]] && ! diff "${from}" "${source}" > /dev/null; then
-    echo "Warning: ${source} differs from ${from}, please reconcile manually"
-  fi
-  # Create symlink if it doesn't already exist
-  if [[ ! -f ${destination} ]]; then
-    ln -s "${source}" "${destination}"
-    echo "Linked ${source} to ${destination}"
   fi
 }
 
-# link .zshrc
-# link .zshenv
-# link .zprofile
+echo "Creating convenience symlinks for easy editing..."
 
-# if ${DIRENV_ROOT}/mise_config.toml doesn't exist, create a symlink to ${HOME}/.config/mise/config.toml
-# TODO: the file from within this repo should be the source of truth. `link` should take  the local file path, and where to symlink it from, so this is always the source of truth
-# The one exception is the zshrc/zprofile/bashrc/bash_profile files, which are in-lined by dotfiles init from within the rc file to enable users to put specific overrides without them being in the repo.
-# The direnv logic to warn you they're out of date also should be updated for this design
-if [[ ! -f "${DIRENV_ROOT}/mise_config.toml" ]]; then
-  ln -s "${HOME}/.config/mise/config.toml" "${DIRENV_ROOT}/mise_config.toml"
-  echo "Linked ${HOME}/.config/mise/config.toml to ${DIRENV_ROOT}/mise_config.toml"
+# Shell config files
+create_convenience_symlink "zshrc"
+create_convenience_symlink "zshenv"
+create_convenience_symlink "zprofile"
+create_convenience_symlink "bashrc"
+create_convenience_symlink "bash_profile"
+
+# Mise config (special case - different path structure)
+if [[ -f "$HOME/.config/mise/config.toml" ]]; then
+  if [[ ! -L "$DOTFILES_DIR/mise_config.toml" ]] || \
+     [[ "$(readlink "$DOTFILES_DIR/mise_config.toml")" != "$HOME/.config/mise/config.toml" ]]; then
+    ln -sfn "$HOME/.config/mise/config.toml" "$DOTFILES_DIR/mise_config.toml"
+    echo "  Created: mise_config.toml → ~/.config/mise/config.toml"
+  fi
 fi
+
+echo ""
+echo "Run 'bin/wire' to deploy dotfiles from repo to \$HOME."

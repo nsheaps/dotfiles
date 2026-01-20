@@ -1,4 +1,5 @@
 # Logs
+/log/
 logs
 *.log
 npm-debug.log*
@@ -138,11 +139,17 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# symlinks (only in repo root, not in _home/)
+# Convenience symlinks to $HOME files (created by direnv, not in _home/)
 /zshrc
 /zshenv
 /zprofile
+/bashrc
+/bash_profile
+/mise_config.toml
 
 # Claude Code hook state
 .repo/hashes.yaml
 .repo/last-reminder-time
+
+# worktrees
+.dev/

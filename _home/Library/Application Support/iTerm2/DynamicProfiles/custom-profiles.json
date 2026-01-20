@@ -1,0 +1,84 @@
+{
+  "Profiles": [
+    {
+      "Name": "stainless",
+      "Guid": "stainless-profile-001",
+      "Background Color (Light)": {
+        "Red Component": 0.93,
+        "Green Component": 0.98,
+        "Blue Component": 0.99
+      },
+      "Background Color (Dark)": {
+        "Red Component": 0.12,
+        "Green Component": 0.23,
+        "Blue Component": 0.37
+      },
+      "Foreground Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0
+      },
+      "Foreground Color (Dark)": {
+        "Red Component": 0.9,
+        "Green Component": 0.9,
+        "Blue Component": 0.9
+      },
+      "Badge Text": "stainless",
+      "Use Bold Font": true,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.4,
+        "Green Component": 0.7,
+        "Blue Component": 1.0
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.3,
+        "Blue Component": 0.8
+      }
+    },
+    {
+      "Name": "nsheaps",
+      "Guid": "nsheaps-profile-001",
+      "Background Color (Light)": {
+        "Red Component": 0.95,
+        "Green Component": 0.9,
+        "Blue Component": 0.96
+      },
+      "Background Color (Dark)": {
+        "Red Component": 0.24,
+        "Green Component": 0.16,
+        "Blue Component": 0.28
+      },
+      "Foreground Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0
+      },
+      "Foreground Color (Dark)": {
+        "Red Component": 0.9,
+        "Green Component": 0.9,
+        "Blue Component": 0.9
+      },
+      "Badge Text": "nsheaps",
+      "Use Bold Font": true,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.4,
+        "Green Component": 0.7,
+        "Blue Component": 1.0
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.3,
+        "Blue Component": 0.8
+      }
+    }
+  ]
+}

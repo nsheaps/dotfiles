@@ -1,0 +1,10 @@
+# This directory holds update scripts that run on-demand (not automatically)
+# Unlike startup.d (which runs on every login), update.d scripts are:
+# - Prompted periodically (like oh-my-zsh updates)
+# - Run manually via: bin/run-updates.sh
+# - Potentially risky operations that shouldn't run automatically
+#
+# Examples of update.d scripts:
+# - Homebrew updates
+# - Git repo pulls
+# - Package manager updates

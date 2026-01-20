@@ -1,861 +1,317 @@
-# Dotfiles Refactoring Review
+# Dotfiles Implementation Review
 
-**Date**: 2025-12-20 (Updated)
-**Reviewer**: Claude Code
-**Purpose**: Comprehensive comparison of current `~/` RC files vs new `_home/` implementation
-
----
-
-## Executive Summary
-
-The new implementation in `_home/` represents a significant architectural improvement with better organization, portability, and maintainability. However, **critical integrations are missing** that will break the shell environment if deployed as-is. The refactoring introduces excellent patterns but loses essential functionality from the current setup.
-
-**Key Finding**: The current `~/.zshrc` uses **dynamic antidote mode** (inline bundles), while the new `_home/zshrc` expects **static mode** with a `.zsh_plugins.txt` file that doesn't exist yet.
-
-**Status**: 🔴 **NOT READY FOR DEPLOYMENT** - Critical issues must be resolved first.
+**Branch:** `feat/complete-dotfiles-refactoring`
+**Merge Base:** `e485be96936b4f5cbe093c78609316f40733f44c`
+**Review Date:** 2026-01-19
 
 ---
 
-## 1. Critical Issues (MUST FIX Before Deployment)
+## Implementation Summary
 
-### ~~1.1 Missing OrbStack Integration~~ - NOT A REPO ISSUE
+This branch refactors the dotfiles system from an eval-based initialization approach to a managed-sections architecture using `bin/wire`. The new system:
 
-**Current Implementation** (`~/.zprofile`):
+1. Creates symlinks for script directories (`profile.d`, `interactive.d`, `startup.d`, `update.d`)
+2. Injects managed sections into shell RC files that source canonical files from `_home/`
+3. Consolidates Claude CLI functions into a single `interactive.d/claude.sh` file
+4. Adds iTerm2 dynamic profile management with automatic switching
+5. Removes old hook scripts that are no longer needed
+
+---
+
+## Critical Findings
+
+### 1. [ADDRESSED] Bash RC Files No Longer Reference Deleted Script
+
+**Previous Status:** `_home/bashrc` and `_home/bash_profile` referenced deleted `bin/dotfiles init`
+**Current Status:** Files now contain minimal shell configuration - the old eval reference is gone.
+
+**Verification:**
+- `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/bashrc` - Now contains only user-customizable section placeholder
+- `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/bash_profile` - Sources Homebrew correctly
+
+**Result:** FIXED
+
+### 2. [ADDRESSED] Missing ~/.dotfiles Symlink
+
+**Previous Status:** `~/.dotfiles` symlink was missing
+**Current Status:** Symlink exists and points correctly
+
+**Verification:**
+```
+~/.dotfiles -> /Users/nathan.heaps/src/nsheaps/dotfiles
+```
+
+**Result:** FIXED
+
+### 3. [ADDRESSED] Hardcoded Homebrew Path for Antidote
+
+**Previous Status:** Hardcoded `/opt/homebrew/opt/antidote/share/antidote/functions`
+**Current Status:** Now uses dynamic detection:
 ```zsh
-source ~/.orbstack/shell/init.zsh 2>/dev/null || :
-```
-
-**New Implementation**: Not included (INTENTIONAL)
-
-**Clarification**: OrbStack is a user customization, not repo content. Users should add this to the user-customizable section of `_home/zprofile` if needed. The repo provides a clean baseline; user tools are added separately.
-
-**Not a critical issue for the repo.**
-
----
-
-### ~~1.2 Missing rbenv Integration~~ - NOT A REPO ISSUE
-
-**Current Implementation** (`~/.bashrc`):
-```bash
-eval "$(rbenv init - --no-rehash bash)"
-```
-
-**New Implementation**: Not included (INTENTIONAL)
-
-**Clarification**: rbenv is a user customization, not repo content. Users should add this to the user-customizable section if needed.
-
-**Not a critical issue for the repo.**
-
----
-
-### 1.3 Antidote Plugin Loading Method Change (ACTUAL CRITICAL ISSUE - FIXED)
-
-**Current Implementation** (`~/.zshrc`):
-```zsh
-source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
-source <(antidote init)
-antidote bundle <<EOBUNDLES
-    zsh-users/zsh-autosuggestions
-    zsh-users/zsh-completions
-    getantidote/use-omz
-    ohmyzsh/ohmyzsh path:lib
-    ohmyzsh/ohmyzsh path:plugins/git
-    ohmyzsh/ohmyzsh path:plugins/autojump
-    ohmyzsh/ohmyzsh path:plugins/brew
-    ohmyzsh/ohmyzsh path:plugins/direnv
-    ohmyzsh/ohmyzsh path:plugins/docker
-    ohmyzsh/ohmyzsh path:plugins/mise
-    ohmyzsh/ohmyzsh path:plugins/command-not-found
-    ohmyzsh/ohmyzsh path:themes/robbyrussell.zsh-theme
-EOBUNDLES
-```
-
-**New Implementation** (`_home/zshrc`):
-```zsh
-# Lazy-load antidote from its functions directory.
-fpath=(/opt/homebrew/opt/antidote/share/antidote/functions $fpath)
-autoload -Uz antidote
-
-# Generate a new static file whenever .zsh_plugins.txt is updated.
-if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
-  antidote bundle <${zsh_plugins}.txt >|${zsh_plugins}.zsh
-fi
-
-# Source your static plugins file.
-source ${zsh_plugins}.zsh
-```
-
-**Analysis**:
-- Current: Dynamic mode (plugins loaded at shell startup every time)
-- New: Static mode (plugins compiled to `.zsh_plugins.zsh`, faster startup)
-- **Benefit**: Faster shell startup time
-- **Critical Issue**: ❌ **`_home/.zsh_plugins.txt` FILE DOES NOT EXIST**
-- **Impact**: Without this file, antidote will not load ANY plugins
-- **Status**: 🔴 **CRITICAL** - Must create `.zsh_plugins.txt` before deployment
-
-**Fix Required**: Create `_home/.zsh_plugins.txt` with the plugin list from current `~/.zshrc`
-
----
-
-### 1.4 Missing Zsh Interactive Comments
-
-**Current Implementation** (`~/.zshrc`):
-```zsh
-setopt interactivecomments
-```
-
-**New Implementation**: ❌ **MISSING**
-
-**Impact**:
-- Comments in interactive shell commands will not work
-- Copy-pasting commands with comments will fail
-- Common workflow disruption for users who comment commands at the prompt
-
-**Fix Required**: Add `setopt interactivecomments` to `_home/zshrc` (should be at the top, before other configuration).
-
----
-
-### 1.5 Brew Shellenv Called in Wrong Place
-
-**Current Implementation** (`~/.zshrc`):
-```zsh
-eval "$(/opt/homebrew/bin/brew shellenv)"
-```
-
-**New Implementation** (`_home/zprofile` and `_home/bash_profile`):
-```zsh
-eval "$(/opt/homebrew/bin/brew shellenv)"
-```
-
-**Analysis**:
-- Current: Brew is initialized in `.zshrc` (interactive shells)
-- New: Brew is initialized in `.zprofile` (login shells only)
-- **Impact**: This is actually **CORRECT BEHAVIOR** - brew should be in login shells, not interactive. The current implementation is technically wrong.
-- **Status**: ✅ **IMPROVEMENT** - New implementation is correct
-
----
-
-### 1.6 Missing ~/.zshenv File Content
-
-**Current Implementation** (`~/.zshenv`):
-- File exists but appears to be empty (only 1 line, likely just a newline)
-
-**New Implementation** (`_home/zshenv`):
-```zsh
-export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
-export XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
-export XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
-typeset -gU path fpath
-```
-
-**Analysis**:
-- New implementation adds XDG directory specifications (modern standard)
-- Ensures path/fpath don't contain duplicates
-- **Status**: ✅ **SIGNIFICANT IMPROVEMENT**
-
----
-
-## 2. What's Broken or Missing
-
-### 2.1 Missing Integrations Summary
-
-| Integration | Current | New | Status |
-|------------|---------|-----|--------|
-| OrbStack | ✅ Present | ❌ Missing | 🔴 Critical |
-| rbenv | ✅ Present | ❌ Missing | 🔴 Critical |
-| Homebrew | ✅ Present | ✅ Present | ✅ OK |
-| Antidote | ✅ Present | ✅ Present | ✅ OK |
-| mise | ❌ Not configured | ✅ Present | ✅ Improvement |
-| NVM | ❌ Not configured | ✅ Present | ✅ Improvement |
-
-### 2.2 Missing Shell Features
-
-- `setopt interactivecomments` - Required for inline comments in zsh
-- `shellrc.d` sourcing logic (currently unused, so not a real loss)
-
-### 2.3 Bash Support Quality
-
-**Current Implementation**:
-- `.bashrc` just sources `.zshrc` (hacky workaround)
-- rbenv initialization present
-
-**New Implementation**:
-- Proper dedicated bash files with appropriate shebangs
-- Clean separation of login vs interactive shells
-- **BUT**: Missing rbenv initialization
-
-**Status**: ✅ **ARCHITECTURAL IMPROVEMENT** but ❌ **missing rbenv**
-
----
-
-## 3. What the New Implementation Does Better
-
-### 3.1 Architectural Improvements
-
-#### 3.1.1 Separation of Concerns
-
-**New Structure**:
-```
-_home/
-├── profile.d/          # Login shell environment (sourced by profile files)
-│   └── 00-env.sh       # PATH, JAVA_HOME, DOTNET_ROOT, NVM, etc.
-├── interactive.d/      # Interactive shell customizations
-│   ├── claude-cc-*.sh  # Claude workspace management functions
-└── [shell RC files]    # Thin wrappers that source profile.d & interactive.d
-```
-
-**Benefits**:
-- Clear distinction between login environment and interactive customizations
-- Numbered file prefixes (00-, 10-, 20-) control load order
-- Shell-agnostic configuration (same files for bash/zsh)
-- Easy to add/remove integrations without editing RC files
-
-**Current Structure**:
-- Everything crammed into `.zshrc`
-- No clear separation of concerns
-- Zsh-specific, not portable to bash
-
-### 3.1.2 Centralized Management via `bin/dotfiles`
-
-**New**: `bin/dotfiles init` command generates shell code to source appropriate configs
-- Detects interactive vs login shells
-- Single source of truth for what gets loaded
-- Easy to update managed sections without manual editing
-- Supports future sync operations
-
-**Current**: Manual sourcing in each RC file, no automation
-
-### 3.1.3 Better Plugin Management
-
-**Static vs Dynamic Mode**:
-- Current: Dynamic mode loads plugins every shell startup (slower)
-- New: Static mode compiles plugins once, faster startup
-- Auto-regeneration when `.zsh_plugins.txt` changes
-
-### 3.1.4 XDG Base Directory Compliance
-
-**New Implementation** properly sets up XDG directories:
-```zsh
-export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}
-export XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
-export XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
-```
-
-**Current Implementation**: No XDG setup
-
-**Benefits**:
-- Modern standard for config/data/cache locations
-- Cleaner home directory (fewer dotfiles)
-- Better for tools that respect XDG
-
-### 3.1.5 Professional Tool Setup
-
-**New Implementation adds**:
-- Java/OpenJDK 21 configuration
-- .NET Core configuration
-- NVM (Node Version Manager) with completion
-- mise shims activation in profile
-
-**Current Implementation**: Only has basic mise via Oh My Zsh plugin
-
----
-
-### 3.2 Portability Improvements
-
-| Aspect | Current | New |
-|--------|---------|-----|
-| Bash support | Hacky (sources .zshrc) | Proper dedicated files |
-| Shell detection | None | Automatic via `$-` check |
-| Path to dotfiles | Hardcoded | Dynamic via `BASH_SOURCE` |
-| Shared config | Duplicated | Shell-agnostic .sh files |
-
-### 3.3 Maintainability Improvements
-
-#### Easier to Add Integrations
-**Current**: Edit `.zshrc` directly, mix with other code
-**New**: Drop a new `.sh` file in `profile.d/` or `interactive.d/`, done
-
-#### Easier to Debug
-**Current**: One monolithic file, hard to isolate issues
-**New**: Modular files with clear purposes, numbered load order
-
-#### Better Documentation
-**New files** include helpful comments explaining when each file loads:
-```zsh
-# .zshenv is loaded before anything else, including macos path setup using /etc/paths
-# .zprofile is loaded at login shells (when macos boots)
-# .zshrc is loaded at non-login interactive shells (when you open a terminal)
-```
-
-#### Self-Documenting Structure
-- File names indicate purpose (`profile.d` vs `interactive.d`)
-- Numbered prefixes show load order (`00-env.sh` before `10-orbstack.sh`)
-- Separation makes it obvious what runs when
-
----
-
-### 3.4 Feature Additions
-
-#### Claude Workspace Management Functions
-**New**: Three custom functions for managing Claude Code sessions
-- `cc-newsession` / `cc-tmp` - Create new/temporary Claude workspaces
-- `cc-resume` - Resume existing workspace sessions with `gum` chooser UI
-- `cc-runclaude` - Core function for launching Claude in workspaces
-
-**Current**: None of these functions exist
-
-**Value**: Professional workflow tools for Claude Code power users
-
----
-
-## 4. Architecture Comparison
-
-### 4.1 Load Order Comparison
-
-#### Current System (Zsh)
-1. `.zshenv` (empty)
-2. `.zprofile` (OrbStack)
-3. `.zshrc` (everything: brew, antidote, plugins)
-
-#### New System (Zsh)
-1. `.zshenv` (XDG dirs, path deduplication)
-2. `.zprofile` (brew shellenv, mise shims, then `dotfiles init`)
-   - Sources `profile.d/*.sh` (00-env.sh: JAVA, .NET, NVM)
-3. `.zshrc` (antidote setup, then `dotfiles init`)
-   - Sources `profile.d/*.sh` (same as above)
-   - Sources `interactive.d/*.sh` (Claude functions) - **only in interactive shells**
-
-### 4.2 Design Philosophy
-
-#### Current: Monolithic
-- Everything in one file
-- Hard to understand what runs when
-- Difficult to maintain
-- Not portable
-
-#### New: Modular & Layered
-- Clear separation by purpose (login vs interactive)
-- Shell-agnostic shared configuration
-- Easy to extend (drop in new files)
-- Professional structure
-- Automated management via `bin/dotfiles`
-
----
-
-## 5. Dependency Analysis
-
-### 5.1 External Dependencies
-
-#### Current Implementation Requires:
-- Homebrew (installed)
-- Antidote (installed)
-- Oh My Zsh plugins (installed via Antidote)
-
-#### New Implementation Requires:
-- Homebrew (installed)
-- Antidote (installed)
-- Oh My Zsh plugins (installed via Antidote)
-- **gum** (for `cc-resume` function) - auto-installs if missing
-- **OrbStack** (missing integration) - needs to be added
-- **rbenv** (missing integration) - needs to be added
-
-### 5.2 Missing Dependency Handling
-
-**Good**: `cc-resume` checks for `gum` and auto-installs:
-```bash
-if ! command -v gum &> /dev/null
-then
-    brew install gum
-fi
-```
-
-**Issue**: No similar checks for critical dependencies like:
-- Homebrew (assumed installed)
-- Antidote (assumed installed)
-- OrbStack (not handled)
-- rbenv (not handled)
-
-**Recommendation**: Add dependency checking to `bin/dotfiles` or create a `bin/dotfiles doctor` command.
-
----
-
-## 6. Testing Considerations
-
-### 6.1 What Needs Testing
-
-Before deployment, test these scenarios:
-
-1. **Fresh Shell Startup**
-   - Does brew shellenv work?
-   - Are mise shims available?
-   - Do Claude functions work?
-
-2. **Login Shell vs Interactive Shell**
-   - Does `profile.d` load in both?
-   - Does `interactive.d` only load in interactive shells?
-
-3. **Bash Compatibility**
-   - Does bash_profile work correctly?
-   - Does bashrc work correctly?
-   - Are all functions available in bash?
-
-4. **Tool Availability**
-   - Java in PATH?
-   - .NET in PATH?
-   - NVM loaded?
-   - rbenv working? (after fix)
-   - OrbStack commands working? (after fix)
-
-5. **Plugin Loading**
-   - Do all antidote plugins load?
-   - Is `.zsh_plugins.zsh` generated correctly?
-   - Are completions working?
-
-### 6.2 Suggested Testing Process
-
-```bash
-# 1. Backup current setup
-cp ~/.zshrc ~/.zshrc.backup
-cp ~/.zprofile ~/.zprofile.backup
-cp ~/.bashrc ~/.bashrc.backup
-cp ~/.zshenv ~/.zshenv.backup
-
-# 2. Deploy new files (after fixes)
-# ... symlink process ...
-
-# 3. Test in new shell
-zsh -l  # Login shell
-zsh     # Interactive shell
-bash -l # Bash login shell
-bash    # Bash interactive shell
-
-# 4. Verify each integration
-which brew
-which mise
-which java
-which dotnet
-which node  # via NVM
-which rbenv
-which docker  # via OrbStack
-cc-tmp  # Test Claude functions
-
-# 5. Check plugin loading
-antidote list
-
-# 6. If issues, restore backup
-```
-
----
-
-## 7. Migration Path
-
-### 7.1 Required Fixes Before Migration
-
-1. **Add OrbStack Integration** (CRITICAL)
-   - Create `_home/profile.d/10-orbstack.sh`
-   - Content: `source ~/.orbstack/shell/init.zsh 2>/dev/null || :`
-
-2. **Add rbenv Integration** (CRITICAL)
-   - Create `_home/profile.d/20-rbenv.sh`
-   - Add shell-aware rbenv init for both bash and zsh
-
-3. **Add Interactive Comments** (CRITICAL)
-   - Add `setopt interactivecomments` to top of `_home/zshrc`
-
-4. **Add Dependency Checking** (RECOMMENDED)
-   - Create `bin/dotfiles doctor` command
-   - Check for Homebrew, Antidote, OrbStack, rbenv
-
-5. **Test Profile vs Interactive Logic** (RECOMMENDED)
-   - Verify `profile.d` loads in both login and interactive shells
-   - Verify `interactive.d` only loads in interactive shells
-
-### 7.2 Recommended Improvements (Non-Critical)
-
-1. **Add Symlink Setup Script**
-   - Automate creation of symlinks from `_home/` to `~/`
-   - Include backup logic for existing files
-
-2. **Add Sync Command**
-   - Implement `bin/dotfiles sync` (currently stubbed)
-   - Should update managed sections in RC files
-
-3. **Add Uninstall/Rollback**
-   - Create `bin/dotfiles uninstall` to restore backups
-   - Safety mechanism for testing
-
-4. **Document the Load Order**
-   - Add diagram showing when each file loads
-   - Include in CLAUDE.md or README
-
-5. **Consider mise vs NVM Conflict**
-   - Both NVM and mise can manage Node versions
-   - Current setup has both enabled
-   - Recommend choosing one (mise is more modern)
-
----
-
-## 8. Risk Assessment
-
-### 8.1 Critical Risks (🔴 High)
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Missing OrbStack | Docker/containers break | Add OrbStack init before deployment |
-| Missing rbenv | Ruby version mgmt breaks | Add rbenv init before deployment |
-| Missing interactivecomments | Copy-paste commands fail | Add setopt before deployment |
-
-### 8.2 Medium Risks (🟡 Medium)
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Antidote mode change | User confusion if plugins don't update | Document the change, add to CLAUDE.md |
-| `bin/dotfiles` path assumption | Breaks if repo moves | Already handled via `BASH_SOURCE` |
-| Profile.d loading in interactive shells | Slight performance impact | Acceptable, provides consistency |
-
-### 8.3 Low Risks (🟢 Low)
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Brew in profile vs zshrc | None (improvement) | No mitigation needed |
-| XDG directory addition | None (improvement) | No mitigation needed |
-| Claude functions | Optional features | No mitigation needed |
-
----
-
-## 9. Recommendations
-
-### 9.1 Immediate Actions (Before Any Deployment)
-
-1. ✅ **Fix Critical Issues**
-   - [ ] Add OrbStack integration to `profile.d/10-orbstack.sh`
-   - [ ] Add rbenv integration to `profile.d/20-rbenv.sh`
-   - [ ] Add `setopt interactivecomments` to `zshrc`
-
-2. ✅ **Create Backup Strategy**
-   - [ ] Document manual backup process
-   - [ ] Or create automated backup in deployment script
-
-3. ✅ **Test in Isolation**
-   - [ ] Test new config in a separate user account or VM
-   - [ ] Verify all integrations work
-   - [ ] Check both bash and zsh
-
-### 9.2 Short-Term Improvements (After Initial Deployment)
-
-1. **Implement `bin/dotfiles sync`**
-   - Update managed sections in RC files
-   - Handle symlink creation/updates
-
-2. **Add `bin/dotfiles doctor`**
-   - Check for required dependencies
-   - Validate symlinks
-   - Report configuration issues
-
-3. **Resolve mise vs NVM**
-   - Choose one Node version manager
-   - Document the decision
-   - Remove the other
-
-### 9.3 Long-Term Improvements
-
-1. **Add Test Suite**
-   - Automated testing for shell configs
-   - Verify load order
-   - Check for common issues
-
-2. **Consider Additional Integrations**
-   - SSH agent management
-   - GPG configuration
-   - Additional development tools
-
-3. **Platform Expansion**
-   - Test on Linux
-   - Add platform-specific directories (e.g., `profile.d/linux/`, `profile.d/macos/`)
-
----
-
-## 10. Conclusion
-
-### 10.1 Summary
-
-The new implementation in `_home/` is **architecturally superior** to the current `~/` setup in almost every way:
-
-**Strengths**:
-- ✅ Better organization and separation of concerns
-- ✅ More portable (proper bash support)
-- ✅ More maintainable (modular structure)
-- ✅ More professional (XDG compliance, modern patterns)
-- ✅ Better tooling (Claude workspace functions, centralized management)
-- ✅ Faster shell startup (static plugin loading)
-
-**Weaknesses**:
-- ❌ Missing critical integrations (OrbStack, rbenv)
-- ❌ Missing shell feature (interactivecomments)
-- ⚠️ Requires user education (antidote mode change)
-
-### 10.2 Deployment Readiness
-
-**Current Status**: 🔴 **NOT READY**
-
-**Blockers**:
-1. OrbStack integration missing
-2. rbenv integration missing
-3. Interactive comments option missing
-
-**Estimated Time to Ready**: ~1-2 hours
-- 30 min: Add missing integrations
-- 30 min: Test in isolated environment
-- 30 min: Document changes and migration process
-
-### 10.3 Final Verdict
-
-**DO NOT DEPLOY AS-IS** - Critical functionality will break.
-
-**HOWEVER**, once the three critical issues are fixed, this refactoring should be deployed immediately. The architectural improvements are significant and will make future maintenance much easier.
-
-The new structure is a **substantial upgrade** that follows modern best practices for dotfiles management. With the fixes applied, this is a **highly recommended migration**.
-
----
-
-## Appendix A: File-by-File Comparison
-
-### A.1 Zsh Files
-
-| File | Current | New | Status |
-|------|---------|-----|--------|
-| `.zshenv` | Empty | XDG setup, path dedup | ✅ Improvement |
-| `.zprofile` | OrbStack only | Brew, mise, dotfiles init | ⚠️ Missing OrbStack |
-| `.zshrc` | Monolithic | Modular + antidote | ⚠️ Missing features |
-| `.zsh_plugins.txt` | N/A (inline) | Dedicated file | ✅ Improvement |
-
-### A.2 Bash Files
-
-| File | Current | New | Status |
-|------|---------|-----|--------|
-| `.bashrc` | Sources .zshrc + rbenv | Proper bash + dotfiles init | ⚠️ Missing rbenv |
-| `.bash_profile` | N/A | Proper bash profile | ✅ New addition |
-
-### A.3 Supporting Files
-
-| File | Current | New | Status |
-|------|---------|-----|--------|
-| `shellrc.d/*.sh` | Empty dir | N/A | N/A (unused) |
-| `profile.d/*.sh` | N/A | Modular env setup | ✅ New & good |
-| `interactive.d/*.sh` | N/A | Claude functions | ✅ New & good |
-| `bin/dotfiles` | N/A | Management script | ✅ New & good |
-
----
-
-## Appendix B: Load Order Diagrams
-
-### B.1 Current System
-
-```
-Zsh Login Shell (Terminal.app opens):
-  └─> .zshenv (empty)
-  └─> .zprofile
-      └─> source ~/.orbstack/shell/init.zsh
-  └─> .zshrc
-      ├─> eval brew shellenv
-      ├─> source antidote
-      ├─> antidote init
-      ├─> antidote bundle (inline)
-      └─> source shellrc.d/*.sh (empty)
-
-Zsh Interactive Shell (in VS Code):
-  └─> .zshenv (empty)
-  └─> .zshrc
-      ├─> eval brew shellenv
-      ├─> source antidote
-      ├─> antidote init
-      ├─> antidote bundle (inline)
-      └─> source shellrc.d/*.sh (empty)
-```
-
-### B.2 New System
-
-```
-Zsh Login Shell:
-  └─> .zshenv
-      ├─> export XDG_* variables
-      └─> typeset -gU path fpath
-  └─> .zprofile
-      ├─> eval brew shellenv
-      ├─> mise activate --shims
-      └─> source <(dotfiles init)
-          └─> for file in profile.d/*.sh
-              └─> source 00-env.sh
-                  ├─> export JAVA_HOME
-                  ├─> export DOTNET_ROOT
-                  └─> source NVM
-  └─> .zshrc
-      ├─> fpath += .zfunctions
-      ├─> autoload antidote
-      ├─> antidote bundle (static)
-      ├─> source .zsh_plugins.zsh
-      └─> source <(dotfiles init)
-          ├─> for file in profile.d/*.sh (again)
-          └─> for file in interactive.d/*.sh
-              ├─> claude-cc-runclaude.sh
-              ├─> claude-cc-newsession.sh
-              └─> claude-cc-resume.sh
-
-Zsh Interactive Shell:
-  └─> .zshenv
-      ├─> export XDG_* variables
-      └─> typeset -gU path fpath
-  └─> .zshrc
-      ├─> fpath += .zfunctions
-      ├─> autoload antidote
-      ├─> antidote bundle (static)
-      ├─> source .zsh_plugins.zsh
-      └─> source <(dotfiles init)
-          ├─> for file in profile.d/*.sh
-          └─> for file in interactive.d/*.sh (only in interactive)
-```
-
----
-
-## Appendix C: Code Snippets for Fixes
-
-### C.1 Fix: Add OrbStack Integration
-
-Create `_home/profile.d/10-orbstack.sh`:
-
-```bash
-#!/usr/bin/env bash
-# OrbStack integration for command-line tools and container management
-
-if [[ -f ~/.orbstack/shell/init.zsh ]]; then
-  source ~/.orbstack/shell/init.zsh 2>/dev/null || :
-fi
-```
-
-### C.2 Fix: Add rbenv Integration
-
-Create `_home/profile.d/20-rbenv.sh`:
-
-```bash
-#!/usr/bin/env bash
-# rbenv - Ruby version management
-
-if command -v rbenv &> /dev/null; then
-  # Detect shell and initialize appropriately
-  if [[ -n "$ZSH_VERSION" ]]; then
-    eval "$(rbenv init - --no-rehash zsh)"
-  elif [[ -n "$BASH_VERSION" ]]; then
-    eval "$(rbenv init - --no-rehash bash)"
+if (( $+commands[brew] )); then
+  _antidote_dir="$(brew --prefix antidote 2>/dev/null)/share/antidote"
+  if [[ -d "$_antidote_dir/functions" ]]; then
+    fpath=("$_antidote_dir/functions" $fpath)
+    autoload -Uz antidote
   fi
+  unset _antidote_dir
 fi
 ```
 
-### C.3 Fix: Add Interactive Comments
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:36-43`
 
-Edit `_home/zshrc`, add near the top (line 2 or 3):
+**Result:** FIXED - Works on both Apple Silicon and Intel Macs
 
-```zsh
-#!/bin/zsh
-setopt interactivecomments  # Allow comments in interactive shells
+### 4. [NEW] Bash Sources Zsh File - Causes Errors
 
-# sourced when an interactive shell is spawned...
+**Location:** `~/.bashrc:2`
+**Issue:** The deployed `~/.bashrc` contains:
+```bash
+#!/usr/bin/env bash
+\. "$HOME/.zshrc"
 ```
+
+This sources `.zshrc` from Bash, which causes errors because `.zshrc` uses zsh-specific syntax:
+- `setopt interactivecomments` - Zsh builtin, not available in Bash
+- `*(.:t)` glob qualifiers - Zsh-only syntax
+
+**Verification Output:**
+```
+/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc: line 12: setopt: command not found
+/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc: line 27: syntax error near unexpected token `('
+```
+
+**Impact:** Bash shells will see errors on startup (though the managed section still loads correctly after)
+
+**Recommendation:** Remove the `. "$HOME/.zshrc"` line from `~/.bashrc` since the managed section already handles loading the correct configuration.
+
+### 5. [NEW] Mise Config Drift Between Repo and HOME
+
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/.config/mise/config.toml` vs `~/.config/mise/config.toml`
+
+**Repository Version:**
+```toml
+[tools]
+bun = "latest"
+go = "latest"
+node = "lts"
+python = "latest"
+
+[hooks]
+preinstall = "echo 'I am about to install tools'"
+postinstall = "echo 'I just installed tools'"
+
+[settings]
+verbose = true
+jobs = 4
+```
+
+**HOME Version:**
+```toml
+[tools]
+bun = "latest"
+go = "latest"
+node = "lts"
+"npm:happy-coder" = "latest"
+pipx = "latest"
+python = "latest"
+```
+
+**Issue:** The symlink in repo root (`mise_config.toml -> ~/.config/mise/config.toml`) means HOME is the source of truth, but the `_home/.config/mise/config.toml` file in the repo is NOT symlinked - they are separate files.
+
+**Impact:** Changes in HOME are not tracked; repo copy is outdated and missing `npm:happy-coder` and `pipx`.
+
+**Recommendation:** Either:
+1. Remove `_home/.config/mise/config.toml` from tracking and use only the symlink, OR
+2. Change `bin/wire` to symlink `.config/mise/` to track the repo version
+
+### 6. [NEW] iTerm README Documentation Error
+
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/.config/iterm2/README.md:32`
+
+**Issue:** States profiles are installed by `_home/update.d/00-iterm-profiles.sh` but the actual script is at `_home/startup.d/00-iterm-profiles.sh`.
+
+**Recommendation:** Update line 32 to reference the correct path.
 
 ---
 
----
+## Opportunities for Improvement
 
-## Appendix D: Verification Results
+### 1. Zfunctions Autoload Conditional Works Correctly
 
-### D.1 Current Home Directory State
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:24-28`
+**Status:** The conditional directory check prevents errors when `~/.zfunctions` doesn't exist. Well implemented.
 
-**Verified files that exist:**
-- `~/.zshrc` - 33 lines, uses dynamic antidote mode
-- `~/.zprofile` - 10 lines, has OrbStack integration
-- `~/.bashrc` - 5 lines, sources `.zshrc` + rbenv init
-- `~/.zshenv` - Nearly empty (1 line)
+### 2. Interactive.d TTY Check Works as Designed
 
-**Files that DO NOT exist:**
-- `~/.zsh_plugins.txt` - Not present (using inline bundles)
-- `~/.zsh_plugins.zsh` - Not present (generated by static mode)
-- `~/shellrc.d/` directory - Does not exist
+**Location:** `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/zshrc:60-64`
 
-**OrbStack integration:**
-- ✅ File exists at `~/.orbstack/shell/init.zsh`
-- ✅ Sourced in `~/.zprofile`
+The `[[ -t 1 ]]` check ensures interactive.d scripts only run in true TTY sessions:
+- Functions like `open-iterm`, `claude`, `cc-tmp` are correctly available in interactive shells
+- They are correctly NOT loaded in non-interactive contexts (scripts, cron, etc.)
 
-### D.2 New _home/ Directory State
+**Verification:** Using `script -q /dev/null zsh -ic 'type open-iterm'` confirms functions load in interactive mode.
 
-**Files that exist:**
-- `_home/zshrc` - Uses static antidote mode
-- `_home/zprofile` - Missing OrbStack integration
-- `_home/bashrc` - Proper implementation
-- `_home/bash_profile` - Proper implementation
-- `_home/profile.d/00-env.sh` - Java, .NET, NVM setup
-- `_home/interactive.d/claude-cc-runclaude.sh` - Claude function
-- `_home/interactive.d/claude-cc-newsession.sh` - Claude function
-- `_home/interactive.d/claude-cc-resume.sh` - Claude function
-- `bin/dotfiles` - Management script
+### 3. rc.d/00_setup_symlinks.sh Simplified
 
-**Files that DO NOT exist:**
-- `_home/.zshenv` - ❌ NOT PRESENT
-- `_home/.zsh_plugins.txt` - ❌ NOT PRESENT
-- `_home/profile.d/01-orbstack.sh` - ❌ NOT PRESENT
-- `_home/profile.d/02-rbenv.sh` - ❌ NOT PRESENT
-- `_home/interactive.d/01-zsh-options.sh` - ❌ NOT PRESENT
-
-### D.3 Critical Gaps Summary
-
-| Feature | Current | New | Required Action |
-|---------|---------|-----|-----------------|
-| OrbStack | ✅ ~/.zprofile | ❌ Missing | Create profile.d/01-orbstack.sh |
-| rbenv | ✅ ~/.bashrc | ❌ Missing | Create profile.d/02-rbenv.sh |
-| Antidote plugins list | ✅ Inline in zshrc | ❌ Missing file | Create .zsh_plugins.txt |
-| Interactive comments | ✅ In zshrc | ❌ Missing | Add to zshrc or interactive.d |
-| .zshenv | ⚠️ Empty | ❌ Missing | Create (even if empty) |
-
-### D.4 Directory Structure Comparison
-
-**Current Setup:**
-```
-~/
-├── .zshrc (monolithic, 33 lines)
-├── .zprofile (OrbStack only, 10 lines)
-├── .bashrc (sources zshrc, 5 lines)
-└── .zshenv (empty, 1 line)
+**Previous Status:** Had unused `link()` function
+**Current Status:** Now just outputs informational message:
+```bash
+echo "Dotfiles directory loaded. Run 'bin/wire' to set up symlinks."
 ```
 
-**New Setup:**
-```
-~/src/nsheaps/dotfiles/_home/
-├── zshrc (modular, 41 lines)
-├── zprofile (brew + mise + init, 15 lines)
-├── bashrc (proper bash, 11 lines)
-├── bash_profile (proper bash, 15 lines)
-├── profile.d/
-│   └── 00-env.sh (Java, .NET, NVM, 21 lines)
-├── interactive.d/
-│   ├── claude-cc-runclaude.sh (42 lines)
-│   ├── claude-cc-newsession.sh (48 lines)
-│   └── claude-cc-resume.sh (37 lines)
-└── ../bin/dotfiles (management script, 64 lines)
-```
+**Assessment:** Simplified appropriately - no dead code.
 
-### D.5 bin/dotfiles Script Analysis
+### 4. Claude Functions Consolidated
 
-**Current Implementation:**
-- `dotfiles init` - Outputs shell code to source profile.d and interactive.d
-- `dotfiles sync` - Stubbed (not implemented)
+**Previous Status:** Multiple files for Claude-related functions
+**Current Status:** Single `/Users/nathan.heaps/src/nsheaps/dotfiles/_home/interactive.d/claude.sh` with all functions:
+- `claude`, `ccresume`, `cccontinue`, `claude-update` (shorthands)
+- `cc-runclaude`, `cc-newsession`, `cc-tmp`, `cc-resume`, `cc-resumesession` (workspace management)
 
-**Issues Found:**
-1. **Comment on line 38**: "CLAUDE USE cat TO READ THESE SNIPPETS FROM A FILE. DO NOT INLINE SHELL SCRIPTS"
-   - This is a note to Claude about avoiding inline scripts
-   - Suggests the script should be refactored
-2. **Subshell vs source consideration** (line 40): Script mentions difference between `source <()` and `eval "$()"` but doesn't make a clear choice
-3. **Interactive detection**: Currently outputs shell code that checks `$-` for 'i', which is correct
-
-**Recommendation**: The script works but has notes indicating it may need refinement.
+**Assessment:** Good consolidation. Clear organization with section headers.
 
 ---
 
-**End of Review**
+## Workflow Analysis
+
+### Update Flow
+**How updates are pulled:**
+1. `git pull` in the dotfiles repo
+2. Script directory changes (`profile.d/`, `interactive.d/`, etc.) are immediate via symlinks
+3. Template changes require re-running `bin/wire`
+4. New shell sessions pick up changes automatically
+
+**Assessment:** Efficient. The symlink approach means most changes are live immediately.
+
+### Push Flow
+**How changes are committed:**
+1. Edit files in `_home/` directory
+2. Standard git workflow: `git add`, `git commit`, `git push`
+3. No special tooling required
+
+**Assessment:** Simple and standard.
+
+### Discovery
+**How users know where to edit:**
+- README clearly documents `_home/` as the canonical location
+- Documentation updated to reflect wire-based architecture
+- `.claude/rules/architecture.md` accurately describes the system
+
+**Potential Confusion:**
+- Repo-root symlinks (`zshrc`, `zprofile`, `zshenv`) point to HOME, not `_home/`
+- `mise_config.toml` symlink points to HOME, which diverges from pattern
+
+**Assessment:** Mostly clear, but the two different symlink patterns could confuse users.
+
+### Modularity
+**Assessment of shareability:**
+- Script directories are well-modularized (one function/feature per file)
+- Each interactive.d script is self-contained
+- Path dependencies are minimal (uses `$DOTFILES_DIR` environment variable)
+- Could be shared to other machines with minimal adaptation
+
+### Environment Impact
+**Effect on other repositories:**
+- `.envrc` only affects the dotfiles directory itself
+- No direnv pollution in other repos
+- Mise shims work globally via `.zprofile` activation
+- iTerm profile switching is based on directory path, non-invasive
+
+**Assessment:** Clean separation. No unexpected side effects.
+
+---
+
+## Architectural Concerns
+
+### 1. Two Symlink Patterns Coexist
+
+The repository has two different approaches to file management:
+
+| Pattern | Example | Source of Truth |
+|---------|---------|-----------------|
+| Managed Section | `~/.zshrc` sources `_home/zshrc` | Repo (`_home/`) |
+| Convenience Symlink | `./mise_config.toml` -> `~/.config/mise/config.toml` | HOME |
+| Convenience Symlink | `./zshrc` -> `~/.zshrc` | HOME (which sources repo) |
+
+This creates cognitive overhead. Users might expect all canonical files to be in `_home/`, but mise config is tracked differently.
+
+**Recommendation:** Document this explicitly in the README or consider unifying the approach.
+
+### 2. iTerm Profile Installation Location
+
+The `00-iterm-profiles.sh` script is in `startup.d/` (run at login) which is appropriate. However:
+- It copies files rather than symlinking
+- Uses a marker prefix (`dotfiles-managed-`) for cleanup
+
+This is a reasonable approach since iTerm may not handle symlinked dynamic profiles well.
+
+### 3. Claude Function Complexity
+
+The `_home/interactive.d/claude.sh` file is 167 lines with complex workspace management logic. While well-organized, it might benefit from:
+- Separating core shorthands from workspace management
+- Adding unit tests for the workspace functions
+
+This is a minor concern - the current implementation works.
+
+---
+
+## Comparison: Repository vs Deployed State
+
+| Component | Repository | HOME | Status |
+|-----------|-----------|------|--------|
+| ~/.zshrc | `_home/zshrc` | Contains managed section | OK |
+| ~/.zprofile | `_home/zprofile` | Contains managed section | OK |
+| ~/.zshenv | `_home/zshenv` | Contains managed section | OK |
+| ~/.bashrc | `_home/bashrc` | Contains managed section + zsh source | **ISSUE** |
+| ~/.bash_profile | `_home/bash_profile` | Contains managed section | OK |
+| ~/.dotfiles | Created by `bin/wire` | Symlink to repo | OK |
+| ~/.profile.d | Symlink target | Symlink to repo | OK |
+| ~/.interactive.d | Symlink target | Symlink to repo | OK |
+| ~/.startup.d | Symlink target | Symlink to repo | OK |
+| ~/.update.d | Symlink target | Symlink to repo | OK |
+| ~/.config/mise/config.toml | Different content | Has extra tools | **DRIFT** |
+| ~/Library/.../DynamicProfiles/ | Source profiles | Copied with prefix | OK |
+
+---
+
+## Previous Critical Issues - Resolution Status
+
+| Issue | Previous Status | Current Status |
+|-------|----------------|----------------|
+| Missing ~/.dotfiles symlink | BROKEN | FIXED |
+| Bash files reference deleted bin/dotfiles | BROKEN | FIXED |
+| Hardcoded Homebrew path for antidote | BROKEN on Intel | FIXED |
+| Documentation references old eval pattern | OUTDATED | FIXED |
+| Orphaned link() function in rc.d/ | DEAD CODE | REMOVED |
+| Duplicate Claude functions | CONFUSING | CONSOLIDATED |
+
+---
+
+## Remaining Work
+
+Based on the stated goals and current implementation:
+
+1. **Remove stray zsh source from ~/.bashrc** - The line `\. "$HOME/.zshrc"` in the deployed `~/.bashrc` should be removed as it causes errors. This appears to be a pre-existing line that wasn't cleaned up during wiring.
+
+2. **Reconcile mise config drift** - Either sync `_home/.config/mise/config.toml` with HOME, or change the tracking approach to use symlinks consistently.
+
+3. **Fix iTerm README path** - Update `_home/.config/iterm2/README.md:32` to reference `startup.d/` instead of `update.d/`.
+
+---
+
+## Summary
+
+The refactoring has achieved its core goals:
+- Clean managed-sections approach replaces eval-based init
+- Symlinks for script directories work correctly
+- Antidote plugin loading is properly configured with dynamic Homebrew detection
+- Claude functions are consolidated
+- iTerm profile management is functional
+
+**Critical issues from previous review are resolved.** The remaining issues are minor:
+- Bash/Zsh source conflict in deployed ~/.bashrc (user-specific cleanup needed)
+- Configuration drift in mise config
+- Minor documentation error in iTerm README
+
+The implementation is solid and maintainable. The architecture is clear and well-documented.

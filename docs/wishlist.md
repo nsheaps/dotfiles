@@ -1,0 +1,8 @@
+- setup sets up rc files to keep stuff in sync when loaded, on an interval (check interval on start, if interval has passed, offer to sync like oh my zsh)
+- for syncing _home/.config stuff, for each subfolder, find the associated folder in ~/.config.
+  - If it doesn't exist, make it
+  - If it does, see if symlinks exist
+    - If they do, see where it points
+      - If it points to the wrong place, exit with error
+    - Sync files from this repo (the checkout location, not necessarily where the project is checked out to) into that folder by creating any missing symlinks to files in this repository. If a file exists that was symlinked prior but no longer exists, remove the symlink (only if it points to the right place)
+- setup worktree-switcher (see https://github.com/nsheaps/.ai/pull/104)

@@ -1,57 +1,309 @@
 #!/usr/bin/env bash
-# Wiring script to sync _home/ files to ~/ and create necessary symlinks
+# Wiring script to deploy dotfiles from repo to $HOME
+#
+# This script:
+# 1. Creates symlinks from ~/.<dir> to _home/<dir> for script directories
+# 2. Injects managed sections into shell RC files
+# 3. Copies _home/.config files to ~/.config with conflict resolution
+#
+# The managed sections contain a single source command pointing to the
+# corresponding file in _home/ (without the dot prefix).
 
 set -euo pipefail
-
-# Safety: Remove this exit 1 when ready to run the script
-exit 1
 
 # Dynamically determine dotfiles directory from script location
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEMPLATES_DIR="$DOTFILES_DIR/templates"
 
 HOME_DIR="$HOME"
 
-echo "Wiring dotfiles from $DOTFILES_DIR/_home to $HOME_DIR..."
+# Managed section markers
+MARKER_BEGIN="# BEGIN: Managed by dotfiles wire"
+MARKER_END="# END: Managed by dotfiles wire"
 
-# Create symlinks for profile.d and interactive.d directories
-echo ""
-echo "Creating directory symlinks..."
-ln -sfn "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
-echo "  ~/.profile.d → $DOTFILES_DIR/_home/profile.d"
+echo "Wiring dotfiles from $DOTFILES_DIR to $HOME_DIR..."
+echo "Dotfiles directory: $DOTFILES_DIR"
 
-ln -sfn "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
-echo "  ~/.interactive.d → $DOTFILES_DIR/_home/interactive.d"
+# =============================================================================
+# Directory Symlinks
+# =============================================================================
 
-# Sync RC files from _home/ to ~/
-echo ""
-echo "Syncing RC files..."
-
-# Function to sync a file
-sync_file() {
+create_symlink() {
   local src="$1"
   local dest="$2"
 
-  if [[ -f "$src" ]]; then
-    cp "$src" "$dest"
-    echo "  Copied $src → $dest"
+  if [[ -d "$src" ]]; then
+    ln -sfn "$src" "$dest"
+    echo "  $dest → $src"
+  else
+    echo "  Warning: Source directory does not exist: $src"
   fi
 }
 
-# Sync zsh files (add dot prefix when copying to home)
-sync_file "$DOTFILES_DIR/_home/zshrc" "$HOME_DIR/.zshrc"
-sync_file "$DOTFILES_DIR/_home/zprofile" "$HOME_DIR/.zprofile"
-sync_file "$DOTFILES_DIR/_home/zshenv" "$HOME_DIR/.zshenv"
-sync_file "$DOTFILES_DIR/_home/zsh_plugins.txt" "$HOME_DIR/.zsh_plugins.txt"
+echo ""
+echo "Creating directory symlinks..."
 
-# Sync bash files (add dot prefix when copying to home)
-sync_file "$DOTFILES_DIR/_home/bashrc" "$HOME_DIR/.bashrc"
-sync_file "$DOTFILES_DIR/_home/bash_profile" "$HOME_DIR/.bash_profile"
+# Create ~/.dotfiles symlink to the dotfiles repo
+ln -sfn "$DOTFILES_DIR" "$HOME_DIR/.dotfiles"
+echo "  $HOME_DIR/.dotfiles → $DOTFILES_DIR"
+
+create_symlink "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
+create_symlink "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
+create_symlink "$DOTFILES_DIR/_home/startup.d" "$HOME_DIR/.startup.d"
+create_symlink "$DOTFILES_DIR/_home/update.d" "$HOME_DIR/.update.d"
+
+# =============================================================================
+# Managed Sections in Shell RC Files
+# =============================================================================
+
+# Inject or update a managed section in a file
+# Usage: inject_managed_section <target_file> <template_file>
+inject_managed_section() {
+  local target="$1"
+  local template="$2"
+
+  if [[ ! -f "$template" ]]; then
+    echo "  Warning: Template not found: $template"
+    return 1
+  fi
+
+  # Build the managed section content with DOTFILES_DIR expanded
+  local section_content
+  section_content="$MARKER_BEGIN
+export DOTFILES_DIR=\"$DOTFILES_DIR\"
+$(cat "$template")
+$MARKER_END"
+
+  # Create target file if it doesn't exist
+  if [[ ! -f "$target" ]]; then
+    echo "$section_content" > "$target"
+    echo "  Created $target with managed section"
+    return 0
+  fi
+
+  # Check if managed section already exists
+  if grep -q "$MARKER_BEGIN" "$target" 2>/dev/null; then
+    # Replace existing managed section
+    local tmpfile content_file
+    tmpfile=$(mktemp)
+    content_file=$(mktemp)
+
+    # Write content to temp file (awk can't handle newlines in -v)
+    echo "$section_content" > "$content_file"
+
+    # Use awk to replace the section, reading replacement from file
+    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v cfile="$content_file" '
+      $0 ~ begin { skip=1; while ((getline line < cfile) > 0) print line; close(cfile); next }
+      $0 ~ end { skip=0; next }
+      !skip { print }
+    ' "$target" > "$tmpfile"
+
+    mv "$tmpfile" "$target"
+    rm -f "$content_file"
+    echo "  Updated managed section in $target"
+  else
+    # Append managed section to end of file
+    echo "" >> "$target"
+    echo "$section_content" >> "$target"
+    echo "  Appended managed section to $target"
+  fi
+}
 
 echo ""
-echo "✓ Wiring complete!"
+echo "Injecting managed sections into shell RC files..."
+
+# Zsh files
+inject_managed_section "$HOME_DIR/.zshrc" "$TEMPLATES_DIR/zsh/rc.zsh"
+inject_managed_section "$HOME_DIR/.zshenv" "$TEMPLATES_DIR/zsh/env.zsh"
+inject_managed_section "$HOME_DIR/.zprofile" "$TEMPLATES_DIR/zsh/profile.zsh"
+
+# Bash files
+inject_managed_section "$HOME_DIR/.bashrc" "$TEMPLATES_DIR/bash/rc.bash"
+inject_managed_section "$HOME_DIR/.bash_profile" "$TEMPLATES_DIR/bash/profile.bash"
+
+# =============================================================================
+# File Symlinking (DRY helper for .config and Library)
+# =============================================================================
+
+# Symlink a single file from repo to HOME with conflict resolution
+# Usage: link_home_file <repo_subdir> <home_subdir> <relative_path>
+# Example: link_home_file "_home/.config" ".config" "mise/config.toml"
+link_home_file() {
+  local repo_subdir="$1"
+  local home_subdir="$2"
+  local rel_path="$3"
+  local src="$DOTFILES_DIR/$repo_subdir/$rel_path"
+  local dest="$HOME_DIR/$home_subdir/$rel_path"
+  local display_path="~/$home_subdir/$rel_path"
+  local dest_dir
+  dest_dir="$(dirname "$dest")"
+
+  # Skip README files - they're for documentation only
+  if [[ "$(basename "$rel_path")" == "README.md" ]]; then
+    return 0
+  fi
+
+  # Create destination directory if needed
+  if [[ ! -d "$dest_dir" ]]; then
+    mkdir -p "$dest_dir"
+  fi
+
+  # Already a correct symlink
+  if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$src" ]]; then
+    echo "  Symlink OK: $display_path"
+    return 0
+  fi
+
+  # If destination doesn't exist, just symlink
+  if [[ ! -e "$dest" ]]; then
+    ln -s "$src" "$dest"
+    echo "  Symlinked: $display_path"
+    return 0
+  fi
+
+  # If it's a symlink pointing elsewhere, update it
+  if [[ -L "$dest" ]]; then
+    rm -f "$dest"
+    ln -s "$src" "$dest"
+    echo "  Updated symlink: $display_path"
+    return 0
+  fi
+
+  # It's a regular file - check if it matches
+  if diff -q "$src" "$dest" > /dev/null 2>&1; then
+    # Files match - replace with symlink
+    rm -f "$dest"
+    ln -s "$src" "$dest"
+    echo "  Converted to symlink: $display_path"
+    return 0
+  fi
+
+  # Files differ - prompt user
+  echo ""
+  echo "  CONFLICT: $display_path differs from repo version"
+  echo ""
+  echo "  --- Diff (repo vs home) ---"
+  if [[ -t 1 ]]; then
+    diff --color=always -u "$src" "$dest" || true
+  else
+    diff -u "$src" "$dest" || true
+  fi
+  echo "  --- End diff ---"
+  echo ""
+  echo "  Options:"
+  echo "    [r] Overwrite HOME with repo version"
+  echo "    [h] Overwrite repo with HOME version (and commit)"
+  echo "    [k] Keep both: 3-way merge with empty base (auto-merges, conflicts if needed)"
+  echo "    [s] Skip (keep both as-is, no sync)"
+  echo "    [d] Show full diff"
+  echo ""
+
+  while true; do
+    read -rp "  Choice [r/h/k/s/d]: " choice
+    case "$choice" in
+      r|R)
+        rm -f "$dest"
+        ln -s "$src" "$dest"
+        echo "  Symlinked $display_path to repo version"
+        break
+        ;;
+      h|H)
+        cp "$dest" "$src"
+        rm -f "$dest"
+        ln -s "$src" "$dest"
+        git -C "$DOTFILES_DIR" add "$src"
+        git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
+        echo "  Updated repo and symlinked $display_path"
+        break
+        ;;
+      k|K)
+        # 3-way merge using git merge-file with empty base
+        local base_tmp
+        base_tmp=$(mktemp)
+        echo ""
+        if git merge-file -p "$src" "$base_tmp" "$dest" > "${src}.merged"; then
+          mv "${src}.merged" "$src"
+          rm -f "$base_tmp"
+          echo "  Merged successfully (no conflicts)"
+        else
+          mv "${src}.merged" "$src"
+          rm -f "$base_tmp"
+          echo "  Merge has conflicts that need manual resolution."
+          read -rp "  Open editor to resolve? [Y/n]: " open_editor
+          if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
+            if command -v code &>/dev/null; then
+              code --wait "$src"
+            else
+              ${EDITOR:-vim} "$src"
+            fi
+          fi
+        fi
+        rm -f "$dest"
+        ln -s "$src" "$dest"
+        git -C "$DOTFILES_DIR" add "$src"
+        git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
+        echo "  Merged, committed, and symlinked"
+        break
+        ;;
+      s|S)
+        echo "  Skipped $display_path"
+        break
+        ;;
+      d|D)
+        echo ""
+        if [[ -t 1 ]]; then
+          diff --color=always -u "$src" "$dest" || true
+        else
+          diff -u "$src" "$dest" || true
+        fi
+        echo ""
+        ;;
+      *)
+        echo "  Invalid choice. Please enter r, h, k, s, or d."
+        ;;
+    esac
+  done
+}
+
+# Helper to symlink all files in a repo subdir to corresponding home location
+# Usage: link_home_dir <repo_subdir> <home_subdir>
+link_home_dir() {
+  local repo_subdir="$1"
+  local home_subdir="$2"
+  local repo_path="$DOTFILES_DIR/$repo_subdir"
+
+  if [[ ! -d "$repo_path" ]]; then
+    return 0
+  fi
+
+  echo ""
+  echo "Symlinking ~/$home_subdir files..."
+
+  local files
+  mapfile -d '' files < <(find "$repo_path" -type f -print0)
+
+  for file in "${files[@]}"; do
+    local rel_path="${file#$repo_path/}"
+    link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
+  done
+}
+
+# Symlink .config and Library directories
+link_home_dir "_home/.config" ".config"
+link_home_dir "_home/Library" "Library"
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+echo ""
+echo "Wiring complete!"
 echo ""
 echo "Next steps:"
-echo "  1. Review the changes in ~/"
-echo "  2. Test with: source ~/.zshrc (or open a new terminal)"
-echo "  3. Verify functions work: cc-tmp, cc-newsession, cc-resume"
+echo "  1. Open a new terminal to test the changes"
+echo "  2. Verify functions work: cc-tmp, cc-newsession, cc-resume"
+echo "  3. Check iTerm profile switching when changing directories"
+echo ""
+echo "To run startup scripts manually:"
+echo "  $DOTFILES_DIR/bin/run-startup.sh"

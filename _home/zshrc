@@ -2,6 +2,12 @@
 # sourced when an interactive shell is spawned. Use to customize the feel of
 # your terminal, but scripts run outside the terminal may not use this setup
 
+# Make sure dotfiles dir is set, or exit with error
+if [[ -z "${DOTFILES_DIR:-}" ]]; then
+  echo "Error: DOTFILES_DIR is not set. Cannot source zshrc." >&2
+  return 1
+fi
+
 # Enable comments in interactive shells (allows copy-pasting commands with comments)
 setopt interactivecomments
 
@@ -13,31 +19,47 @@ setopt interactivecomments
 # User-customizable section
 # Add your personal customizations here
 
-### managed by automation ###
-eval "$($HOME/src/nsheaps/dotfiles/bin/dotfiles init)"
-### end managed by automation ###
 
 # Lazy-load (autoload) Zsh function files from a directory.
 ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
-fpath=($ZFUNCDIR $fpath)
-autoload -Uz $ZFUNCDIR/*(.:t)
-
-# Create an amazing Zsh config using antidote plugins.
-
-# Set the root name of the plugins files (.txt and .zsh) antidote will use.
-zsh_plugins="${HOME}/.zsh_plugins"
-# Ensure the .zsh_plugins.txt file exists so you can add plugins.
-[[ -f ${zsh_plugins}.txt ]] || touch ${zsh_plugins}.txt
-
-# Lazy-load antidote from its functions directory.
-fpath=(/opt/homebrew/opt/antidote/share/antidote/functions $fpath)
-autoload -Uz antidote
-
-# Generate a new static file whenever .zsh_plugins.txt is updated.
-if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
-  antidote bundle <${zsh_plugins}.txt >|${zsh_plugins}.zsh
+if [[ -d "$ZFUNCDIR" ]]; then
+  fpath=($ZFUNCDIR $fpath)
+  autoload -Uz $ZFUNCDIR/*(.:t) 2>/dev/null
 fi
 
-# Source your static plugins file.
-source ${zsh_plugins}.zsh
+# Antidote plugin management
+# Plugins are defined in _home/zsh_plugins.txt, compiled to ~/.zsh_plugins.zsh
+zsh_plugins_src="${DOTFILES_DIR}/_home/zsh_plugins.txt"
+zsh_plugins_compiled="${HOME}/.zsh_plugins.zsh"
+
+# Lazy-load antidote from its functions directory (supports Apple Silicon and Intel Macs)
+if (( $+commands[brew] )); then
+  _antidote_dir="$(brew --prefix antidote 2>/dev/null)/share/antidote"
+  if [[ -d "$_antidote_dir/functions" ]]; then
+    fpath=("$_antidote_dir/functions" $fpath)
+    autoload -Uz antidote
+  fi
+  unset _antidote_dir
+fi
+
+# Generate compiled plugins file when source changes
+if [[ ! -f "$zsh_plugins_compiled" ]] || [[ "$zsh_plugins_src" -nt "$zsh_plugins_compiled" ]]; then
+  antidote bundle <"$zsh_plugins_src" >"$zsh_plugins_compiled"
+fi
+
+# Source the compiled plugins
+source "$zsh_plugins_compiled"
+
+
+# Source all profile.d scripts (environment setup)
+for script in "${DOTFILES_DIR}"/_home/profile.d/*.sh(N); do
+  source "$script"
+done
+
+# Source all interactive.d scripts (functions, aliases) - only for TTY
+if [[ -t 1 ]]; then
+  for script in "${DOTFILES_DIR}"/_home/interactive.d/*.sh(N); do
+    source "$script"
+  done
+fi
 
