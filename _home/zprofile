@@ -7,5 +7,5 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # do a non-interactive mise activation to set up shims for tools so they can be available globally
-mise activate --shims
+eval "$(mise activate --shims)"
 
