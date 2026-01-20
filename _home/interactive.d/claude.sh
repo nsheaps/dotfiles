@@ -23,21 +23,40 @@
 # =============================================================================
 
 _claudeish() {
-  local ALWAYS_USE_CLAUDE_DIRECTLY_FOR_THESE_COMMANDS=("auth" "plugin" "doctor")
+  # Commands that only exist in claude (not happy) - always redirect to claude
+  local CLAUDE_ONLY_COMMANDS=("auth" "plugin")
+  # Commands that exist in both - pass through to whichever binary was requested
+  local PASSTHROUGH_COMMANDS=("doctor")
   local BIN_NAME="$1"
   shift
 
-  local HAS_SPECIAL_COMMAND=false
-  # assume special command is next arg
-  for cmd in "${ALWAYS_USE_CLAUDE_DIRECTLY_FOR_THESE_COMMANDS[@]}"; do
+  local HAS_CLAUDE_ONLY_COMMAND=false
+  local HAS_PASSTHROUGH_COMMAND=false
+
+  # Check if this is a claude-only command
+  for cmd in "${CLAUDE_ONLY_COMMANDS[@]}"; do
     if [[ "$1" == "$cmd" ]]; then
-      HAS_SPECIAL_COMMAND=true
+      HAS_CLAUDE_ONLY_COMMAND=true
       break
     fi
   done
 
-  if [[ $HAS_SPECIAL_COMMAND == true ]]; then
+  # Check if this is a passthrough command (exists in both CLIs)
+  for cmd in "${PASSTHROUGH_COMMANDS[@]}"; do
+    if [[ "$1" == "$cmd" ]]; then
+      HAS_PASSTHROUGH_COMMAND=true
+      break
+    fi
+  done
+
+  # Only redirect to claude for claude-only commands
+  if [[ $HAS_CLAUDE_ONLY_COMMAND == true ]]; then
     BIN_NAME="claude"
+  fi
+
+  local HAS_SPECIAL_COMMAND=false
+  if [[ $HAS_CLAUDE_ONLY_COMMAND == true ]] || [[ $HAS_PASSTHROUGH_COMMAND == true ]]; then
+    HAS_SPECIAL_COMMAND=true
   fi
 
   if [[ "$BIN_NAME" == "happy" ]] && ! command -v happy &> /dev/null; then
