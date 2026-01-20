@@ -9,6 +9,9 @@
 #   ccc           - Short alias for --continue with visual feedback
 #   claude-update - Update claude-code via Homebrew
 #
+# General utilities:
+#   restart-shell - Restart the current shell (exec $SHELL -l)
+#
 # Workspace management (cc-* prefix):
 #   cc-tmp        - Create temporary workspace (deleted on exit)
 #   cc-newsession - Create persistent workspace
@@ -93,6 +96,14 @@ ccc() {
 
 claude-update() {
   brew update && brew upgrade claude-code
+}
+
+# =============================================================================
+# General Shell Utilities
+# =============================================================================
+
+restart-shell() {
+  exec $SHELL -l
 }
 
 # =============================================================================
