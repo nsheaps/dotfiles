@@ -9,9 +9,9 @@
         "Blue Component": 0.97
       },
       "Background Color (Dark)": {
-        "Red Component": 0.08,
-        "Green Component": 0.10,
-        "Blue Component": 0.18
+        "Red Component": 0.04,
+        "Green Component": 0.08,
+        "Blue Component": 0.16
       },
       "Foreground Color (Light)": {
         "Red Component": 0.1,
@@ -43,8 +43,8 @@
         "Alpha Component": 0.8
       },
       "Badge Max Width": 0.75,
-      "Badge Max Height": 0.075,
-      "Use Bold Font": true,
+      "Badge Max Height": 0.05,
+      "Use Bold Font": false,
       "Use Bright Bold": true,
       "Use Italic Font": false,
       "Transparency": 0,
@@ -69,9 +69,9 @@
         "Blue Component": 0.98
       },
       "Background Color (Dark)": {
-        "Red Component": 0.12,
-        "Green Component": 0.08,
-        "Blue Component": 0.20
+        "Red Component": 0.26,
+        "Green Component": 0.10,
+        "Blue Component": 0.14
       },
       "Foreground Color (Light)": {
         "Red Component": 0.1,
