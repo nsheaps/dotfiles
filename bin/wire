@@ -123,15 +123,19 @@ inject_managed_section "$HOME_DIR/.bashrc" "$TEMPLATES_DIR/bash/rc.bash"
 inject_managed_section "$HOME_DIR/.bash_profile" "$TEMPLATES_DIR/bash/profile.bash"
 
 # =============================================================================
-# .config Directory Symlinking
+# File Symlinking (DRY helper for .config and Library)
 # =============================================================================
 
 # Symlink a single file from repo to HOME with conflict resolution
-# Usage: link_config_file <relative_path>
-link_config_file() {
-  local rel_path="$1"
-  local src="$DOTFILES_DIR/_home/.config/$rel_path"
-  local dest="$HOME_DIR/.config/$rel_path"
+# Usage: link_home_file <repo_subdir> <home_subdir> <relative_path>
+# Example: link_home_file "_home/.config" ".config" "mise/config.toml"
+link_home_file() {
+  local repo_subdir="$1"
+  local home_subdir="$2"
+  local rel_path="$3"
+  local src="$DOTFILES_DIR/$repo_subdir/$rel_path"
+  local dest="$HOME_DIR/$home_subdir/$rel_path"
+  local display_path="~/$home_subdir/$rel_path"
   local dest_dir
   dest_dir="$(dirname "$dest")"
 
@@ -147,14 +151,14 @@ link_config_file() {
 
   # Already a correct symlink
   if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$src" ]]; then
-    echo "  Symlink OK: ~/.config/$rel_path"
+    echo "  Symlink OK: $display_path"
     return 0
   fi
 
   # If destination doesn't exist, just symlink
   if [[ ! -e "$dest" ]]; then
     ln -s "$src" "$dest"
-    echo "  Symlinked: ~/.config/$rel_path"
+    echo "  Symlinked: $display_path"
     return 0
   fi
 
@@ -162,7 +166,7 @@ link_config_file() {
   if [[ -L "$dest" ]]; then
     rm -f "$dest"
     ln -s "$src" "$dest"
-    echo "  Updated symlink: ~/.config/$rel_path"
+    echo "  Updated symlink: $display_path"
     return 0
   fi
 
@@ -171,13 +175,13 @@ link_config_file() {
     # Files match - replace with symlink
     rm -f "$dest"
     ln -s "$src" "$dest"
-    echo "  Converted to symlink: ~/.config/$rel_path"
+    echo "  Converted to symlink: $display_path"
     return 0
   fi
 
   # Files differ - prompt user
   echo ""
-  echo "  CONFLICT: ~/.config/$rel_path differs from repo version"
+  echo "  CONFLICT: $display_path differs from repo version"
   echo ""
   echo "  --- Diff (repo vs home) ---"
   if [[ -t 1 ]]; then
@@ -201,7 +205,7 @@ link_config_file() {
       r|R)
         rm -f "$dest"
         ln -s "$src" "$dest"
-        echo "  Symlinked ~/.config/$rel_path to repo version"
+        echo "  Symlinked $display_path to repo version"
         break
         ;;
       h|H)
@@ -209,8 +213,8 @@ link_config_file() {
         rm -f "$dest"
         ln -s "$src" "$dest"
         git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: update _home/.config/$rel_path from HOME"
-        echo "  Updated repo and symlinked ~/.config/$rel_path"
+        git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
+        echo "  Updated repo and symlinked $display_path"
         break
         ;;
       k|K)
@@ -238,12 +242,12 @@ link_config_file() {
         rm -f "$dest"
         ln -s "$src" "$dest"
         git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: merge _home/.config/$rel_path with HOME"
+        git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
         echo "  Merged, committed, and symlinked"
         break
         ;;
       s|S)
-        echo "  Skipped ~/.config/$rel_path"
+        echo "  Skipped $display_path"
         break
         ;;
       d|D)
@@ -262,17 +266,32 @@ link_config_file() {
   done
 }
 
-echo ""
-echo "Symlinking .config files..."
+# Helper to symlink all files in a repo subdir to corresponding home location
+# Usage: link_home_dir <repo_subdir> <home_subdir>
+link_home_dir() {
+  local repo_subdir="$1"
+  local home_subdir="$2"
+  local repo_path="$DOTFILES_DIR/$repo_subdir"
 
-# Collect files into array first (avoids stdin redirection issues with interactive prompts)
-mapfile -d '' config_files < <(find "$DOTFILES_DIR/_home/.config" -type f -print0)
+  if [[ ! -d "$repo_path" ]]; then
+    return 0
+  fi
 
-for file in "${config_files[@]}"; do
-  # Get relative path from _home/.config/
-  rel_path="${file#$DOTFILES_DIR/_home/.config/}"
-  link_config_file "$rel_path"
-done
+  echo ""
+  echo "Symlinking ~/$home_subdir files..."
+
+  local files
+  mapfile -d '' files < <(find "$repo_path" -type f -print0)
+
+  for file in "${files[@]}"; do
+    local rel_path="${file#$repo_path/}"
+    link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
+  done
+}
+
+# Symlink .config and Library directories
+link_home_dir "_home/.config" ".config"
+link_home_dir "_home/Library" "Library"
 
 # =============================================================================
 # Summary
