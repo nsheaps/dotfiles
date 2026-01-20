@@ -5,6 +5,8 @@
 #   claude        - Launch claude with default flags
 #   ccresume      - Shorthand for 'claude --resume'
 #   cccontinue    - Shorthand for 'claude --continue'
+#   ccr           - Short alias for --resume with visual feedback
+#   ccc           - Short alias for --continue with visual feedback
 #   claude-update - Update claude-code via Homebrew
 #
 # Workspace management (cc-* prefix):
@@ -73,6 +75,19 @@ ccresume() {
 }
 
 cccontinue() {
+  claude --continue "$@"
+}
+
+# Short aliases with visual feedback
+ccr() {
+  echo "Resuming Claude Code Session..."
+  sleep 0.4
+  claude --resume "$@"
+}
+
+ccc() {
+  echo "Continuing Claude Code Session..."
+  sleep 0.4
   claude --continue "$@"
 }
 
