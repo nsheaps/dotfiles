@@ -3,6 +3,7 @@
     {
       "Name": "stainless",
       "Guid": "stainless-profile-001",
+      "Load Shell Integration Automatically": true,
       "Background Color (Light)": {
         "Red Component": 0.95,
         "Green Component": 0.95,
@@ -49,6 +50,9 @@
       "Use Italic Font": false,
       "Transparency": 0,
       "Blur": false,
+      "Background Image Location": "~/Library/Application Support/iTerm2/assets/stainless-logo.png",
+      "Background Image Mode": 3,
+      "Blend": 0.15,
       "Link Color (Dark)": {
         "Red Component": 0.7,
         "Green Component": 0.6,
@@ -63,6 +67,7 @@
     {
       "Name": "nsheaps",
       "Guid": "nsheaps-profile-001",
+      "Load Shell Integration Automatically": true,
       "Background Color (Light)": {
         "Red Component": 0.97,
         "Green Component": 0.95,
