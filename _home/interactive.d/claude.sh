@@ -17,14 +17,31 @@
 # CLI Shorthands
 # =============================================================================
 
-claude() {
-  local CLAUDE_BIN=(command claude)
+_claudeish() {
+  local BIN_NAME="$1"
+  shift
+  local CLAUDE_BIN=(command "$BIN_NAME")
   local FLAGS=("--allow-dangerously-skip-permissions" "$@")
-  echo "Launching claude with flags:" >&2
+  echo "Launching $BIN_NAME with flags:" >&2
   for flag in "${FLAGS[@]}"; do
     echo "  $flag" >&2
   done
   $CLAUDE_BIN "${FLAGS[@]}"
+}
+
+happy() {
+  USE_BIN="happy"
+  if ! command -v happy &> /dev/null; then
+    echo "happy CLI not found. Install via \`npm install -g happy-coder\`" >&2
+    echo "  see: https://happy.engineering/docs/quick-start/" >&2
+    echo "Falling back to 'claude' command." >&2
+    USE_BIN="claude"
+  fi
+  _claudeish "$USE_BIN" "$@"
+}
+
+claude() {
+  _claudeish "happy" "$@"
 }
 
 ccresume() {
