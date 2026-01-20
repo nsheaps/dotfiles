@@ -18,8 +18,22 @@
 # =============================================================================
 
 _claudeish() {
+  local ALWAYS_USE_CLAUDE_DIRECTLY_FOR_THESE_COMMANDS=("auth" "plugin" "doctor")
   local BIN_NAME="$1"
   shift
+
+  local HAS_SPECIAL_COMMAND=false
+  # assume special command is next arg
+  for cmd in "${ALWAYS_USE_CLAUDE_DIRECTLY_FOR_THESE_COMMANDS[@]}"; do
+    if [[ "$1" == "$cmd" ]]; then
+      HAS_SPECIAL_COMMAND=true
+      break
+    fi
+  done
+
+  if [[ $HAS_SPECIAL_COMMAND == true ]]; then
+    BIN_NAME="claude"
+  fi
 
   if [[ "$BIN_NAME" == "happy" ]] && ! command -v happy &> /dev/null; then
     echo "happy CLI not found. Install via \`npm install -g happy-coder\`" >&2
@@ -29,6 +43,13 @@ _claudeish() {
   fi
 
   local CLAUDE_BIN=(command "$BIN_NAME")
+
+  if [[ $HAS_SPECIAL_COMMAND == true ]]; then
+    # pass through directly
+    $CLAUDE_BIN "$@"
+    return
+  fi
+
   local FLAGS=("--allow-dangerously-skip-permissions" "$@")
   echo "Launching $BIN_NAME with flags:" >&2
   for flag in "${FLAGS[@]}"; do
