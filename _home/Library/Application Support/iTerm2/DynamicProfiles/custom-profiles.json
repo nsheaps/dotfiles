@@ -28,10 +28,22 @@
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.2
+        "Alpha Component": 0.8
       },
-      "Badge Max Width": 0.5,
-      "Badge Max Height": 0.08,
+      "Badge Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0,
+        "Alpha Component": 0.8
+      },
+      "Badge Color (Dark)": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.8
+      },
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.1,
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
@@ -76,10 +88,22 @@
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.2
+        "Alpha Component": 0.8
       },
-      "Badge Max Width": 0.5,
-      "Badge Max Height": 0.08,
+      "Badge Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0,
+        "Alpha Component": 0.8
+      },
+      "Badge Color (Dark)": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.8
+      },
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.1,
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,

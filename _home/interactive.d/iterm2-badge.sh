@@ -31,6 +31,10 @@ _update_iterm2_badge() {
       # No remote, just show the repo name
       repo_info=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)")
     fi
+  elif [[ "$PWD" == "$HOME/src/"* ]]; then
+    # In ~/src but not a git repo - show org/folder structure
+    # e.g., ~/src/nsheaps -> "nsheaps", ~/src/nsheaps/ai -> "nsheaps/ai"
+    repo_info="${PWD#$HOME/src/}"
   fi
 
   iterm2_set_user_var "gitRepo" "$repo_info"
