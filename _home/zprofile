@@ -9,3 +9,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # do a non-interactive mise activation to set up shims for tools so they can be available globally
 eval "$(mise activate --shims)"
 
+# Source all profile.d scripts (environment setup)
+for script in "${DOTFILES_DIR}"/_home/profile.d/*.sh(N); do
+  source "$script"
+done

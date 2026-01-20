@@ -25,11 +25,13 @@
       },
       "Badge Text": "\\(user.gitRepo)",
       "Badge Color": {
-        "Red Component": 0.4,
-        "Green Component": 0.35,
-        "Blue Component": 0.6,
-        "Alpha Component": 0.3
+        "Red Component": 0.9,
+        "Green Component": 0.9,
+        "Blue Component": 0.95,
+        "Alpha Component": 0.25
       },
+      "Badge Max Width": 0.4,
+      "Badge Max Height": 0.15,
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
@@ -71,11 +73,13 @@
       },
       "Badge Text": "\\(user.gitRepo)",
       "Badge Color": {
-        "Red Component": 0.5,
-        "Green Component": 0.3,
-        "Blue Component": 0.7,
-        "Alpha Component": 0.35
+        "Red Component": 0.9,
+        "Green Component": 0.85,
+        "Blue Component": 0.95,
+        "Alpha Component": 0.25
       },
+      "Badge Max Width": 0.4,
+      "Badge Max Height": 0.15,
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
