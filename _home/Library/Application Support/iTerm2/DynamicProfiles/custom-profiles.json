@@ -4,80 +4,92 @@
       "Name": "stainless",
       "Guid": "stainless-profile-001",
       "Background Color (Light)": {
-        "Red Component": 0.93,
-        "Green Component": 0.98,
-        "Blue Component": 0.99
+        "Red Component": 0.95,
+        "Green Component": 0.95,
+        "Blue Component": 0.97
       },
       "Background Color (Dark)": {
-        "Red Component": 0.12,
-        "Green Component": 0.23,
-        "Blue Component": 0.37
+        "Red Component": 0.08,
+        "Green Component": 0.10,
+        "Blue Component": 0.18
       },
       "Foreground Color (Light)": {
-        "Red Component": 0.0,
-        "Green Component": 0.0,
-        "Blue Component": 0.0
+        "Red Component": 0.1,
+        "Green Component": 0.1,
+        "Blue Component": 0.15
       },
       "Foreground Color (Dark)": {
         "Red Component": 0.9,
         "Green Component": 0.9,
-        "Blue Component": 0.9
+        "Blue Component": 0.95
       },
-      "Badge Text": "stainless",
+      "Badge Text": "\\(user.gitRepo)",
+      "Badge Color": {
+        "Red Component": 0.4,
+        "Green Component": 0.35,
+        "Blue Component": 0.6,
+        "Alpha Component": 0.3
+      },
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
       "Transparency": 0,
       "Blur": false,
       "Link Color (Dark)": {
-        "Red Component": 0.4,
-        "Green Component": 0.7,
-        "Blue Component": 1.0
+        "Red Component": 0.7,
+        "Green Component": 0.6,
+        "Blue Component": 0.9
       },
       "Link Color (Light)": {
-        "Red Component": 0.0,
-        "Green Component": 0.3,
-        "Blue Component": 0.8
+        "Red Component": 0.3,
+        "Green Component": 0.2,
+        "Blue Component": 0.6
       }
     },
     {
       "Name": "nsheaps",
       "Guid": "nsheaps-profile-001",
       "Background Color (Light)": {
-        "Red Component": 0.95,
-        "Green Component": 0.9,
-        "Blue Component": 0.96
+        "Red Component": 0.97,
+        "Green Component": 0.95,
+        "Blue Component": 0.98
       },
       "Background Color (Dark)": {
-        "Red Component": 0.24,
-        "Green Component": 0.16,
-        "Blue Component": 0.28
+        "Red Component": 0.12,
+        "Green Component": 0.08,
+        "Blue Component": 0.20
       },
       "Foreground Color (Light)": {
-        "Red Component": 0.0,
-        "Green Component": 0.0,
-        "Blue Component": 0.0
+        "Red Component": 0.1,
+        "Green Component": 0.05,
+        "Blue Component": 0.15
       },
       "Foreground Color (Dark)": {
-        "Red Component": 0.9,
-        "Green Component": 0.9,
-        "Blue Component": 0.9
+        "Red Component": 0.92,
+        "Green Component": 0.88,
+        "Blue Component": 0.96
       },
-      "Badge Text": "nsheaps",
+      "Badge Text": "\\(user.gitRepo)",
+      "Badge Color": {
+        "Red Component": 0.5,
+        "Green Component": 0.3,
+        "Blue Component": 0.7,
+        "Alpha Component": 0.35
+      },
       "Use Bold Font": true,
       "Use Bright Bold": true,
       "Use Italic Font": false,
       "Transparency": 0,
       "Blur": false,
       "Link Color (Dark)": {
-        "Red Component": 0.4,
-        "Green Component": 0.7,
-        "Blue Component": 1.0
+        "Red Component": 0.85,
+        "Green Component": 0.65,
+        "Blue Component": 0.2
       },
       "Link Color (Light)": {
-        "Red Component": 0.0,
-        "Green Component": 0.3,
-        "Blue Component": 0.8
+        "Red Component": 0.6,
+        "Green Component": 0.45,
+        "Blue Component": 0.1
       }
     }
   ]
