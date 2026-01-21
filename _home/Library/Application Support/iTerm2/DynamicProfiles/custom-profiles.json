@@ -43,8 +43,8 @@
         "Blue Component": 1.0,
         "Alpha Component": 0.8
       },
-      "Badge Max Width": 0.75,
-      "Badge Max Height": 0.05,
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.15,
       "Use Bold Font": false,
       "Use Bright Bold": true,
       "Use Italic Font": false,
@@ -75,7 +75,7 @@
       },
       "Background Color (Dark)": {
         "Red Component": 0.26,
-        "Green Component": 0.10,
+        "Green Component": 0.1,
         "Blue Component": 0.14
       },
       "Foreground Color (Light)": {
@@ -107,8 +107,8 @@
         "Blue Component": 1.0,
         "Alpha Component": 0.8
       },
-      "Badge Max Width": 0.75,
-      "Badge Max Height": 0.05,
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.15,
       "Use Bold Font": false,
       "Use Bright Bold": true,
       "Use Italic Font": false,
