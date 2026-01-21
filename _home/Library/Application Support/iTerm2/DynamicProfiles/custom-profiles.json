@@ -29,19 +29,19 @@
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Color (Light)": {
         "Red Component": 0.0,
         "Green Component": 0.0,
         "Blue Component": 0.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Color (Dark)": {
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Max Width": 1.0,
       "Badge Max Height": 0.15,
@@ -52,7 +52,7 @@
       "Blur": false,
       "Background Image Location": "~/Library/Application Support/iTerm2/assets/stainless-logo.png",
       "Background Image Mode": 3,
-      "Blend": 0.15,
+      "Blend": 0.075,
       "Link Color (Dark)": {
         "Red Component": 0.7,
         "Green Component": 0.6,
@@ -93,19 +93,19 @@
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Color (Light)": {
         "Red Component": 0.0,
         "Green Component": 0.0,
         "Blue Component": 0.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Color (Dark)": {
         "Red Component": 1.0,
         "Green Component": 1.0,
         "Blue Component": 1.0,
-        "Alpha Component": 0.8
+        "Alpha Component": 0.5
       },
       "Badge Max Width": 1.0,
       "Badge Max Height": 0.15,
