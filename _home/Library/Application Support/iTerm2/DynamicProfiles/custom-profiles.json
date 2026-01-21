@@ -3,7 +3,6 @@
     {
       "Name": "stainless",
       "Guid": "stainless-profile-001",
-      "Load Shell Integration Automatically": true,
       "Background Color (Light)": {
         "Red Component": 0.95,
         "Green Component": 0.95,
@@ -67,7 +66,6 @@
     {
       "Name": "nsheaps",
       "Guid": "nsheaps-profile-001",
-      "Load Shell Integration Automatically": true,
       "Background Color (Light)": {
         "Red Component": 0.97,
         "Green Component": 0.95,
