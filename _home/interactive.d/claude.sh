@@ -5,13 +5,6 @@
 #   claude        - Launch claude with default flags
 #   claude-update - Update claude-code via Homebrew
 #
-# General utilities:
-#   restart-shell - Restart the current shell (exec $SHELL -l)
-#
-# NOTE: Many functions have been moved to claude-utils package.
-# Install via: brew tap nsheaps/devsetup && brew install claude-utils
-# Moved commands: ccresume, cccontinue, ccr, ccc, claude-clean-orphaned,
-#                 cc-tmp, cc-newsession, cc-resume
 
 # =============================================================================
 # CLI Shorthands
@@ -87,10 +80,3 @@ claude() {
   happy "$@"
 }
 
-# =============================================================================
-# General Shell Utilities
-# =============================================================================
-
-restart-shell() {
-  exec $SHELL -l
-}
