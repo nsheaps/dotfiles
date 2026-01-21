@@ -127,10 +127,13 @@ restart-shell() {
 }
 
 # Kill orphaned claude processes (PPID=1) that don't have happy in their process tree
-# Usage: claude-clean-orphaned [--dry-run]
+# Usage: claude-clean-orphaned [--force]
+#   Default: dry-run (shows what would be killed)
+#   --force: actually kill the processes
+#   Interactive TTY: prompts for confirmation instead of requiring --force
 claude-clean-orphaned() {
-  local dry_run=false
-  [[ "$1" == "--dry-run" ]] && dry_run=true
+  local force=false
+  [[ "$1" == "--force" ]] && force=true
 
   local orphan_pids=()
 
@@ -176,10 +179,19 @@ claude-clean-orphaned() {
     ps -o pid,etime,command -p "$pid" 2>/dev/null | tail -1
   done
 
-  if [[ "$dry_run" == true ]]; then
+  # Determine if we should kill: --force flag, or interactive confirmation
+  local should_kill=false
+  if [[ "$force" == true ]]; then
+    should_kill=true
+  elif [[ -t 0 && -t 1 ]]; then
+    # Interactive TTY - prompt the user
     echo ""
-    echo "(dry-run) Would kill: ${orphan_pids[*]}"
-  else
+    printf "Kill these processes? [y/N] "
+    read -r response
+    [[ "$response" =~ ^[Yy]$ ]] && should_kill=true
+  fi
+
+  if [[ "$should_kill" == true ]]; then
     echo ""
     echo "Sending SIGINT to ${#orphan_pids[@]} orphaned process(es)..."
     kill -INT "${orphan_pids[@]}" 2>/dev/null
@@ -199,6 +211,10 @@ claude-clean-orphaned() {
     fi
 
     echo "Done."
+  else
+    echo ""
+    echo "(dry-run) Would kill: ${orphan_pids[*]}"
+    echo "Use --force to kill, or run interactively to be prompted."
   fi
 }
 
