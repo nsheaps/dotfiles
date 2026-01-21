@@ -2,7 +2,7 @@
 # Claude CLI helper functions
 #
 # Shorthands:
-#   claude        - Launch claude with default flags
+#   claude        - Launch claude with default flags (via run-claude)
 #   claude-update - Update claude-code via Homebrew
 #
 
@@ -10,80 +10,18 @@
 # CLI Shorthands
 # =============================================================================
 
-# NOTE: _claudeish, happy(), and claude() functions have been moved to
-# claude-utils/bin/lib/claude.lib.sh for use by standalone scripts.
-# The interactive shell wrappers below are commented out since the scripts
-# (ccc, ccr, etc.) now handle routing internally.
-#
-# If you need these functions in interactive shells again, uncomment below
-# or source the claude-utils library directly.
+# The main logic lives in claude-utils/bin/lib/claude.lib.sh.
+# This shell function wraps run-claude for interactive use.
 
-# _claudeish() {
-#   # Commands that only exist in claude (not happy) - always redirect to claude
-#   local CLAUDE_ONLY_COMMANDS=("auth" "plugin")
-#   # Commands that exist in both - pass through to whichever binary was requested
-#   local PASSTHROUGH_COMMANDS=("doctor" "daemon")
-#   local BIN_NAME="$1"
-#   shift
-#
-#   local HAS_CLAUDE_ONLY_COMMAND=false
-#   local HAS_PASSTHROUGH_COMMAND=false
-#
-#   # Check if this is a claude-only command
-#   for cmd in "${CLAUDE_ONLY_COMMANDS[@]}"; do
-#     if [[ "$1" == "$cmd" ]]; then
-#       HAS_CLAUDE_ONLY_COMMAND=true
-#       break
-#     fi
-#   done
-#
-#   # Check if this is a passthrough command (exists in both CLIs)
-#   for cmd in "${PASSTHROUGH_COMMANDS[@]}"; do
-#     if [[ "$1" == "$cmd" ]]; then
-#       HAS_PASSTHROUGH_COMMAND=true
-#       break
-#     fi
-#   done
-#
-#   # Only redirect to claude for claude-only commands
-#   if [[ $HAS_CLAUDE_ONLY_COMMAND == true ]]; then
-#     BIN_NAME="claude"
-#   fi
-#
-#   local HAS_SPECIAL_COMMAND=false
-#   if [[ $HAS_CLAUDE_ONLY_COMMAND == true ]] || [[ $HAS_PASSTHROUGH_COMMAND == true ]]; then
-#     HAS_SPECIAL_COMMAND=true
-#   fi
-#
-#   if [[ "$BIN_NAME" == "happy" ]] && ! command -v happy &> /dev/null; then
-#     echo "happy CLI not found. Install via \`npm install -g happy-coder\`" >&2
-#     echo "  see: https://happy.engineering/docs/quick-start/" >&2
-#     echo "Falling back to 'claude'." >&2
-#     BIN_NAME="claude"
-#   fi
-#
-#   local CLAUDE_BIN=(command "$BIN_NAME")
-#
-#   if [[ $HAS_SPECIAL_COMMAND == true ]]; then
-#     # pass through directly
-#     $CLAUDE_BIN "$@"
-#     return
-#   fi
-#
-#   local FLAGS=("--allow-dangerously-skip-permissions" "$@")
-#   echo "Launching $BIN_NAME with flags:" >&2
-#   for flag in "${FLAGS[@]}"; do
-#     echo "  $flag" >&2
-#   done
-#   $CLAUDE_BIN "${FLAGS[@]}"
-# }
-#
-# happy() {
-#   _claudeish "happy" "$@"
-# }
-#
-# claude() {
-#   # claude passes through to happy all the time
-#   # _claudeish "claude" "$@"
-#   happy "$@"
-# }
+claude() {
+  # Use run-claude from claude-utils which handles happy routing and bypass permissions
+  if command -v run-claude &> /dev/null; then
+    run-claude "$@"
+  else
+    echo "run-claude not found. Install claude-utils with Homebrew:" >&2
+    echo "  brew tap nsheaps/claude-utils" >&2
+    echo "  brew install claude-utils" >&2
+    echo "Falling back to direct claude invocation." >&2
+    command claude "$@"
+  fi
+}
