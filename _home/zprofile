@@ -6,7 +6,7 @@
 # Load brew, which adds the brew bin to PATH
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# do a non-interactive mise activation to set up shims for tools so they can be available globally
+# do a non-interactive mise activation to set up shims for tools so they can be available globally in scripts not available
 eval "$(mise activate --shims)"
 
 # Source all profile.d scripts (environment setup)

@@ -1,5 +1,14 @@
 #!/usr/bin/env zsh
 
+# Mac os changes paths between zshenv and loading this, so we force our user paths to be first again
+# If we don't, when antidote loads mise, the paths get all fubar and out of order
+path=(
+  $HOME/{,s}bin(N)
+  $HOME/.local/{,s}bin(N)
+  $path
+)
+export NEW_PATH="${(j.:.)path}"
+
 # Lazy-load (autoload) Zsh function files from a directory.
 ZFUNCDIR=${ZDOTDIR:-$HOME}/.zfunctions
 if [[ -d "$ZFUNCDIR" ]]; then

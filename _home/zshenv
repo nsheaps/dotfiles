@@ -21,10 +21,17 @@ export XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
 typeset -gU path fpath
 
 # Set the list of directories that zsh searches for commands.
+# Prepend user-specific bin directories and Homebrew paths.
+# The (N) glob qualifier ensures that only existing directories are added.
+# Paths deduplicated by the 'typeset -gU path' above.
 path=(
   $HOME/{,s}bin(N)
   $HOME/.local/{,s}bin(N)
-  /opt/{homebrew,local}/{,s}bin(N)
   /usr/local/{,s}bin(N)
+  # Java/OpenJDK 21
+  /opt/homebrew/opt/openjdk@21/bin(N)
+  # .NET
+  /opt/homebrew/opt/dotnet/libexec(N)
   $path
+  /opt/{homebrew,local}/{,s}bin(N)
 )
