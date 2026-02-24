@@ -1,0 +1,66 @@
+name: check
+
+on:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || ( github.ref == 'refs/heads/main' && github.sha || github.ref ) }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find bash scripts
+        id: find-bash
+        run: |
+          # Collect .sh files with bash shebangs + standalone bash scripts in bin/
+          bash_files=""
+          for f in $(find . -name '*.sh' -not -path './.git/*' -not -path './.dev/*'); do
+            shebang=$(head -1 "$f")
+            if echo "$shebang" | grep -qE '(bash|^#!/bin/sh)'; then
+              bash_files="$bash_files $f"
+            fi
+          done
+          # Also check bin/ scripts without .sh extension
+          for f in $(find ./bin -maxdepth 1 -type f -not -name '*.sh' -not -path './.git/*'); do
+            shebang=$(head -1 "$f")
+            if echo "$shebang" | grep -qE '(bash|^#!/bin/sh)'; then
+              bash_files="$bash_files $f"
+            fi
+          done
+          # Also check _home shell config files (bashrc, bash_profile)
+          for f in ./_home/bashrc ./_home/bash_profile; do
+            if [[ -f "$f" ]]; then
+              shebang=$(head -1 "$f")
+              if echo "$shebang" | grep -qE '(bash|^#!/bin/sh)'; then
+                bash_files="$bash_files $f"
+              fi
+            fi
+          done
+          echo "files=$bash_files" >> "$GITHUB_OUTPUT"
+          echo "Found bash files:$bash_files"
+
+      - name: ShellCheck
+        if: steps.find-bash.outputs.files != ''
+        run: |
+          bash_files="${{ steps.find-bash.outputs.files }}"
+          echo "Running ShellCheck on:$bash_files"
+          shellcheck $bash_files
+
+      - name: shfmt check
+        if: steps.find-bash.outputs.files != ''
+        run: |
+          bash_files="${{ steps.find-bash.outputs.files }}"
+          echo "Running shfmt on:$bash_files"
+          # -d shows diff, -i 2 matches .editorconfig indent_size=2, -ci indents case bodies
+          shfmt -d -i 2 -ci $bash_files
+
+      - name: EditorConfig check
+        uses: editorconfig-checker/action-editorconfig-checker@main
+
+      - name: Run editorconfig-checker
+        run: editorconfig-checker
