@@ -204,66 +204,66 @@ link_home_file() {
   while true; do
     read -rp "  Choice [r/h/k/s/d]: " choice
     case "$choice" in
-      r | R)
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        echo "  Symlinked $display_path to repo version"
-        break
-        ;;
-      h | H)
-        cp "$dest" "$src"
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
-        echo "  Updated repo and symlinked $display_path"
-        break
-        ;;
-      k | K)
-        # 3-way merge using git merge-file with empty base
-        local base_tmp
-        base_tmp=$(mktemp)
-        echo ""
-        if git merge-file -p "$src" "$base_tmp" "$dest" >"${src}.merged"; then
-          mv "${src}.merged" "$src"
-          rm -f "$base_tmp"
-          echo "  Merged successfully (no conflicts)"
-        else
-          mv "${src}.merged" "$src"
-          rm -f "$base_tmp"
-          echo "  Merge has conflicts that need manual resolution."
-          read -rp "  Open editor to resolve? [Y/n]: " open_editor
-          if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
-            if command -v code &>/dev/null; then
-              code --wait "$src"
-            else
-              ${EDITOR:-vim} "$src"
-            fi
+    r | R)
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      echo "  Symlinked $display_path to repo version"
+      break
+      ;;
+    h | H)
+      cp "$dest" "$src"
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      git -C "$DOTFILES_DIR" add "$src"
+      git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
+      echo "  Updated repo and symlinked $display_path"
+      break
+      ;;
+    k | K)
+      # 3-way merge using git merge-file with empty base
+      local base_tmp
+      base_tmp=$(mktemp)
+      echo ""
+      if git merge-file -p "$src" "$base_tmp" "$dest" >"${src}.merged"; then
+        mv "${src}.merged" "$src"
+        rm -f "$base_tmp"
+        echo "  Merged successfully (no conflicts)"
+      else
+        mv "${src}.merged" "$src"
+        rm -f "$base_tmp"
+        echo "  Merge has conflicts that need manual resolution."
+        read -rp "  Open editor to resolve? [Y/n]: " open_editor
+        if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
+          if command -v code &>/dev/null; then
+            code --wait "$src"
+          else
+            ${EDITOR:-vim} "$src"
           fi
         fi
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
-        echo "  Merged, committed, and symlinked"
-        break
-        ;;
-      s | S)
-        echo "  Skipped $display_path"
-        break
-        ;;
-      d | D)
-        echo ""
-        if [[ -t 1 ]]; then
-          diff --color=always -u "$src" "$dest" || true
-        else
-          diff -u "$src" "$dest" || true
-        fi
-        echo ""
-        ;;
-      *)
-        echo "  Invalid choice. Please enter r, h, k, s, or d."
-        ;;
+      fi
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      git -C "$DOTFILES_DIR" add "$src"
+      git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
+      echo "  Merged, committed, and symlinked"
+      break
+      ;;
+    s | S)
+      echo "  Skipped $display_path"
+      break
+      ;;
+    d | D)
+      echo ""
+      if [[ -t 1 ]]; then
+        diff --color=always -u "$src" "$dest" || true
+      else
+        diff -u "$src" "$dest" || true
+      fi
+      echo ""
+      ;;
+    *)
+      echo "  Invalid choice. Please enter r, h, k, s, or d."
+      ;;
     esac
   done
 }

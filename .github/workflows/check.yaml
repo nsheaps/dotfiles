@@ -4,7 +4,7 @@ on:
   push:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || ( github.ref == 'refs/heads/main' && github.sha || github.ref ) }}
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -56,8 +56,8 @@ jobs:
         run: |
           bash_files="${{ steps.find-bash.outputs.files }}"
           echo "Running shfmt on:$bash_files"
-          # -d shows diff, -i 2 matches .editorconfig indent_size=2, -ci indents case bodies
-          shfmt -d -i 2 -ci $bash_files
+          # -d shows diff; indent settings sourced from .editorconfig
+          shfmt -d $bash_files
 
       - name: EditorConfig check
         uses: editorconfig-checker/action-editorconfig-checker@main
