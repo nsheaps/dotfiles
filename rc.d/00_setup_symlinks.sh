@@ -48,8 +48,8 @@ create_convenience_symlink "bash_profile"
 
 # Mise config (special case - different path structure)
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
-  if [[ ! -L "$DOTFILES_DIR/mise_config.toml" ]] || \
-     [[ "$(readlink "$DOTFILES_DIR/mise_config.toml")" != "$HOME/.config/mise/config.toml" ]]; then
+  if [[ ! -L "$DOTFILES_DIR/mise_config.toml" ]] ||
+    [[ "$(readlink "$DOTFILES_DIR/mise_config.toml")" != "$HOME/.config/mise/config.toml" ]]; then
     ln -sfn "$HOME/.config/mise/config.toml" "$DOTFILES_DIR/mise_config.toml"
     echo "  Created: mise_config.toml → ~/.config/mise/config.toml"
   fi

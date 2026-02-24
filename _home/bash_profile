@@ -8,4 +8,3 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # User-customizable section
 # Add your personal customizations here
-

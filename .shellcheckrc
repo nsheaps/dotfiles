@@ -1,0 +1,14 @@
+# ShellCheck configuration for nsheaps/dotfiles
+# https://www.shellcheck.net/wiki/
+
+# Default shell dialect — most scripts in this repo are bash.
+# Zsh-specific files (interactive.d/*.sh with #!/usr/bin/env zsh) are
+# excluded from ShellCheck via the CI workflow since ShellCheck does not
+# support zsh syntax.
+shell=bash
+
+# SC1091: Not following sourced files — sourced paths are dynamic ($HOME, $DOTFILES_DIR)
+disable=SC1091
+
+# SC2034: Variable appears unused — many variables are exported for child shells
+disable=SC2034

@@ -77,7 +77,7 @@ $MARKER_END"
 
   # Create target file if it doesn't exist
   if [[ ! -f "$target" ]]; then
-    echo "$section_content" > "$target"
+    echo "$section_content" >"$target"
     echo "  Created $target with managed section"
     return 0
   fi
@@ -90,22 +90,22 @@ $MARKER_END"
     content_file=$(mktemp)
 
     # Write content to temp file (awk can't handle newlines in -v)
-    echo "$section_content" > "$content_file"
+    echo "$section_content" >"$content_file"
 
     # Use awk to replace the section, reading replacement from file
     awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v cfile="$content_file" '
       $0 ~ begin { skip=1; while ((getline line < cfile) > 0) print line; close(cfile); next }
       $0 ~ end { skip=0; next }
       !skip { print }
-    ' "$target" > "$tmpfile"
+    ' "$target" >"$tmpfile"
 
     mv "$tmpfile" "$target"
     rm -f "$content_file"
     echo "  Updated managed section in $target"
   else
     # Append managed section to end of file
-    echo "" >> "$target"
-    echo "$section_content" >> "$target"
+    echo "" >>"$target"
+    echo "$section_content" >>"$target"
     echo "  Appended managed section to $target"
   fi
 }
@@ -135,6 +135,8 @@ link_home_file() {
   local rel_path="$3"
   local src="$DOTFILES_DIR/$repo_subdir/$rel_path"
   local dest="$HOME_DIR/$home_subdir/$rel_path"
+  # Tilde is intentional for display, not expansion
+  # shellcheck disable=SC2088
   local display_path="~/$home_subdir/$rel_path"
   local dest_dir
   dest_dir="$(dirname "$dest")"
@@ -171,7 +173,7 @@ link_home_file() {
   fi
 
   # It's a regular file - check if it matches
-  if diff -q "$src" "$dest" > /dev/null 2>&1; then
+  if diff -q "$src" "$dest" >/dev/null 2>&1; then
     # Files match - replace with symlink
     rm -f "$dest"
     ln -s "$src" "$dest"
@@ -202,66 +204,66 @@ link_home_file() {
   while true; do
     read -rp "  Choice [r/h/k/s/d]: " choice
     case "$choice" in
-      r|R)
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        echo "  Symlinked $display_path to repo version"
-        break
-        ;;
-      h|H)
-        cp "$dest" "$src"
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
-        echo "  Updated repo and symlinked $display_path"
-        break
-        ;;
-      k|K)
-        # 3-way merge using git merge-file with empty base
-        local base_tmp
-        base_tmp=$(mktemp)
-        echo ""
-        if git merge-file -p "$src" "$base_tmp" "$dest" > "${src}.merged"; then
-          mv "${src}.merged" "$src"
-          rm -f "$base_tmp"
-          echo "  Merged successfully (no conflicts)"
-        else
-          mv "${src}.merged" "$src"
-          rm -f "$base_tmp"
-          echo "  Merge has conflicts that need manual resolution."
-          read -rp "  Open editor to resolve? [Y/n]: " open_editor
-          if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
-            if command -v code &>/dev/null; then
-              code --wait "$src"
-            else
-              ${EDITOR:-vim} "$src"
-            fi
+    r | R)
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      echo "  Symlinked $display_path to repo version"
+      break
+      ;;
+    h | H)
+      cp "$dest" "$src"
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      git -C "$DOTFILES_DIR" add "$src"
+      git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
+      echo "  Updated repo and symlinked $display_path"
+      break
+      ;;
+    k | K)
+      # 3-way merge using git merge-file with empty base
+      local base_tmp
+      base_tmp=$(mktemp)
+      echo ""
+      if git merge-file -p "$src" "$base_tmp" "$dest" >"${src}.merged"; then
+        mv "${src}.merged" "$src"
+        rm -f "$base_tmp"
+        echo "  Merged successfully (no conflicts)"
+      else
+        mv "${src}.merged" "$src"
+        rm -f "$base_tmp"
+        echo "  Merge has conflicts that need manual resolution."
+        read -rp "  Open editor to resolve? [Y/n]: " open_editor
+        if [[ ! "$open_editor" =~ ^[Nn]$ ]]; then
+          if command -v code &>/dev/null; then
+            code --wait "$src"
+          else
+            ${EDITOR:-vim} "$src"
           fi
         fi
-        rm -f "$dest"
-        ln -s "$src" "$dest"
-        git -C "$DOTFILES_DIR" add "$src"
-        git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
-        echo "  Merged, committed, and symlinked"
-        break
-        ;;
-      s|S)
-        echo "  Skipped $display_path"
-        break
-        ;;
-      d|D)
-        echo ""
-        if [[ -t 1 ]]; then
-          diff --color=always -u "$src" "$dest" || true
-        else
-          diff -u "$src" "$dest" || true
-        fi
-        echo ""
-        ;;
-      *)
-        echo "  Invalid choice. Please enter r, h, k, s, or d."
-        ;;
+      fi
+      rm -f "$dest"
+      ln -s "$src" "$dest"
+      git -C "$DOTFILES_DIR" add "$src"
+      git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
+      echo "  Merged, committed, and symlinked"
+      break
+      ;;
+    s | S)
+      echo "  Skipped $display_path"
+      break
+      ;;
+    d | D)
+      echo ""
+      if [[ -t 1 ]]; then
+        diff --color=always -u "$src" "$dest" || true
+      else
+        diff -u "$src" "$dest" || true
+      fi
+      echo ""
+      ;;
+    *)
+      echo "  Invalid choice. Please enter r, h, k, s, or d."
+      ;;
     esac
   done
 }
@@ -284,7 +286,7 @@ link_home_dir() {
   mapfile -d '' files < <(find "$repo_path" -type f -print0)
 
   for file in "${files[@]}"; do
-    local rel_path="${file#$repo_path/}"
+    local rel_path="${file#"$repo_path"/}"
     link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
   done
 }
