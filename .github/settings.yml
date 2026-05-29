@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------
 # Auto-merged from nsheaps/.github on every sync.
-#   Source: https://github.com/nsheaps/.github/blob/94540ea2770f26f5a0159aba7184040e8d5eaba8/.github/repo-settings.yaml
+#   Source: https://github.com/nsheaps/.github/blob/6133faed3e0ec6fd17848fdc826a0b80426f664e/.github/repo-settings.yaml
 # Edits to this file are KEPT on the next sync (deep merge).
 # To remove an org default, delete the key here — it will not come back.
 # ----------------------------------------------------------------
@@ -181,7 +181,7 @@ rulesets:
       # by render-repo-settings when this template is rendered to repo-settings.yaml.
       - actor_id: 2549081
         actor_type: Integration
-        bypass_mode: always
+        bypass_mode: exempt
     rules:
       - type: pull_request
         # parameters:
@@ -242,7 +242,7 @@ rulesets:
       # by render-repo-settings when this template is rendered to repo-settings.yaml.
       - actor_id: 2549081
         actor_type: Integration
-        bypass_mode: always
+        bypass_mode: exempt
     rules:
       - type: pull_request
         parameters:
@@ -274,7 +274,7 @@ rulesets:
       # by render-repo-settings when this template is rendered to repo-settings.yaml.
       - actor_id: 2549081
         actor_type: Integration
-        bypass_mode: always
+        bypass_mode: exempt
     rules:
       - type: pull_request
         parameters:
