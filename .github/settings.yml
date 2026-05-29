@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------
 # Auto-merged from nsheaps/.github on every sync.
-#   Source: https://github.com/nsheaps/.github/blob/40094e841f3444a7fe05216f809222763b66baae/.github/repo-settings.yaml
+#   Source: https://github.com/nsheaps/.github/blob/a42edbcc711fe08e6b79eb3bc42c6d1a19c8e426/.github/repo-settings.yaml
 # Edits to this file are KEPT on the next sync (deep merge).
 # To remove an org default, delete the key here — it will not come back.
 # ----------------------------------------------------------------
@@ -153,6 +153,9 @@ rulesets:
       - actor_id: -1
         actor_type: Integration
         bypass_mode: always
+      - actor_id: 2549081
+        actor_type: Integration
+        bypass_mode: always
     rules:
       - type: deletion          # block branch deletion
       - type: non_fast_forward  # block force-push
@@ -175,6 +178,9 @@ rulesets:
         actor_type: Integration
         bypass_mode: always
       - actor_id: -1
+        actor_type: Integration
+        bypass_mode: always
+      - actor_id: 2549081
         actor_type: Integration
         bypass_mode: always
     rules:
@@ -233,6 +239,9 @@ rulesets:
       - actor_id: -1
         actor_type: Integration
         bypass_mode: always
+      - actor_id: 2549081
+        actor_type: Integration
+        bypass_mode: always
     rules:
       - type: pull_request
         parameters:
@@ -265,6 +274,9 @@ rulesets:
       - actor_id: -1
         actor_type: Integration
         bypass_mode: always
+      - actor_id: 2549081
+        actor_type: Integration
+        bypass_mode: always
     rules:
       - type: pull_request
         parameters:
@@ -289,6 +301,9 @@ rulesets:
         actor_type: Integration
         bypass_mode: always
       - actor_id: -1
+        actor_type: Integration
+        bypass_mode: always
+      - actor_id: 2549081
         actor_type: Integration
         bypass_mode: always
     rules:
