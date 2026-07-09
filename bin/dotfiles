@@ -35,7 +35,7 @@ MARKER_END="# END: Managed by dotfiles wire"
 # Portable (no dependency on `readlink -f`, which BSD/macOS historically lacked).
 script_dir() {
   local source="${BASH_SOURCE[0]}" dir
-  while [[ -h "$source" ]]; do
+  while [[ -L "$source" ]]; do
     dir="$(cd -P "$(dirname "$source")" && pwd)"
     source="$(readlink "$source")"
     [[ "$source" != /* ]] && source="$dir/$source"
@@ -402,6 +402,9 @@ cmd_wire() {
 # check
 # -----------------------------------------------------------------------------
 
+# The status messages below print literal "~/..." as human-readable shorthand;
+# the tilde is intentional display text, not a path meant to expand.
+# shellcheck disable=SC2088
 cmd_check() {
   local quiet=""
   while [[ $# -gt 0 ]]; do
@@ -547,7 +550,7 @@ EOF
 
 main() {
   local cmd="${1:-}"
-  [[ $# -gt 0 ]] && shift || true
+  if [[ $# -gt 0 ]]; then shift; fi
 
   case "$cmd" in
   -h | --help | help | "")
