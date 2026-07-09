@@ -6,6 +6,13 @@
 #     (nsheaps/homebrew-devsetup). Runs brew update, then upgrades all
 #     formulas from the specified tap.
 #
+# Aliases:
+#   brew-outdated   - brew update, then list outdated formulae/casks
+#   brew-update-all - brew update, then upgrade everything (including casks)
+#
+
+alias brew-outdated="brew update && brew outdated"
+alias brew-update-all="brew update && brew upgrade --greedy"
 
 uufft() {
   if [[ -z "$1" ]]; then

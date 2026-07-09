@@ -10,22 +10,24 @@
   - `interactive.d/`: Interactive shell scripts (symlinked to `~/.interactive.d`)
   - `startup.d/`: Safe, idempotent scripts for Mac login (symlinked to `~/.startup.d`)
   - `update.d/`: Potentially risky update scripts (symlinked to `~/.update.d`)
-  - `.config/`: XDG-compliant configuration directory (copied to `~/.config` by wire)
+  - `.config/`: XDG-compliant configuration directory (copied to `~/.config` by `dotfiles wire`)
 - `bin/`: Executable scripts
-  - `wire`: Deployment script that creates symlinks, injects managed sections, and copies .config
-  - `run-startup.sh`: Runs startup.d scripts (for Mac login items)
-  - `run-updates.sh`: Runs update.d scripts (manual)
+  - `dotfiles`: The `dotfiles` CLI — `wire` (creates symlinks, injects managed sections, copies .config), `check` (reports wired state), `ensure-wired` (check-then-wire, used by the formula's `post_install`), plus `startup`/`update` delegates
+  - `run-startup.sh`: Runs startup.d scripts (for Mac login items; `dotfiles startup` delegates here)
+  - `run-updates.sh`: Runs update.d scripts (manual; `dotfiles update` delegates here)
   - `lib/source-scripts.sh`: Helper to execute scripts from a directory
+- `Formula/`: Homebrew formula template (`dotfiles.rb.gotmpl`), rendered into the `nsheaps/homebrew-devsetup` tap by the release pipeline
 - `templates/`: Shell code templates for managed sections
   - `zsh/rc.zsh`, `zsh/profile.zsh`, `zsh/env.zsh`
   - `bash/rc.bash`, `bash/profile.bash`
 - `rc.d/`: Shell scripts sourced by direnv when entering the directory
-  - Creates convenience symlinks in repo root pointing to `$HOME` files
+  - `00_dotfiles_path.sh`: Prepends `bin/` to `PATH` and exports `DOTFILES_DIR` so the in-repo `dotfiles` CLI shadows the brew-installed one while developing
+  - `00_setup_symlinks.sh`: Creates convenience symlinks in repo root pointing to `$HOME` files
 - `.envrc`: Direnv configuration that sources all scripts in `rc.d/`
 
-## Wiring System (bin/wire)
+## Wiring System (dotfiles wire)
 
-The `bin/wire` script deploys dotfiles from repo to `$HOME`:
+`dotfiles wire` deploys dotfiles from repo to `$HOME`:
 
 1. **Creates symlinks** for script directories:
    - `~/.dotfiles` → this repo
@@ -53,7 +55,7 @@ source "$DOTFILES_DIR/_home/zshrc"
 
 ## Convenience Symlinks (rc.d/00_setup_symlinks.sh)
 
-When entering the dotfiles directory (via direnv), convenience symlinks are created in the repo root pointing to actual files in `$HOME`. This allows editing deployed files directly:
+When entering the dotfiles directory (via direnv), `rc.d/00_dotfiles_path.sh` first prepends the repo's `bin/` to `PATH` (so `dotfiles` runs the in-repo copy) and exports `DOTFILES_DIR="$DIRENV_ROOT"`. Then `rc.d/00_setup_symlinks.sh` creates convenience symlinks in the repo root pointing to actual files in `$HOME`. This allows editing deployed files directly:
 
 - `zshrc` → `~/.zshrc`
 - `zshenv` → `~/.zshenv`

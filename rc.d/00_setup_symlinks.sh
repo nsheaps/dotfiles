@@ -56,4 +56,4 @@ if [[ -f "$HOME/.config/mise/config.toml" ]]; then
 fi
 
 echo ""
-echo "Run 'bin/wire' to deploy dotfiles from repo to \$HOME."
+echo "Run 'dotfiles wire' to deploy dotfiles from repo to \$HOME."
