@@ -7,7 +7,6 @@
     "type": "git",
     "url": "https://github.com/nsheaps/dotfiles.git"
   },
-  "license": "MIT",
   "devDependencies": {
     "@release-it/conventional-changelog": "^11.0.1",
     "release-it": "^20.2.0"
