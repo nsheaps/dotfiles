@@ -115,7 +115,6 @@ to anyone else, or prevent the Licensor from granting licenses to anyone
 else. These terms do not imply any other licenses. All rights not expressly
 granted above are reserved by the Licensor.
 
-
 Oura may have "fair use" rights for the software under the law. These terms
 do not limit them.
 
@@ -138,6 +137,7 @@ NATURE OF THE SOFTWARE, UNDER ANY KIND OF LEGAL CLAIM.
 
 ---
 
+_Note: this license combines real, standardized license language — the
 **PolyForm Internal Use License 1.0.0** as its base, with a patent grant and
 trademark clause modeled on **Apache License 2.0** (Sections 3 and 6) — with
 custom business terms specified by the author (single named licensee,
