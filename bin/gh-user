@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# gh-user <account> [gh-args...]
+#
+# Runs `gh` scoped to an isolated GH_CONFIG_DIR for <account>, without touching
+# your default gh identity or any ambient GH_TOKEN/GITHUB_TOKEN. Accounts live
+# under ~/.config/gh-users/<account>/ (or $GH_USERS_DIR if set), each holding
+# its own hosts.yml from a separate `gh auth login`.
+#
+# Explicit-invocation semantics: this always forces <account>'s identity,
+# overriding any ambient GH_TOKEN/GITHUB_TOKEN (e.g. from an agent's bot
+# token) — matching the `env -u GH_TOKEN -u GITHUB_TOKEN gh ...` pattern in
+# nsheaps/agents' docs/specs/auth-credentials.md, used there to defeat gh's
+# silent fallback to whichever credential it finds first.
+#
+# For plain `git` commands (push/pull/fetch/clone), no wrapper is needed:
+# ~/.gitconfig's `includeIf "gitdir:~/src/<account>/"` blocks switch identity
+# and credential.helper automatically based on the directory you're in.
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: gh-user <account> [gh-args...]" >&2
+  users_dir="${GH_USERS_DIR:-$HOME/.config/gh-users}"
+  # Glob instead of `ls | tr` (ShellCheck SC2012: ls output isn't safe to
+  # parse for non-alphanumeric filenames) — also avoids find(1)'s BSD vs
+  # GNU flag differences (-printf is GNU-only), so this stays portable
+  # between the Linux CI runner and macOS.
+  accounts=""
+  for d in "${users_dir}"/*/; do
+    [[ -d "$d" ]] && accounts+="$(basename "$d") "
+  done
+  echo "  known accounts: ${accounts}" >&2
+  exit 1
+fi
+
+account="$1"
+shift
+users_dir="${GH_USERS_DIR:-$HOME/.config/gh-users}"
+account_dir="${users_dir}/${account}"
+
+if [[ ! -d "${account_dir}" ]]; then
+  echo "gh-user: no config for account '${account}' under ${users_dir}" >&2
+  echo "  create it with:" >&2
+  echo "    mkdir -p '${account_dir}' && GH_CONFIG_DIR='${account_dir}' gh auth login --hostname github.com --git-protocol https --web" >&2
+  exit 1
+fi
+
+exec env -u GH_TOKEN -u GITHUB_TOKEN GH_CONFIG_DIR="${account_dir}" gh "$@"
