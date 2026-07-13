@@ -19,6 +19,32 @@ permissions:
   contents: read
 
 jobs:
+  # macOS runners cost far more than Linux ones, so wire-test-macos below
+  # doesn't run on every push like wire-test does — only on an explicit
+  # workflow_dispatch, or when the PR for this branch carries the
+  # `test-macos` label. A push with no open PR (e.g. straight to main after
+  # merge) has nothing to look up, so it's treated the same as "no label".
+  should-run-macos:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - name: Decide whether to run the macOS job
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "run=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          has_label="$(gh pr list --repo "${{ github.repository }}" --head "${{ github.ref_name }}" --state open --json labels \
+            --jq '[.[].labels[].name] | index("test-macos") != null')"
+          echo "run=${has_label}" >>"$GITHUB_OUTPUT"
+
   wire-test:
     runs-on: ubuntu-latest
     container:
@@ -79,6 +105,8 @@ jobs:
   # /bin/bash against a throwaway $HOME so this class of bug is covered going
   # forward. No Homebrew needed — the hosted runner's system bash is enough.
   wire-test-macos:
+    needs: should-run-macos
+    if: needs.should-run-macos.outputs.run == 'true'
     runs-on: macos-latest
     steps:
       - name: Checkout repository
