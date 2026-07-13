@@ -54,6 +54,9 @@ create_convenience_symlink ".bash_profile"
 # XDG config directory
 create_convenience_symlink ".config"
 
+# User-local scripts/binaries (includes ~/.local/bin)
+create_convenience_symlink ".local"
+
 # Mise config (special case - different path structure)
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
   if [[ ! -L "$DOTFILES_DIR/mise_config.toml" ]] ||

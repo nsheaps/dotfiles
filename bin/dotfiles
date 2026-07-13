@@ -299,6 +299,44 @@ link_home_file() {
   done
 }
 
+# Ensure every script under _home/.local/bin is reachable from ~/.local/bin,
+# preserving subdirectory structure (e.g. lib/ helpers sourced by the scripts).
+# Unlike link_home_file/link_home_dir, this never diffs, prompts, or syncs
+# HOME back into the repo -- ~/.local/bin is a shared PATH directory other
+# tools also install into, so we only ever add our own symlinks, never
+# overwrite a file that isn't already one of them.
+ensure_local_bin() {
+  local repo_bin="$DOTFILES_DIR/_home/.local/bin"
+  local home_bin="$HOME_DIR/.local/bin"
+
+  if [[ ! -d "$repo_bin" ]]; then
+    return 0
+  fi
+
+  echo ""
+  echo "Linking ~/.local/bin scripts..."
+
+  local file rel_path dest dest_dir
+  while IFS= read -r -d '' file; do
+    rel_path="${file#"$repo_bin"/}"
+    dest="$home_bin/$rel_path"
+    dest_dir="$(dirname "$dest")"
+    mkdir -p "$dest_dir"
+
+    if [[ -L "$dest" ]] && [[ "$(readlink "$dest")" == "$file" ]]; then
+      continue
+    fi
+
+    if [[ -e "$dest" ]] && [[ ! -L "$dest" ]]; then
+      echo "  Skipped (not ours, left as-is): ~/.local/bin/$rel_path" >&2
+      continue
+    fi
+
+    ln -sfn "$file" "$dest"
+    echo "  Linked: ~/.local/bin/$rel_path"
+  done < <(find "$repo_bin" -type f -print0)
+}
+
 # Symlink all files in a repo subdir to the corresponding home location.
 # Usage: link_home_dir <repo_subdir> <home_subdir>
 link_home_dir() {
@@ -385,6 +423,7 @@ cmd_wire() {
   # ---------------------------------------------------------------------------
   link_home_dir "_home/.config" ".config"
   link_home_dir "_home/Library" "Library"
+  ensure_local_bin
 
   # ---------------------------------------------------------------------------
   # Summary
