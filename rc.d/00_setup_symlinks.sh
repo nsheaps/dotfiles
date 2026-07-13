@@ -18,21 +18,26 @@ echo "Dotfiles directory loaded: $DOTFILES_DIR"
 # These allow editing the actual deployed files directly from the repo
 create_convenience_symlink() {
   local name="$1"
-  local home_file="$HOME/.$name"
-  local repo_link="$DOTFILES_DIR/$name"
+  local home_file="$HOME/$name"
+  local repo_real_files_dir="$DOTFILES_DIR/_real"
+  local repo_link="$repo_real_files_dir/$name"
 
-  if [[ -f "$home_file" ]]; then
+  mkdir -p "$repo_real_files_dir"
+
+  # -e matches both regular files and directories (e.g. ~/.config), so the
+  # same helper can link a whole config directory as well as single files.
+  if [[ -e "$home_file" ]]; then
     if [[ -L "$repo_link" ]]; then
       # Already a symlink, check if it points to the right place
       local current_target
       current_target="$(readlink "$repo_link")"
       if [[ "$current_target" != "$home_file" ]]; then
         ln -sfn "$home_file" "$repo_link"
-        echo "  Updated: $name → ~/.$name"
+        echo "  Updated: $name → ~/$name"
       fi
     else
       ln -sfn "$home_file" "$repo_link"
-      echo "  Created: $name → ~/.$name"
+      echo "  Created: $name → ~/$name"
     fi
   fi
 }
@@ -40,11 +45,14 @@ create_convenience_symlink() {
 echo "Creating convenience symlinks for easy editing..."
 
 # Shell config files
-create_convenience_symlink "zshrc"
-create_convenience_symlink "zshenv"
-create_convenience_symlink "zprofile"
-create_convenience_symlink "bashrc"
-create_convenience_symlink "bash_profile"
+create_convenience_symlink ".zshrc"
+create_convenience_symlink ".zshenv"
+create_convenience_symlink ".zprofile"
+create_convenience_symlink ".bashrc"
+create_convenience_symlink ".bash_profile"
+
+# XDG config directory
+create_convenience_symlink ".config"
 
 # Mise config (special case - different path structure)
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
