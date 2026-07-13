@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# brew-update-tap <tap>
+#
+# Runs `brew update`, then reports that <tap> was updated and lists any
+# outdated formulae it has.
+#
+# <tap> accepts either brew tap format (nsheaps/devsetup) or GitHub repo
+# format (nsheaps/homebrew-devsetup); the leading homebrew- on the repo
+# portion is normalized away.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/brew-tap-normalize.sh
+source "$SCRIPT_DIR/lib/brew-tap-normalize.sh"
+
+if [[ -z "${1:-}" ]]; then
+  echo "Usage: brew-update-tap <tap>" >&2
+  exit 1
+fi
+
+tap="$(brew_normalize_tap "$1")"
+
+brew update
+echo "Tap ${tap} has been updated."
+
+outdated="$(brew-outdated "$tap")"
+if [[ -n "$outdated" ]]; then
+  printf 'Run `brew-upgrade-tap %s` to upgrade the formula to the latest version.\n' "$tap"
+  printf 'Outdated formula:\n%s\n' "$outdated"
+fi

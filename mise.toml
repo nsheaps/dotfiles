@@ -1,0 +1,32 @@
+[tools]
+node = "lts"
+yarn = "4"
+shellcheck = "latest"
+shfmt = "latest"
+
+[tasks.lint]
+description = "Run ShellCheck on all bash scripts"
+run = "shellcheck bin/dotfiles bin/*.sh rc.d/*.sh"
+
+[tasks.test]
+description = "Run CLI smoke tests"
+run = """
+echo "Testing dotfiles --help..."
+bash bin/dotfiles --help > /dev/null
+echo "Testing dotfiles --version..."
+bash bin/dotfiles --version > /dev/null
+echo "All tests passed."
+"""
+
+[tasks.fmt]
+description = "Format all bash scripts with shfmt"
+run = "shfmt -w bin/dotfiles bin/*.sh rc.d/*.sh"
+
+[tasks.fmt-check]
+description = "Check formatting of all bash scripts"
+run = "shfmt -d bin/dotfiles bin/*.sh rc.d/*.sh"
+
+[tasks.check]
+description = "Run all checks (lint + fmt-check + test)"
+depends = ["lint", "fmt-check", "test"]
+run = "echo 'All checks passed'"

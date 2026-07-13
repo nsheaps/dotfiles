@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# brew-upgrade-all
+#
+# Runs `brew update` and then greedily upgrades everything (formulae and
+# casks, including those that auto-update themselves).
+
+set -euo pipefail
+
+brew update
+brew upgrade --greedy

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# brew-outdated [<tap>]
+#
+# Lists outdated formulae; with <tap>, only those belonging to that tap.
+# Does not run `brew update`; use a brew-update-* command first.
+#
+# <tap> accepts either brew tap format (nsheaps/devsetup) or GitHub repo
+# format (nsheaps/homebrew-devsetup); the leading homebrew- on the repo
+# portion is normalized away.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/brew-tap-normalize.sh
+source "$SCRIPT_DIR/lib/brew-tap-normalize.sh"
+
+# No tap: list every outdated formula/cask.
+if [[ -z "${1:-}" ]]; then
+  brew outdated
+  exit 0
+fi
+
+tap="$(brew_normalize_tap "$1")"
+
+tap_formulae="$(brew tap-info --json "$tap" 2>/dev/null | jq -r '.[].formula_names[]')" || {
+  echo "Error: could not read tap info for ${tap}" >&2
+  exit 1
+}
+
+# Intersect the tap's formulae with the currently-outdated ones, comparing on
+# the bare formula name (comm needs sorted, de-duplicated inputs).
+comm -12 \
+  <(brew outdated --formula | sed 's#.*/##' | sort -u) \
+  <(printf '%s\n' "$tap_formulae" | sed 's#.*/##' | sort -u)

@@ -14,6 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install shfmt
+        run: |
+          # ubuntu-latest ships shellcheck but not shfmt; install a pinned
+          # release so the `shfmt check` step has the binary on PATH.
+          SHFMT_VERSION=v3.10.0
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL -o "$HOME/.local/bin/shfmt" \
+            "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64"
+          chmod +x "$HOME/.local/bin/shfmt"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/shfmt" --version
+
       - name: Find bash scripts
         id: find-bash
         run: |

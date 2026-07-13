@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# brew-update-all
+#
+# Runs `brew update`, refreshing all taps.
+
+set -euo pipefail
+
+brew update
