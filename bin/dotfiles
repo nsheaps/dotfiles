@@ -94,6 +94,11 @@ DOTFILES_DIR="${DOTFILES_DIR:-}"
 TEMPLATES_DIR=""
 HOME_DIR="$HOME"
 
+# Set only by the Homebrew wrapper (never by direnv/rc.d), so its presence
+# distinguishes "running the brew-installed CLI with no shadowing checkout"
+# from "running inside a dev checkout" — see cmd_wire's use of it below.
+DOTFILES_DEFAULT_REPO_URL="${DOTFILES_DEFAULT_REPO_URL:-}"
+
 # -----------------------------------------------------------------------------
 # wire
 # -----------------------------------------------------------------------------
@@ -395,7 +400,10 @@ link_home_dir() {
 # Sets the global DOTFILES_DIR/TEMPLATES_DIR on success. Never destroys an
 # existing ~/.dotfiles that isn't one we created ourselves (a plain
 # symlink, or empty/absent) — a real directory or a clone of a DIFFERENT
-# repo is left untouched and this returns failure instead.
+# repo is left untouched and this returns failure instead. If ~/.dotfiles is
+# already a clean checkout of $1, fetches and fast-forwards it; a dirty
+# tree or a non-fast-forwardable history is left alone rather than stashed
+# or rebased.
 clone_repo_to_home_dotfiles() {
   local repo_url="$1"
   local dest="$HOME_DIR/.dotfiles"
@@ -408,7 +416,18 @@ clone_repo_to_home_dotfiles() {
       echo "  Not touching it — move it aside or remove it, then re-run with --repo." >&2
       return 1
     fi
-    echo "  ~/.dotfiles is already a checkout of $repo_url; using it as-is (not pulling automatically)."
+    # Bring it up to date, but only when it's safe: a dirty working tree or a
+    # diverged/missing upstream means the user has their own local commits or
+    # edits, and silently rewriting those is exactly the kind of destructive
+    # surprise `wire` should never spring on a re-run — leave it as-is and
+    # say so instead of stashing, rebasing, or force-updating anything.
+    if [[ -n "$(git -C "$dest" status --porcelain 2>/dev/null)" ]]; then
+      echo "  ~/.dotfiles is already a checkout of $repo_url but has uncommitted changes; leaving it as-is (not fetching)."
+    elif git -C "$dest" fetch --quiet origin 2>/dev/null && git -C "$dest" merge --ff-only --quiet '@{upstream}' 2>/dev/null; then
+      echo "  ~/.dotfiles is already a checkout of $repo_url; fetched and fast-forwarded to the latest."
+    else
+      echo "  ~/.dotfiles is already a checkout of $repo_url; could not fast-forward (no upstream, or local commits ahead) — leaving it as-is."
+    fi
     # Canonicalize (pwd -P) so this matches what resolve_dotfiles_dir will
     # produce on later invocations (cd .. && pwd -P) — a raw $dest here
     # would mismatch cmd_check's plain string comparisons on any machine
@@ -513,6 +532,12 @@ cmd_wire() {
       echo "                            editable, independently git-tracked"
       echo "                            ~/.dotfiles rather than a symlink into"
       echo "                            Homebrew's managed copy."
+      echo ""
+      echo "  When run via the Homebrew-installed CLI (not shadowed by direnv"
+      echo "  in a checkout), --repo defaults to this repo's own URL — so a"
+      echo "  fresh install ends up with a real, editable ~/.dotfiles checkout"
+      echo "  instead of a symlink into the bundled copy. Pass --repo explicitly"
+      echo "  to wire a different dotfiles repo instead."
       return 0
       ;;
     *)
@@ -522,6 +547,15 @@ cmd_wire() {
     esac
     shift
   done
+
+  # No explicit --repo: default to this repo's own URL, but only when running
+  # via the Homebrew wrapper (the only thing that sets DOTFILES_DEFAULT_REPO_URL).
+  # Inside a dev checkout (direnv-shadowed), this stays empty, so `wire` keeps
+  # symlinking ~/.dotfiles to the checkout you're actually running from instead
+  # of cloning a redundant second copy of itself.
+  if [[ -z "$repo_url" && -n "$DOTFILES_DEFAULT_REPO_URL" ]]; then
+    repo_url="$DOTFILES_DEFAULT_REPO_URL"
+  fi
 
   local cloned=0
   if [[ -n "$repo_url" ]]; then
