@@ -1,69 +1,6 @@
 {
   "Profiles": [
     {
-      "Name": "stainless",
-      "Guid": "stainless-profile-001",
-      "Background Color (Light)": {
-        "Red Component": 0.95,
-        "Green Component": 0.95,
-        "Blue Component": 0.97
-      },
-      "Background Color (Dark)": {
-        "Red Component": 0.04,
-        "Green Component": 0.08,
-        "Blue Component": 0.16
-      },
-      "Foreground Color (Light)": {
-        "Red Component": 0.1,
-        "Green Component": 0.1,
-        "Blue Component": 0.15
-      },
-      "Foreground Color (Dark)": {
-        "Red Component": 0.9,
-        "Green Component": 0.9,
-        "Blue Component": 0.95
-      },
-      "Badge Text": "\\(user.badge)",
-      "Badge Color": {
-        "Red Component": 1.0,
-        "Green Component": 1.0,
-        "Blue Component": 1.0,
-        "Alpha Component": 0.5
-      },
-      "Badge Color (Light)": {
-        "Red Component": 0.0,
-        "Green Component": 0.0,
-        "Blue Component": 0.0,
-        "Alpha Component": 0.5
-      },
-      "Badge Color (Dark)": {
-        "Red Component": 1.0,
-        "Green Component": 1.0,
-        "Blue Component": 1.0,
-        "Alpha Component": 0.5
-      },
-      "Badge Max Width": 1.0,
-      "Badge Max Height": 0.15,
-      "Use Bold Font": false,
-      "Use Bright Bold": true,
-      "Use Italic Font": false,
-      "Transparency": 0,
-      "Blur": false,
-      "Background Image Location": "~/Library/Application Support/iTerm2/assets/stainless-logo.png",
-      "Background Image Mode": 3,
-      "Blend": 0.075,
-      "Link Color (Dark)": {
-        "Red Component": 0.7,
-        "Green Component": 0.6,
-        "Blue Component": 0.9
-      },
-      "Link Color (Light)": {
-        "Red Component": 0.3,
-        "Green Component": 0.2,
-        "Blue Component": 0.6
-      }
-    },
-    {
       "Name": "nsheaps",
       "Guid": "nsheaps-profile-001",
       "Background Color (Light)": {

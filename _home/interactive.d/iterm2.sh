@@ -36,9 +36,6 @@ _iterm2_update_profile() {
   # also match */src/nsheaps-oura/* if it came first — more specific patterns
   # must precede the shorter prefix they'd otherwise shadow.
   case "$PWD" in
-    */src/stainless-api*|*/src/stainless*)
-      _iterm2_set_profile "stainless"
-      ;;
     */src/nsheaps-oura*)
       _iterm2_set_profile "nsheaps-oura"
       ;;

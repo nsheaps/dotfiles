@@ -14,19 +14,10 @@ This directory contains iTerm2 profile configurations that are version-controlle
 _home/Library/Application Support/iTerm2/
 ├── DynamicProfiles/
 │   └── custom-profiles.json    # Custom profile definitions
-├── assets/
-│   └── stainless-logo.png
 └── README.md                    # This file
 ```
 
 ## Profiles
-
-### stainless
-
-- **Light Mode Background**: Light blue (#E3F2FD)
-- **Dark Mode Background**: Dark blue (#1E3A5F)
-- **Purpose**: Visual indicator for stainless directories
-- **Auto-switch**: Activates in directories matching `*/src/stainless-api*` or `*/src/stainless*`
 
 ### nsheaps
 
@@ -91,20 +82,14 @@ esac
 
 Colors are defined using decimal RGB values (0-1 scale):
 
-| Profile      | Mode       | Color        | Hex     | RGB (0-1)         |
-| ------------ | ---------- | ------------ | ------- | ------------------ |
-| stainless    | Light Mode | Light Blue   | #E3F2FD | 0.95, 0.95, 0.97* |
-| stainless    | Dark Mode  | Dark Blue    | #0A1429 | 0.04, 0.08, 0.16   |
-| nsheaps      | Light Mode | Light Maroon | #F7F2FA | 0.97, 0.95, 0.98   |
-| nsheaps      | Dark Mode  | Dark Maroon  | #42191F | 0.26, 0.10, 0.14   |
-| nsheaps-oura | Light Mode | Light Teal   | #EDFAF5 | 0.93, 0.98, 0.96   |
-| nsheaps-oura | Dark Mode  | Dark Teal    | #0A2E26 | 0.04, 0.18, 0.15   |
-| jouzen       | Light Mode | Light Indigo | #F2F0FC | 0.95, 0.94, 0.99   |
-| jouzen       | Dark Mode  | Dark Indigo  | #19153A | 0.10, 0.08, 0.22   |
-
-\* stainless's actual JSON values render closer to a very light gray-blue
-than the originally-documented `#E3F2FD` — left as-is (cosmetic, low-value
-to chase further); the other rows are exact.
+| Profile      | Mode       | Color        | Hex     | RGB (0-1)        |
+| ------------ | ---------- | ------------ | ------- | ---------------- |
+| nsheaps      | Light Mode | Light Maroon | #F7F2FA | 0.97, 0.95, 0.98 |
+| nsheaps      | Dark Mode  | Dark Maroon  | #42191F | 0.26, 0.10, 0.14 |
+| nsheaps-oura | Light Mode | Light Teal   | #EDFAF5 | 0.93, 0.98, 0.96 |
+| nsheaps-oura | Dark Mode  | Dark Teal    | #0A2E26 | 0.04, 0.18, 0.15 |
+| jouzen       | Light Mode | Light Indigo | #F2F0FC | 0.95, 0.94, 0.99 |
+| jouzen       | Dark Mode  | Dark Indigo  | #19153A | 0.10, 0.08, 0.22 |
 
 To convert hex to decimal: `Decimal = Hex / 255`
 
