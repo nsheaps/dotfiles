@@ -10,9 +10,9 @@
   - `interactive.d/`: Interactive shell scripts (symlinked to `~/.interactive.d`)
   - `startup.d/`: Safe, idempotent scripts for Mac login (symlinked to `~/.startup.d`)
   - `update.d/`: Potentially risky update scripts (symlinked to `~/.update.d`)
-  - `.config/`: XDG-compliant configuration directory (copied to `~/.config` by `dotfiles wire`)
+  - `.config/`: XDG-compliant configuration directory (symlinked into `~/.config` by `dotfiles wire`)
 - `bin/`: Executable scripts
-  - `dotfiles`: The `dotfiles` CLI — `wire` (creates symlinks, injects managed sections, copies .config), `check` (reports wired state), `ensure-wired` (check-then-wire, used by the formula's `post_install`), plus `startup`/`update` delegates
+  - `dotfiles`: The `dotfiles` CLI — `wire` (creates symlinks, injects managed sections, symlinks .config), `check` (reports wired state), `ensure-wired` (check-then-wire, used by the formula's `post_install`), plus `startup`/`update` delegates
   - `run-startup.sh`: Runs startup.d scripts (for Mac login items; `dotfiles startup` delegates here)
   - `run-updates.sh`: Runs update.d scripts (manual; `dotfiles update` delegates here)
   - `lib/source-scripts.sh`: Helper to execute scripts from a directory
@@ -40,10 +40,12 @@
    - `~/.zshrc`, `~/.zshenv`, `~/.zprofile` (zsh)
    - `~/.bashrc`, `~/.bash_profile` (bash)
 
-3. **Copies .config files** from `_home/.config` to `~/.config`:
-   - If file doesn't exist: copies it
-   - If file matches: skips
-   - If file differs: prompts user to overwrite, sync back to repo, or keep
+3. **Symlinks .config files** from `_home/.config` into `~/.config`:
+   - If the file doesn't exist: symlinks it
+   - If it's already the correct symlink, or a plain file identical to the repo copy: leaves it (converting an identical plain file to a symlink)
+   - If it differs: in non-interactive mode (or with no TTY) skips and leaves both untouched; interactively prompts to overwrite HOME with the repo copy, sync HOME back to the repo, 3-way merge, or skip
+
+   These are symlinks, not copies, so editing a file under `~/.config` writes straight back through to the repo. Keep that in mind for anything identity- or secret-adjacent — a symlinked file is shared state across every machine wired from the same checkout.
 
 The managed sections look like:
 ```bash

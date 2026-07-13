@@ -313,13 +313,16 @@ link_home_dir() {
   echo ""
   echo "Symlinking ~/$home_subdir files..."
 
-  local files
-  mapfile -d '' files < <(find "$repo_path" -type f -print0)
-
-  for file in "${files[@]}"; do
-    local rel_path="${file#"$repo_path"/}"
+  # Use a NUL-delimited read loop rather than `mapfile`: `mapfile` is a bash
+  # 4.0+ builtin, but the Homebrew wrapper runs under /bin/bash, which on macOS
+  # is Apple's frozen bash 3.2 (no `mapfile`). Reading from a process
+  # substitution keeps link_home_file in the current shell, and this avoids an
+  # empty-array expansion that would also trip `set -u` on bash 3.2.
+  local file rel_path
+  while IFS= read -r -d '' file; do
+    rel_path="${file#"$repo_path"/}"
     link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
-  done
+  done < <(find "$repo_path" -type f -print0)
 }
 
 cmd_wire() {
