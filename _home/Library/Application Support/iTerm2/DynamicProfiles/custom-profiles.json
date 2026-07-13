@@ -122,6 +122,126 @@
         "Green Component": 0.45,
         "Blue Component": 0.1
       }
+    },
+    {
+      "Name": "nsheaps-oura",
+      "Guid": "nsheaps-oura-profile-001",
+      "Background Color (Light)": {
+        "Red Component": 0.93,
+        "Green Component": 0.98,
+        "Blue Component": 0.96
+      },
+      "Background Color (Dark)": {
+        "Red Component": 0.04,
+        "Green Component": 0.18,
+        "Blue Component": 0.15
+      },
+      "Foreground Color (Light)": {
+        "Red Component": 0.05,
+        "Green Component": 0.12,
+        "Blue Component": 0.1
+      },
+      "Foreground Color (Dark)": {
+        "Red Component": 0.88,
+        "Green Component": 0.97,
+        "Blue Component": 0.94
+      },
+      "Badge Text": "\\(user.badge)",
+      "Badge Color": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Color (Dark)": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.15,
+      "Use Bold Font": false,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.3,
+        "Green Component": 0.85,
+        "Blue Component": 0.7
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.05,
+        "Green Component": 0.5,
+        "Blue Component": 0.4
+      }
+    },
+    {
+      "Name": "jouzen",
+      "Guid": "jouzen-profile-001",
+      "Background Color (Light)": {
+        "Red Component": 0.95,
+        "Green Component": 0.94,
+        "Blue Component": 0.99
+      },
+      "Background Color (Dark)": {
+        "Red Component": 0.1,
+        "Green Component": 0.08,
+        "Blue Component": 0.22
+      },
+      "Foreground Color (Light)": {
+        "Red Component": 0.08,
+        "Green Component": 0.06,
+        "Blue Component": 0.18
+      },
+      "Foreground Color (Dark)": {
+        "Red Component": 0.9,
+        "Green Component": 0.88,
+        "Blue Component": 0.97
+      },
+      "Badge Text": "\\(user.badge)",
+      "Badge Color": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Color (Light)": {
+        "Red Component": 0.0,
+        "Green Component": 0.0,
+        "Blue Component": 0.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Color (Dark)": {
+        "Red Component": 1.0,
+        "Green Component": 1.0,
+        "Blue Component": 1.0,
+        "Alpha Component": 0.5
+      },
+      "Badge Max Width": 1.0,
+      "Badge Max Height": 0.15,
+      "Use Bold Font": false,
+      "Use Bright Bold": true,
+      "Use Italic Font": false,
+      "Transparency": 0,
+      "Blur": false,
+      "Link Color (Dark)": {
+        "Red Component": 0.65,
+        "Green Component": 0.55,
+        "Blue Component": 0.95
+      },
+      "Link Color (Light)": {
+        "Red Component": 0.35,
+        "Green Component": 0.25,
+        "Blue Component": 0.7
+      }
     }
   ]
 }

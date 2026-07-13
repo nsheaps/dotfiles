@@ -32,9 +32,18 @@ _iterm2_set_user_var() {
 # =============================================================================
 
 _iterm2_update_profile() {
+  # Order matters: case patterns match top-to-bottom, and */src/nsheaps* would
+  # also match */src/nsheaps-oura/* if it came first — more specific patterns
+  # must precede the shorter prefix they'd otherwise shadow.
   case "$PWD" in
     */src/stainless-api*|*/src/stainless*)
       _iterm2_set_profile "stainless"
+      ;;
+    */src/nsheaps-oura*)
+      _iterm2_set_profile "nsheaps-oura"
+      ;;
+    */src/jouzen*)
+      _iterm2_set_profile "jouzen"
       ;;
     */src/nsheaps*)
       _iterm2_set_profile "nsheaps"
