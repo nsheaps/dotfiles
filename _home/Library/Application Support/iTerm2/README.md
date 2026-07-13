@@ -14,6 +14,9 @@ This directory contains iTerm2 profile configurations that are version-controlle
 _home/Library/Application Support/iTerm2/
 ├── DynamicProfiles/
 │   └── custom-profiles.json    # Custom profile definitions
+├── assets/
+│   ├── oura-logo.png                # Official Oura ring mark (jouzen)
+│   └── oura-logo-nsheaps-oura.png   # Oura mark + nsheaps-oura avatar badge
 └── README.md                    # This file
 ```
 
@@ -33,6 +36,11 @@ _home/Library/Application Support/iTerm2/
 - **Dark Mode Background**: Dark teal (#0A2E26)
 - **Purpose**: Visual indicator for `nsheaps-oura` (work-affiliated) directories
 - **Auto-switch**: Activates in directories matching `*/src/nsheaps-oura*`
+- **Background image**: `oura-logo-nsheaps-oura.png` — the official Oura ring
+  mark (fetched from `ouraring.com`'s own `og:image`) with the `nsheaps-oura`
+  GitHub avatar composited into a small circular badge, bottom-right, with a
+  white separation ring — the same visual pattern GitHub uses for "acting on
+  behalf of" app/bot badges.
 
 ### jouzen
 
@@ -40,6 +48,8 @@ _home/Library/Application Support/iTerm2/
 - **Dark Mode Background**: Dark indigo (#19153A)
 - **Purpose**: Visual indicator for `jouzen` (Oura's own org) directories
 - **Auto-switch**: Activates in directories matching `*/src/jouzen*`
+- **Background image**: `oura-logo.png` — the plain official Oura ring mark,
+  same source as above, no badge.
 
 ## Installation
 
