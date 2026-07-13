@@ -479,7 +479,7 @@ cmd_wire() {
 
   echo ""
   echo "Setting iTerm2 default profile..."
-  set_default_iterm_profile "nsheaps"
+  set_default_iterm_profile "Default"
 
   # ---------------------------------------------------------------------------
   # Summary
