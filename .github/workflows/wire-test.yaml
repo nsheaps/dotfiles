@@ -37,7 +37,7 @@ jobs:
           bash --version | head -1
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: First wire (non-interactive)
         run: ./bin/dotfiles wire --yes
@@ -82,7 +82,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Show system bash version
         run: /bin/bash --version | head -1
