@@ -20,11 +20,20 @@ set -euo pipefail
 if [[ $# -lt 1 ]]; then
   echo "usage: gh-user <account> [gh-args...]" >&2
   users_dir="${GH_USERS_DIR:-$HOME/.config/gh-users}"
-  echo "  known accounts: $(ls "${users_dir}" 2>/dev/null | tr '\n' ' ')" >&2
+  # Glob instead of `ls | tr` (ShellCheck SC2012: ls output isn't safe to
+  # parse for non-alphanumeric filenames) — also avoids find(1)'s BSD vs
+  # GNU flag differences (-printf is GNU-only), so this stays portable
+  # between the Linux CI runner and macOS.
+  accounts=""
+  for d in "${users_dir}"/*/; do
+    [[ -d "$d" ]] && accounts+="$(basename "$d") "
+  done
+  echo "  known accounts: ${accounts}" >&2
   exit 1
 fi
 
-account="$1"; shift
+account="$1"
+shift
 users_dir="${GH_USERS_DIR:-$HOME/.config/gh-users}"
 account_dir="${users_dir}/${account}"
 
