@@ -140,12 +140,8 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Convenience symlinks to $HOME files (created by direnv, not in _home/)
-/zshrc
-/zshenv
-/zprofile
-/bashrc
-/bash_profile
-/mise_config.toml
+_real/
+!_real/.gitkeep
 
 # Claude Code hook state
 .repo/hashes.yaml

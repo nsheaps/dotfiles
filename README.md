@@ -11,9 +11,9 @@ This repository uses a modular approach with:
 - **`_home/interactive.d/`** - Interactive shell scripts (functions, aliases)
 - **`_home/startup.d/`** - Safe, idempotent scripts run at Mac login
 - **`_home/update.d/`** - Potentially risky scripts run manually
-- **`bin/wire`** - Deployment script that creates symlinks and injects managed sections
+- **`bin/dotfiles`** - The `dotfiles` CLI that creates symlinks and injects managed sections (`dotfiles wire` / `dotfiles check`)
 
-All files in `_home/` are visible (no leading dots) for easier editing. The `bin/wire` script creates symlinks and injects managed sections into shell RC files.
+All files in `_home/` are visible (no leading dots) for easier editing. The `dotfiles` CLI creates symlinks and injects managed sections into shell RC files.
 
 ## Quick Start
 
@@ -23,21 +23,35 @@ All files in `_home/` are visible (no leading dots) for easier editing. The `bin
 # Install Homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install base tools (includes antidote, mise, etc.)
+# Install base tools. The nsheaps-base cask depends on the `dotfiles` formula,
+# which installs the global `dotfiles` command AND wires the shell config into
+# $HOME automatically on install — no manual `bin/wire`, no copy-pasting an
+# antidote block into ~/.zshrc.
 brew install --cask nsheaps/devsetup/nsheaps-base
 
-# Clone this repo
-git clone git@github.com:nsheaps/dotfiles.git ~/src/nsheaps/dotfiles
-cd ~/src/nsheaps/dotfiles
-
-# Install development tools via mise
-mise use -g node@lts bun@latest python@latest go@latest
-
-# Deploy the dotfiles
-bin/wire
-
-# Start a new shell to test
+# Start a new shell to pick up the changes
 zsh
+```
+
+That's it — the formula's `post_install` runs `dotfiles ensure-wired`, so the
+managed sections and symlinks are already in place. Verify with:
+
+```bash
+dotfiles check     # reports whether $HOME is fully wired
+```
+
+### Local Development
+
+To hack on the dotfiles themselves, clone the repo. `direnv` prepends the repo's
+`bin/` to `PATH`, so `dotfiles` resolves to your working copy (not the installed
+one) while you're inside the checkout:
+
+```bash
+git clone git@github.com:nsheaps/dotfiles.git ~/src/nsheaps/dotfiles
+cd ~/src/nsheaps/dotfiles   # direnv: `dotfiles` now = ./bin/dotfiles
+
+# Re-deploy from your working copy
+dotfiles wire
 ```
 
 ### Updating Dotfiles
@@ -57,7 +71,7 @@ git push
 
 # Changes to profile.d/, interactive.d/ are immediate (symlinked)
 # Changes to RC file templates require re-running wire:
-bin/wire
+dotfiles wire
 
 # Reload shell
 source ~/.zshrc  # or open new terminal
@@ -68,11 +82,13 @@ source ~/.zshrc  # or open new terminal
 ```
 dotfiles/
 ├── bin/
-│   ├── wire              # Deployment script (creates symlinks, injects managed sections)
+│   ├── dotfiles          # The `dotfiles` CLI (wire, check, ensure-wired, startup, update)
 │   ├── run-startup.sh    # Runs startup.d scripts (for Mac login items)
 │   ├── run-updates.sh    # Runs update.d scripts (manual)
 │   └── lib/
 │       └── source-scripts.sh  # Helper to execute scripts from a directory
+├── Formula/
+│   └── dotfiles.rb.gotmpl  # Homebrew formula template (rendered by the release pipeline)
 ├── templates/            # Shell code templates for managed sections
 │   ├── zsh/
 │   │   ├── rc.zsh        # Template for ~/.zshrc managed section
@@ -102,9 +118,9 @@ dotfiles/
 
 ## How It Works
 
-### Wiring (bin/wire)
+### Wiring (dotfiles wire)
 
-The `bin/wire` script sets up your shell environment:
+`dotfiles wire` sets up your shell environment:
 
 1. **Creates symlinks** for script directories:
    - `~/.dotfiles` → this repo
@@ -132,7 +148,8 @@ When you start a shell:
 
 - **Edit**: Make changes in `_home/` directory
 - **Script directories**: Changes are immediate (symlinked)
-- **RC files**: Run `bin/wire` after changing templates
+- **RC files**: Run `dotfiles wire` after changing templates
+- **Check**: Run `dotfiles check` to confirm `$HOME` is fully wired
 - **Customize**: Add personal overrides above the managed section in `~/.zshrc`
 
 ## Features
@@ -155,8 +172,8 @@ When you start a shell:
 
 ### Startup & Update Scripts
 
-- **`bin/run-startup.sh`** - Run safe, idempotent startup scripts. Add as a Mac login item.
-- **`bin/run-updates.sh`** - Run potentially risky update scripts manually.
+- **`dotfiles startup`** - Run safe, idempotent startup scripts. Add as a Mac login item. (Delegates to `bin/run-startup.sh`.)
+- **`dotfiles update`** - Run potentially risky update scripts manually. (Delegates to `bin/run-updates.sh`.)
 
 ## Customization
 
@@ -216,6 +233,6 @@ source ~/.zshrc
 
 ```bash
 # If you change templates/zsh/*.zsh or templates/bash/*.bash
-bin/wire
+dotfiles wire
 source ~/.zshrc
 ```

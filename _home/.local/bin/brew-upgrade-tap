@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# brew-upgrade-tap <tap>
+#
+# Runs `brew update`, then upgrades the formulae belonging to <tap>.
+#
+# <tap> accepts either brew tap format (nsheaps/devsetup) or GitHub repo
+# format (nsheaps/homebrew-devsetup); the leading homebrew- on the repo
+# portion is normalized away.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/brew-tap-normalize.sh
+source "$SCRIPT_DIR/lib/brew-tap-normalize.sh"
+
+if [[ -z "${1:-}" ]]; then
+  echo "Usage: brew-upgrade-tap <tap>" >&2
+  echo "  e.g. brew-upgrade-tap nsheaps/devsetup" >&2
+  echo "       brew-upgrade-tap nsheaps/homebrew-devsetup" >&2
+  exit 1
+fi
+
+tap="$(brew_normalize_tap "$1")"
+
+echo "Updating brew..."
+brew update
+
+echo "Finding formulae in tap ${tap}..."
+formulae="$(brew tap-info --json "$tap" | jq -r '.[].formula_names[]')" || {
+  echo "Error: could not get formulae for tap ${tap}" >&2
+  exit 1
+}
+
+if [[ -z "$formulae" ]]; then
+  echo "No formulae found in tap ${tap}" >&2
+  exit 0
+fi
+
+echo "Upgrading: ${formulae}"
+# Intentionally unquoted: $formulae is a newline-separated list of formula
+# names that brew upgrade expects as separate arguments.
+# shellcheck disable=SC2086
+brew upgrade $formulae
