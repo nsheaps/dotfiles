@@ -8,7 +8,7 @@ Copyright (c) 2026 Nathan Heaps. All rights reserved.
 >
 > - Its overall structure and most of its wording come from the
 >   **PolyForm Internal Use License 1.0.0**
->   (<https://polyformproject.org/licenses/internal-use/1.0.0/>), which is
+>   ([https://polyformproject.org/licenses/internal-use/1.0.0]), which is
 >   purpose-built for "use the software for internal business operations, do
 >   not distribute it." The one substantive adaptation is that PolyForm grants
 >   rights to *"you and your company"* (whoever accepts the license), whereas
