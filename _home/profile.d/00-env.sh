@@ -2,11 +2,4 @@
 # Environment variables for login shells
 # This file is sourced by both zprofile and bash_profile
 
-# NVM (Node Version Manager)
-export NVM_DIR="$HOME/.nvm"
-if [[ -s "$NVM_DIR/nvm.sh" ]]; then
-  source "$NVM_DIR/nvm.sh"
-fi
-if [[ -s "$NVM_DIR/bash_completion" ]]; then
-  source "$NVM_DIR/bash_completion"
-fi
+# If you use NVM, it's init would go here, but we use mise to manage node versions

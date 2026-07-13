@@ -1,3 +1,4 @@
 #!/usr/bin/env zsh
 
-happy daemon start
+# disable happy
+# happy daemon start
