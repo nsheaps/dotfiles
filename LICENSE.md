@@ -115,6 +115,8 @@ to anyone else, or prevent the Licensor from granting licenses to anyone
 else. These terms do not imply any other licenses. All rights not expressly
 granted above are reserved by the Licensor.
 
+## Fair Use
+
 Oura may have "fair use" rights for the software under the law. These terms
 do not limit them.
 
