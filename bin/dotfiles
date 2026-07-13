@@ -317,7 +317,7 @@ ensure_local_bin() {
   echo "Linking ~/.local/bin scripts..."
 
   local file rel_path dest dest_dir
-  while IFS= read -r -d '' file; do
+  while IFS= read -r -d '' file <&3; do
     rel_path="${file#"$repo_bin"/}"
     dest="$home_bin/$rel_path"
     dest_dir="$(dirname "$dest")"
@@ -334,7 +334,7 @@ ensure_local_bin() {
 
     ln -sfn "$file" "$dest"
     echo "  Linked: ~/.local/bin/$rel_path"
-  done < <(find "$repo_bin" -type f -print0)
+  done 3< <(find "$repo_bin" -type f -print0)
 }
 
 # Symlink all files in a repo subdir to the corresponding home location.
@@ -357,10 +357,15 @@ link_home_dir() {
   # substitution keeps link_home_file in the current shell, and this avoids an
   # empty-array expansion that would also trip `set -u` on bash 3.2.
   local file rel_path
-  while IFS= read -r -d '' file; do
+  # Read the file list on fd 3, NOT the loop's own stdin (fd 0) — otherwise
+  # this redirect silently steals stdin from link_home_file's nested
+  # interactive conflict prompt, making -t 0 always false even when this is
+  # run from a real terminal. (Confirmed by testing under a real pty: the
+  # prompt never appeared until this was fixed.)
+  while IFS= read -r -d '' file <&3; do
     rel_path="${file#"$repo_path"/}"
     link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
-  done < <(find "$repo_path" -type f -print0)
+  done 3< <(find "$repo_path" -type f -print0)
 }
 
 cmd_wire() {
