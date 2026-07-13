@@ -92,6 +92,11 @@ jobs:
           set -eux
           export HOME="$RUNNER_TEMP/fake-home"
           mkdir -p "$HOME"
+          # `defaults write` (used to set the default iTerm2 profile) targets
+          # the real runner user's preference domain by UID, not $HOME, so it
+          # can't be sandboxed into fake-home like everything else this job
+          # tests. Skip it here rather than mutate the runner's real plist.
+          export DOTFILES_SKIP_ITERM_DEFAULT=1
           /bin/bash ./bin/dotfiles wire --yes
 
       - name: Check after first wire
@@ -109,6 +114,7 @@ jobs:
         run: |
           set -eux
           export HOME="$RUNNER_TEMP/fake-home"
+          export DOTFILES_SKIP_ITERM_DEFAULT=1
           /bin/bash ./bin/dotfiles wire --yes
 
       - name: Check after re-wire
