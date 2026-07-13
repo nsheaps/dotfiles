@@ -123,11 +123,25 @@ dotfiles/
 `dotfiles wire` sets up your shell environment:
 
 1. **Creates symlinks** for script directories:
-   - `~/.dotfiles` → this repo
+   - `~/.dotfiles` → this repo (or, see below, a real checkout if you used `--repo`)
    - `~/.profile.d` → `_home/profile.d`
    - `~/.interactive.d` → `_home/interactive.d`
    - `~/.startup.d` → `_home/startup.d`
    - `~/.update.d` → `_home/update.d`
+
+**`dotfiles wire --repo <url>`** — instead of symlinking `~/.dotfiles` to
+wherever this CLI is currently running from (e.g. the Homebrew-managed
+`opt`/`libexec` copy), clones `<url>` to `~/.dotfiles` as a real, independent
+git checkout, then wires everything else *from that clone* — so your
+`~/.config/...`/`~/Library/...` symlinks point at your own editable checkout,
+not a copy you can't easily push commits from. Useful right after
+`brew install dotfiles`, when you want your own real, personal checkout at
+`~/.dotfiles` instead of a symlink into Homebrew's cellar. Once used, later
+plain `dotfiles wire`/`dotfiles check` calls automatically recognize the real
+checkout at `~/.dotfiles` and keep using it — you don't need to pass `--repo`
+again. Refuses (rather than touching anything) if `~/.dotfiles` already
+exists as something it didn't create: a real directory that isn't a git
+checkout, or a checkout of a *different* repo.
 
 2. **Injects managed sections** into shell RC files (`~/.zshrc`, `~/.bashrc`, etc.):
    ```bash
