@@ -12,7 +12,7 @@
   - `update.d/`: Potentially risky update scripts (symlinked to `~/.update.d`)
   - `.config/`: XDG-compliant configuration directory (symlinked into `~/.config` by `dotfiles wire`)
 - `bin/`: Executable scripts
-  - `dotfiles`: The `dotfiles` CLI — `wire` (creates symlinks, injects managed sections, symlinks .config), `check` (reports wired state), `ensure-wired` (check-then-wire, used by the formula's `post_install`), plus `startup`/`update` delegates
+  - `dotfiles`: The `dotfiles` CLI — `wire` (creates symlinks, injects managed sections, symlinks .config), `check` (reports wired state), `ensure-wired` (check-then-wire, used by the formula's `post_install`), `staleness-check` (warns on stderr if `$DOTFILES_DIR` is off-branch or behind the last-fetched remote, rate-limited via a timestamp in `$XDG_CACHE_HOME/dotfiles/`), plus `startup`/`update` delegates
   - `run-startup.sh`: Runs startup.d scripts (for Mac login items; `dotfiles startup` delegates here)
   - `run-updates.sh`: Runs update.d scripts (manual; `dotfiles update` delegates here)
   - `lib/source-scripts.sh`: Helper to execute scripts from a directory
