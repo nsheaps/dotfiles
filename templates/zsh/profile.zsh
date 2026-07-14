@@ -1,1 +1,1 @@
-source "$DOTFILES_DIR/_home/zprofile"
+source "$DOTFILES_DIR/internal/zprofile"

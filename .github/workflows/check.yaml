@@ -54,8 +54,8 @@ jobs:
               bash_files="$bash_files $f"
             fi
           done
-          # Also check _home shell config files (bashrc, bash_profile)
-          for f in ./_home/bashrc ./_home/bash_profile; do
+          # Also check internal/ shell config files (bashrc, bash_profile)
+          for f in ./internal/bashrc ./internal/bash_profile; do
             if [[ -f "$f" ]]; then
               shebang=$(head -1 "$f")
               if echo "$shebang" | grep -qE '(bash|^#!/bin/sh)'; then
