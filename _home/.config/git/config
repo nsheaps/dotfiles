@@ -1,0 +1,32 @@
+# Shared, non-identity git settings — symlinked to ~/.config/git/config by
+# `dotfiles wire`. See README.md in this directory for why user.name,
+# user.email, and credential settings are intentionally kept out of this
+# tracked file.
+
+[init]
+  defaultBranch = main
+
+[pull]
+  rebase = false
+
+[push]
+  autoSetupRemote = true
+
+[fetch]
+  prune = true
+
+[rerere]
+  enabled = true
+
+[color]
+  ui = auto
+
+[diff]
+  colorMoved = default
+
+[alias]
+  st = status
+  co = checkout
+  br = branch
+  ci = commit
+  lg = log --graph --oneline --decorate --all

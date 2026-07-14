@@ -185,6 +185,17 @@ When you start a shell:
 - **Antidote** - Zsh plugin manager (static loading for faster startup)
 - **Homebrew** - Package manager
 
+### Git Configuration
+
+`_home/.config/git/config` is symlinked to `~/.config/git/config` (same
+`link_home_dir` mechanism as `mise`/`gh`), so shared, non-identity settings
+(aliases, `pull`/`push`/`fetch` behavior, etc.) sync across machines like
+everything else in `_home/.config`. `user.name`, `user.email`, and
+credential/signing settings are intentionally **not** tracked — set those in
+your own `~/.gitconfig` (untracked, per-machine); Git reads it after the
+XDG file and lets it win, so the two layer without conflicting. See
+`_home/.config/git/README.md` for details.
+
 ### Startup & Update Scripts
 
 - **`dotfiles startup`** - Run safe, idempotent startup scripts. Add as a Mac login item. (Delegates to `bin/run-startup.sh`.)

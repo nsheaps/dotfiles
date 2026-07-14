@@ -58,6 +58,8 @@ jobs:
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshrc"
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshenv"
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zprofile"
+          # .config files (e.g. git config) are symlinked in by link_home_dir.
+          test -L "$HOME/.config/git/config"
 
       - name: Re-wire (idempotency)
         run: ./bin/dotfiles wire --yes
