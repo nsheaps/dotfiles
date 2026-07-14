@@ -897,26 +897,26 @@ cmd_staleness_check() {
 # -----------------------------------------------------------------------------
 
 cmd_sync() {
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -h | --help)
-      echo "Usage: dotfiles sync"
-      echo ""
-      echo "Commit any local changes in \$DOTFILES_DIR (symlinked .config files"
-      echo "write straight through into the repo, so this can go dirty without"
-      echo "a git command ever running here), fetch and rebase onto the"
-      echo "current branch's remote counterpart, then push. Clears the"
-      echo "'uncommitted changes' / 'unpushed commit(s)' warning printed by"
-      echo "'dotfiles staleness-check' at shell startup."
-      return 0
-      ;;
-    *)
-      echo "dotfiles sync: unknown option: $1" >&2
-      return 1
-      ;;
-    esac
-    shift
-  done
+  # No flags besides --help, so (unlike wire/check/staleness-check) there's
+  # no option that falls through to a loop -- every branch below returns.
+  case "${1:-}" in
+  -h | --help)
+    echo "Usage: dotfiles sync"
+    echo ""
+    echo "Commit any local changes in \$DOTFILES_DIR (symlinked .config files"
+    echo "write straight through into the repo, so this can go dirty without"
+    echo "a git command ever running here), fetch and rebase onto the"
+    echo "current branch's remote counterpart, then push. Clears the"
+    echo "'uncommitted changes' / 'unpushed commit(s)' warning printed by"
+    echo "'dotfiles staleness-check' at shell startup."
+    return 0
+    ;;
+  "") ;;
+  *)
+    echo "dotfiles sync: unknown option: $1" >&2
+    return 1
+    ;;
+  esac
 
   if ! git -C "$DOTFILES_DIR" rev-parse --git-dir &>/dev/null; then
     echo "dotfiles sync: $DOTFILES_DIR is not a git checkout; nothing to sync." >&2
