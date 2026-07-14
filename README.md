@@ -102,7 +102,8 @@ dotfiles/
 │   ├── interactive.d/    # Interactive shell scripts (symlinked to ~/.interactive.d)
 │   │   ├── claude.sh     # Claude CLI helper functions
 │   │   ├── iterm-auto-profile.sh
-│   │   └── open-iterm.sh
+│   │   ├── open-iterm.sh
+│   │   └── staleness-check.sh  # Warns if the dotfiles checkout is stale (dotfiles staleness-check)
 │   ├── startup.d/        # Mac login scripts (symlinked to ~/.startup.d)
 │   ├── update.d/         # Manual update scripts (symlinked to ~/.update.d)
 │   ├── zshrc             # Zsh interactive config
@@ -188,6 +189,22 @@ When you start a shell:
 
 - **`dotfiles startup`** - Run safe, idempotent startup scripts. Add as a Mac login item. (Delegates to `bin/run-startup.sh`.)
 - **`dotfiles update`** - Run potentially risky update scripts manually. (Delegates to `bin/run-updates.sh`.)
+
+### Staleness Check
+
+Every new interactive shell runs `dotfiles staleness-check` (via
+`_home/interactive.d/staleness-check.sh`). At most once every 16 hours (tracked
+in `$XDG_CACHE_HOME/dotfiles/last-staleness-check`), it checks `$DOTFILES_DIR`
+against the last-fetched remote state — no network access, so it never blocks
+shell startup — and prints a warning to stderr if the checkout is on a
+different branch than the remote's default branch, or is behind it. A no-op
+if `$DOTFILES_DIR` isn't a git checkout (e.g. the Homebrew-installed copy).
+
+```bash
+dotfiles staleness-check --force   # check now, ignoring the interval
+DOTFILES_SKIP_STALENESS_CHECK=1    # disable entirely
+DOTFILES_STALENESS_CHECK_INTERVAL=3600   # override the interval (seconds)
+```
 
 ## Customization
 
