@@ -55,6 +55,18 @@ resolve_dotfiles_dir() {
     return 0
   fi
 
+  # A real (non-symlink) git checkout at ~/.dotfiles — e.g. from a prior
+  # `wire --repo` — is the user's own editable copy and takes priority over
+  # the bundled/installed one: if they have their own checkout there, that's
+  # the one every subsequent `check`/`wire` should treat as the source of
+  # truth, not the Homebrew-managed bundle. This is what makes the --repo
+  # choice "stick" across future invocations without needing a state file —
+  # the presence of a real checkout at this path is itself the signal.
+  if [[ -d "$HOME/.dotfiles/.git" && ! -L "$HOME/.dotfiles" && -d "$HOME/.dotfiles/_home" ]]; then
+    (cd "$HOME/.dotfiles" && pwd -P)
+    return 0
+  fi
+
   local sdir root
   sdir="$(script_dir)"
   root="$(cd "$sdir/.." && pwd)"
@@ -73,10 +85,19 @@ resolve_dotfiles_dir() {
   return 1
 }
 
-# Populated by main() before dispatching to a subcommand.
-DOTFILES_DIR=""
+# Populated by main() before dispatching to a subcommand. Preserve an
+# inherited DOTFILES_DIR (e.g. from the Homebrew wrapper, or direnv in a
+# checkout) rather than unconditionally clobbering it — resolve_dotfiles_dir's
+# own priority-1 check for it is meaningless otherwise, since this ran before
+# that check on every invocation.
+DOTFILES_DIR="${DOTFILES_DIR:-}"
 TEMPLATES_DIR=""
 HOME_DIR="$HOME"
+
+# Set only by the Homebrew wrapper (never by direnv/rc.d), so its presence
+# distinguishes "running the brew-installed CLI with no shadowing checkout"
+# from "running inside a dev checkout" — see cmd_wire's use of it below.
+DOTFILES_DEFAULT_REPO_URL="${DOTFILES_DEFAULT_REPO_URL:-}"
 
 # -----------------------------------------------------------------------------
 # wire
@@ -368,6 +389,72 @@ link_home_dir() {
   done 3< <(find "$repo_path" -type f -print0)
 }
 
+# Clone $1 into $HOME_DIR/.dotfiles as a REAL git checkout, instead of the
+# usual `ln -sfn "$DOTFILES_DIR" "$HOME_DIR/.dotfiles"` symlink, and repoint
+# DOTFILES_DIR (and TEMPLATES_DIR) at it so the rest of `wire` treats the
+# fresh clone as the source of truth for everything else it symlinks —
+# otherwise ~/.dotfiles would be a nice real clone while every other
+# symlink still pointed into the (typically read-only-ish, Homebrew-owned)
+# bundle, which defeats the point of cloning a personal, editable checkout.
+#
+# Sets the global DOTFILES_DIR/TEMPLATES_DIR on success. Never destroys an
+# existing ~/.dotfiles that isn't one we created ourselves (a plain
+# symlink, or empty/absent) — a real directory or a clone of a DIFFERENT
+# repo is left untouched and this returns failure instead. If ~/.dotfiles is
+# already a clean checkout of $1, fetches and fast-forwards it; a dirty
+# tree or a non-fast-forwardable history is left alone rather than stashed
+# or rebased.
+clone_repo_to_home_dotfiles() {
+  local repo_url="$1"
+  local dest="$HOME_DIR/.dotfiles"
+
+  if [[ -d "$dest/.git" ]]; then
+    local existing_url
+    existing_url="$(git -C "$dest" remote get-url origin 2>/dev/null || true)"
+    if [[ -n "$existing_url" && "$existing_url" != "$repo_url" ]]; then
+      echo "  ~/.dotfiles is already a git checkout of a different repo ($existing_url)." >&2
+      echo "  Not touching it — move it aside or remove it, then re-run with --repo." >&2
+      return 1
+    fi
+    # Bring it up to date, but only when it's safe: a dirty working tree or a
+    # diverged/missing upstream means the user has their own local commits or
+    # edits, and silently rewriting those is exactly the kind of destructive
+    # surprise `wire` should never spring on a re-run — leave it as-is and
+    # say so instead of stashing, rebasing, or force-updating anything.
+    if [[ -n "$(git -C "$dest" status --porcelain 2>/dev/null)" ]]; then
+      echo "  ~/.dotfiles is already a checkout of $repo_url but has uncommitted changes; leaving it as-is (not fetching)."
+    elif git -C "$dest" fetch --quiet origin 2>/dev/null && git -C "$dest" merge --ff-only --quiet '@{upstream}' 2>/dev/null; then
+      echo "  ~/.dotfiles is already a checkout of $repo_url; fetched and fast-forwarded to the latest."
+    else
+      echo "  ~/.dotfiles is already a checkout of $repo_url; could not fast-forward (no upstream, or local commits ahead) — leaving it as-is."
+    fi
+    # Canonicalize (pwd -P) so this matches what resolve_dotfiles_dir will
+    # produce on later invocations (cd .. && pwd -P) — a raw $dest here
+    # would mismatch cmd_check's plain string comparisons on any machine
+    # where a path component is itself a symlink (e.g. macOS's /tmp ->
+    # /private/tmp), since the symlinks we are about to create/verify get
+    # compared by their literal recorded target, not by realpath equality.
+    DOTFILES_DIR="$(cd "$dest" && pwd -P)"
+    TEMPLATES_DIR="$DOTFILES_DIR/templates"
+    return 0
+  fi
+
+  if [[ -L "$dest" ]]; then
+    echo "  ~/.dotfiles is currently a symlink -> $(readlink "$dest"); removing it to clone a real checkout there."
+    rm -f "$dest"
+  elif [[ -e "$dest" ]]; then
+    echo "  ~/.dotfiles already exists and is neither a git checkout nor a symlink we manage." >&2
+    echo "  Not touching it — move it aside or remove it, then re-run with --repo." >&2
+    return 1
+  fi
+
+  echo "  Cloning $repo_url to $dest..."
+  git clone "$repo_url" "$dest" || return 1
+  # Canonicalize for the same reason as the already-cloned branch above.
+  DOTFILES_DIR="$(cd "$dest" && pwd -P)"
+  TEMPLATES_DIR="$DOTFILES_DIR/templates"
+}
+
 # Point iTerm2's OS-level default bookmark at the named profile from
 # custom-profiles.json, so new windows/tabs use it without a manual pick in
 # iTerm2's preferences. macOS-only (no-op elsewhere, e.g. the Linux wire-test
@@ -417,16 +504,40 @@ set_default_iterm_profile() {
 
 cmd_wire() {
   # Parse wire-specific options.
+  local repo_url=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -y | --yes | --non-interactive)
       NONINTERACTIVE=1
       ;;
+    --repo)
+      shift
+      [[ $# -gt 0 ]] || {
+        echo "dotfiles wire: --repo requires a URL or path argument" >&2
+        return 1
+      }
+      repo_url="$1"
+      ;;
     -h | --help)
-      echo "Usage: dotfiles wire [--yes]"
+      echo "Usage: dotfiles wire [--yes] [--repo <url>]"
       echo ""
       echo "Deploy dotfiles from $DOTFILES_DIR into \$HOME."
       echo "  --yes, --non-interactive  Never prompt; skip conflicting .config files."
+      echo "  --repo <url>              Clone <url> to ~/.dotfiles as a real git"
+      echo "                            checkout (instead of symlinking ~/.dotfiles"
+      echo "                            to the bundled/installed copy), then wire"
+      echo "                            everything else from that checkout. Useful"
+      echo "                            for the Homebrew formula's post_install, so"
+      echo "                            a fresh machine ends up with its own"
+      echo "                            editable, independently git-tracked"
+      echo "                            ~/.dotfiles rather than a symlink into"
+      echo "                            Homebrew's managed copy."
+      echo ""
+      echo "  When run via the Homebrew-installed CLI (not shadowed by direnv"
+      echo "  in a checkout), --repo defaults to this repo's own URL — so a"
+      echo "  fresh install ends up with a real, editable ~/.dotfiles checkout"
+      echo "  instead of a symlink into the bundled copy. Pass --repo explicitly"
+      echo "  to wire a different dotfiles repo instead."
       return 0
       ;;
     *)
@@ -437,6 +548,21 @@ cmd_wire() {
     shift
   done
 
+  # No explicit --repo: default to this repo's own URL, but only when running
+  # via the Homebrew wrapper (the only thing that sets DOTFILES_DEFAULT_REPO_URL).
+  # Inside a dev checkout (direnv-shadowed), this stays empty, so `wire` keeps
+  # symlinking ~/.dotfiles to the checkout you're actually running from instead
+  # of cloning a redundant second copy of itself.
+  if [[ -z "$repo_url" && -n "$DOTFILES_DEFAULT_REPO_URL" ]]; then
+    repo_url="$DOTFILES_DEFAULT_REPO_URL"
+  fi
+
+  local cloned=0
+  if [[ -n "$repo_url" ]]; then
+    clone_repo_to_home_dotfiles "$repo_url" || return 1
+    cloned=1
+  fi
+
   echo "Wiring dotfiles from $DOTFILES_DIR to $HOME_DIR..."
   echo "Dotfiles directory: $DOTFILES_DIR"
 
@@ -446,9 +572,16 @@ cmd_wire() {
   echo ""
   echo "Creating directory symlinks..."
 
-  # ~/.dotfiles -> repo root (used by check and as a resolution fallback)
-  ln -sfn "$DOTFILES_DIR" "$HOME_DIR/.dotfiles"
-  echo "  $HOME_DIR/.dotfiles → $DOTFILES_DIR"
+  if [[ "$cloned" -eq 1 ]]; then
+    # ~/.dotfiles IS the clone itself (see clone_repo_to_home_dotfiles) —
+    # nothing to symlink, and doing so would try to replace the real
+    # checkout we just made or reused.
+    echo "  $HOME_DIR/.dotfiles is a git checkout of $repo_url (not a symlink)"
+  else
+    # ~/.dotfiles -> repo root (used by check and as a resolution fallback)
+    ln -sfn "$DOTFILES_DIR" "$HOME_DIR/.dotfiles"
+    echo "  $HOME_DIR/.dotfiles → $DOTFILES_DIR"
+  fi
 
   create_symlink "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
   create_symlink "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
@@ -530,9 +663,14 @@ cmd_check() {
     echo "  [$status] $msg"
   }
 
-  # 1. ~/.dotfiles symlink points at the repo root.
+  # 1. ~/.dotfiles is wired: either a symlink to $DOTFILES_DIR (the normal
+  #    case), or IS $DOTFILES_DIR itself as a real git checkout (the --repo
+  #    case — resolve_dotfiles_dir resolves straight to it, so there's
+  #    nothing to symlink; ~/.dotfiles being the real checkout is correct).
   if [[ -L "$HOME_DIR/.dotfiles" ]] && [[ "$(cd "$HOME_DIR/.dotfiles" 2>/dev/null && pwd -P)" == "$(cd "$DOTFILES_DIR" && pwd -P)" ]]; then
     report OK "~/.dotfiles → $DOTFILES_DIR"
+  elif [[ -d "$HOME_DIR/.dotfiles/.git" ]] && [[ "$(cd "$HOME_DIR/.dotfiles" 2>/dev/null && pwd -P)" == "$(cd "$DOTFILES_DIR" && pwd -P)" ]]; then
+    report OK "~/.dotfiles is a git checkout (same path as \$DOTFILES_DIR)"
   else
     report "  " "~/.dotfiles is not linked to $DOTFILES_DIR"
     ok=1

@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
 
-if command -v gs &> /dev/null; then
-  eval "$(gs shell completion zsh)"
+if command -v git-spice &> /dev/null; then
+  eval "$(git-spice shell completion zsh)"
 fi

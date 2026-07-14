@@ -21,13 +21,30 @@ class Dotfiles < Formula
     # out of a version-stable location instead of a separate clone.
     libexec.install 'bin', '_home', 'templates'
 
-    # Install a thin wrapper on PATH. It points DOTFILES_DIR at the version-
-    # stable opt path (so managed sections written into ~/.zshrc survive
-    # `brew upgrade`) and execs the real CLI. Inside a checkout of the repo,
-    # direnv shadows this wrapper with the repo's own bin/dotfiles.
+    # Install a thin wrapper on PATH that just execs the real CLI at the
+    # version-stable opt path. Deliberately does NOT export a DOTFILES_DIR
+    # default here — bin/dotfiles' own resolve_dotfiles_dir() already falls
+    # back to its own script location (this opt path) when nothing else
+    # applies, and it also checks for a real git checkout at ~/.dotfiles
+    # (from `wire --repo`) first. A hardcoded default here would win over
+    # that ~/.dotfiles check every time (since it makes the env var look
+    # "already set" to the exec'd script), silently defeating --repo on
+    # every invocation after the first. Inside a checkout of the repo,
+    # direnv exporting its own DOTFILES_DIR is still respected normally,
+    # since child processes inherit an already-exported env var either way
+    # — nothing extra needed here for that case either.
+    #
+    # DOTFILES_DEFAULT_REPO_URL is safe to export unconditionally, unlike
+    # DOTFILES_DIR above: cmd_wire only consults it to pick a default `--repo`
+    # target when none was passed explicitly, and nothing ever persists it
+    # anywhere, so there's no "looks already set forever" trap. This is what
+    # makes a brew-installed `dotfiles wire` (no flags) default to cloning
+    # this same repo to ~/.dotfiles instead of just symlinking the bundled
+    # libexec copy — someone wiring their OWN separate dotfiles repo instead
+    # passes an explicit `--repo <their-url>`, which always wins.
     (bin/'dotfiles').write <<~SH
       #!/bin/bash
-      export DOTFILES_DIR="${DOTFILES_DIR:-#{opt_libexec}}"
+      export DOTFILES_DEFAULT_REPO_URL="${DOTFILES_DEFAULT_REPO_URL:-#{homepage}.git}"
       exec "#{opt_libexec}/bin/dotfiles" "$@"
     SH
   end

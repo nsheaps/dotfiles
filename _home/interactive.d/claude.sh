@@ -18,10 +18,6 @@ claude() {
   if command -v run-claude &> /dev/null; then
     run-claude "$@"
   else
-    echo "run-claude not found. Install claude-utils with Homebrew:" >&2
-    echo "  brew tap nsheaps/claude-utils" >&2
-    echo "  brew install claude-utils" >&2
-    echo "Falling back to direct claude invocation." >&2
     command claude "$@"
   fi
 }

@@ -6,9 +6,14 @@ name: wire-test
 # sections). A bare ubuntu:24.04 image (rather than the pre-populated hosted
 # runner) gives an empty $HOME, which is the closest CI analogue to a fresh
 # machine right after the Homebrew formula's post_install runs `ensure-wired`.
+#
+# The macOS-specific bash-3.2 counterpart to this job lives in its own
+# wire-test-macos.yaml, gated separately since macOS runners cost far more.
 
 on:
+  pull_request:
   push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -64,64 +69,6 @@ jobs:
           ./bin/dotfiles check
           # Re-wiring must REPLACE the managed section in place, not append a
           # second one: exactly one BEGIN/END marker pair per rc file.
-          for rc in .zshrc .zshenv .zprofile; do
-            begins=$(grep -c '# BEGIN: Managed by dotfiles wire' "$HOME/$rc")
-            ends=$(grep -c '# END: Managed by dotfiles wire' "$HOME/$rc")
-            echo "$rc: $begins begin marker(s), $ends end marker(s)"
-            test "$begins" -eq 1
-            test "$ends" -eq 1
-          done
-
-  # The ubuntu job above runs a modern bash, so it can't catch regressions that
-  # only bite bash 3.2 — which is exactly what the Homebrew wrapper runs under
-  # on macOS (its `#!/bin/bash` resolves to Apple's frozen 3.2.57: no `mapfile`,
-  # and `set -u` errors on empty-array expansion). Invoke the CLI explicitly via
-  # /bin/bash against a throwaway $HOME so this class of bug is covered going
-  # forward. No Homebrew needed — the hosted runner's system bash is enough.
-  wire-test-macos:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Show system bash version
-        run: /bin/bash --version | head -1
-
-      - name: First wire (non-interactive, system /bin/bash)
-        run: |
-          set -eux
-          export HOME="$RUNNER_TEMP/fake-home"
-          mkdir -p "$HOME"
-          # `defaults write` (used to set the default iTerm2 profile) targets
-          # the real runner user's preference domain by UID, not $HOME, so it
-          # can't be sandboxed into fake-home like everything else this job
-          # tests. Skip it here rather than mutate the runner's real plist.
-          export DOTFILES_SKIP_ITERM_DEFAULT=1
-          /bin/bash ./bin/dotfiles wire --yes
-
-      - name: Check after first wire
-        run: |
-          set -eux
-          export HOME="$RUNNER_TEMP/fake-home"
-          /bin/bash ./bin/dotfiles check
-          test -L "$HOME/.dotfiles"
-          test -L "$HOME/.profile.d"
-          grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshrc"
-          grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshenv"
-          grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zprofile"
-
-      - name: Re-wire (idempotency, system /bin/bash)
-        run: |
-          set -eux
-          export HOME="$RUNNER_TEMP/fake-home"
-          export DOTFILES_SKIP_ITERM_DEFAULT=1
-          /bin/bash ./bin/dotfiles wire --yes
-
-      - name: Check after re-wire
-        run: |
-          set -eux
-          export HOME="$RUNNER_TEMP/fake-home"
-          /bin/bash ./bin/dotfiles check
           for rc in .zshrc .zshenv .zprofile; do
             begins=$(grep -c '# BEGIN: Managed by dotfiles wire' "$HOME/$rc")
             ends=$(grep -c '# END: Managed by dotfiles wire' "$HOME/$rc")
