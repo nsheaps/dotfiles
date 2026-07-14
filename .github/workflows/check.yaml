@@ -46,6 +46,14 @@ jobs:
               bash_files="$bash_files $f"
             fi
           done
+          # Also check _home/.local/bin/ scripts without .sh extension (the
+          # ones `ensure_local_bin` actually links onto PATH — e.g. gh-user)
+          for f in $(find ./_home/.local/bin -maxdepth 1 -type f -not -name '*.sh' -not -path './.git/*'); do
+            shebang=$(head -1 "$f")
+            if echo "$shebang" | grep -qE '(bash|^#!/bin/sh)'; then
+              bash_files="$bash_files $f"
+            fi
+          done
           # Also check _home shell config files (bashrc, bash_profile)
           for f in ./_home/bashrc ./_home/bash_profile; do
             if [[ -f "$f" ]]; then
