@@ -26,6 +26,9 @@ echo "Tap ${tap} has been updated."
 
 outdated="$(brew-outdated "$tap")"
 if [[ -n "$outdated" ]]; then
+  # Single-quoted so the backticks print literally; %s (not $tap) is what
+  # actually substitutes here, passed as printf's second argument below.
+  # shellcheck disable=SC2016
   printf 'Run `brew-upgrade-tap %s` to upgrade the formula to the latest version.\n' "$tap"
   printf 'Outdated formula:\n%s\n' "$outdated"
 fi
