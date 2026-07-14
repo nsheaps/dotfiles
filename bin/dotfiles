@@ -10,10 +10,14 @@
 #                   Always exits 0 (used by the Homebrew formula post_install).
 #   startup         Run the startup.d scripts (bin/run-startup.sh).
 #   update          Run the update.d scripts (bin/run-updates.sh).
-#   staleness-check Warn on stderr if this checkout is on the wrong branch or
-#                   behind the last-fetched remote HEAD. Rate-limited to once
-#                   per interval; called from shell startup (see
+#   staleness-check Warn on stderr if this checkout is on the wrong branch,
+#                   behind the last-fetched remote HEAD, or has
+#                   uncommitted/unpushed changes. Rate-limited to once per
+#                   interval; called from shell startup (see
 #                   _home/interactive.d/staleness-check.sh).
+#   sync            Commit any local changes in $DOTFILES_DIR, pull (rebase),
+#                   then push. Clears the uncommitted/unpushed warning
+#                   printed by staleness-check above.
 #
 # This is the global entrypoint installed by the Homebrew formula. When you are
 # inside a checkout of the repo, direnv puts the repo's bin/ first on PATH so
@@ -763,8 +767,9 @@ cmd_staleness_check() {
       echo "Usage: dotfiles staleness-check [--force]"
       echo ""
       echo "Warn on stderr if \$DOTFILES_DIR is on a different branch than the"
-      echo "remote's default branch, or is behind that branch as of the last"
-      echo "fetch. Silent (and a no-op) if run again within"
+      echo "remote's default branch, is behind that branch as of the last"
+      echo "fetch, or has uncommitted changes / commits not yet pushed"
+      echo "(remedy: 'dotfiles sync'). Silent (and a no-op) if run again within"
       echo "\$DOTFILES_STALENESS_CHECK_INTERVAL seconds (default 16h) of the last"
       echo "check, or if \$DOTFILES_DIR isn't a git checkout."
       echo ""
@@ -816,6 +821,35 @@ cmd_staleness_check() {
     return 0
   fi
 
+  # Local drift: uncommitted changes, or commits sitting ahead of the current
+  # branch's upstream. Independent of (and checked before) the remote-default-
+  # branch drift below -- .config files under $DOTFILES_DIR are symlinked
+  # in, not copied (see architecture.md), so editing one of them through its
+  # ~/.config symlink can leave this checkout dirty without ever running a
+  # git command here.
+  local dirty="" ahead=0
+  if [[ -n "$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null)" ]]; then
+    dirty=1
+  fi
+  if git -C "$DOTFILES_DIR" rev-parse --verify --quiet '@{upstream}' &>/dev/null; then
+    ahead="$(git -C "$DOTFILES_DIR" rev-list --count '@{upstream}..HEAD' 2>/dev/null || echo 0)"
+    [[ "$ahead" =~ ^[0-9]+$ ]] || ahead=0
+  fi
+
+  local local_reason=""
+  if [[ -n "$dirty" && "$ahead" -gt 0 ]]; then
+    local_reason="has uncommitted changes and $ahead unpushed commit(s)"
+  elif [[ -n "$dirty" ]]; then
+    local_reason="has uncommitted changes"
+  elif [[ "$ahead" -gt 0 ]]; then
+    local_reason="has $ahead unpushed commit(s)"
+  fi
+
+  if [[ -n "$local_reason" ]]; then
+    echo "dotfiles: warning: $DOTFILES_DIR $local_reason." >&2
+    echo "  Run: dotfiles sync" >&2
+  fi
+
   # Find the remote's default branch without touching the network: prefer
   # the recorded origin/HEAD symlink (set by `git clone`), falling back to
   # checking for a conventionally-named branch if that's missing (e.g. a
@@ -859,6 +893,84 @@ cmd_staleness_check() {
 }
 
 # -----------------------------------------------------------------------------
+# sync
+# -----------------------------------------------------------------------------
+
+cmd_sync() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+      echo "Usage: dotfiles sync"
+      echo ""
+      echo "Commit any local changes in \$DOTFILES_DIR (symlinked .config files"
+      echo "write straight through into the repo, so this can go dirty without"
+      echo "a git command ever running here), fetch and rebase onto the"
+      echo "current branch's remote counterpart, then push. Clears the"
+      echo "'uncommitted changes' / 'unpushed commit(s)' warning printed by"
+      echo "'dotfiles staleness-check' at shell startup."
+      return 0
+      ;;
+    *)
+      echo "dotfiles sync: unknown option: $1" >&2
+      return 1
+      ;;
+    esac
+    shift
+  done
+
+  if ! git -C "$DOTFILES_DIR" rev-parse --git-dir &>/dev/null; then
+    echo "dotfiles sync: $DOTFILES_DIR is not a git checkout; nothing to sync." >&2
+    return 1
+  fi
+
+  local current_branch
+  current_branch="$(git -C "$DOTFILES_DIR" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  if [[ -z "$current_branch" ]]; then
+    echo "dotfiles sync: $DOTFILES_DIR has a detached HEAD; checkout a branch first." >&2
+    return 1
+  fi
+
+  echo "Syncing $DOTFILES_DIR (branch $current_branch)..."
+
+  if [[ -n "$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null)" ]]; then
+    echo "  Committing local changes..."
+    git -C "$DOTFILES_DIR" add -A
+    git -C "$DOTFILES_DIR" commit --quiet -m "sync: local changes from $(hostname 2>/dev/null || echo unknown)"
+  else
+    echo "  No uncommitted changes."
+  fi
+
+  echo "  Fetching..."
+  if ! git -C "$DOTFILES_DIR" fetch --quiet origin; then
+    echo "dotfiles sync: fetch failed; check your network connection." >&2
+    return 1
+  fi
+
+  if git -C "$DOTFILES_DIR" show-ref --verify --quiet "refs/remotes/origin/$current_branch"; then
+    echo "  Rebasing onto origin/$current_branch..."
+    if ! git -C "$DOTFILES_DIR" rebase --quiet "origin/$current_branch"; then
+      echo "dotfiles sync: rebase hit conflicts; resolve them in $DOTFILES_DIR" >&2
+      echo "  (fix conflicts, git add <files>, git rebase --continue), then re-run 'dotfiles sync'." >&2
+      return 1
+    fi
+  else
+    echo "  No origin/$current_branch to rebase onto yet."
+  fi
+
+  echo "  Pushing..."
+  local push_args=(push --quiet origin "HEAD:refs/heads/$current_branch")
+  if ! git -C "$DOTFILES_DIR" rev-parse --verify --quiet '@{upstream}' &>/dev/null; then
+    push_args=(push --quiet -u origin "HEAD:refs/heads/$current_branch")
+  fi
+  if ! git -C "$DOTFILES_DIR" "${push_args[@]}"; then
+    echo "dotfiles sync: push failed (remote may have moved); re-run 'dotfiles sync'." >&2
+    return 1
+  fi
+
+  echo "Sync complete."
+}
+
+# -----------------------------------------------------------------------------
 # startup / update (delegate to the standalone runners)
 # -----------------------------------------------------------------------------
 
@@ -891,7 +1003,8 @@ COMMANDS:
   ensure-wired    Wire only if not already wired (non-interactive, never fails)
   startup         Run the startup.d scripts
   update          Run the update.d scripts
-  staleness-check Warn if this checkout is stale relative to its remote
+  staleness-check Warn if this checkout is stale, or has uncommitted/unpushed changes
+  sync            Commit local changes, pull, and push $DOTFILES_DIR
 
 OPTIONS:
   -h, --help      Show this help
@@ -929,6 +1042,7 @@ main() {
   startup) cmd_startup "$@" ;;
   update) cmd_update "$@" ;;
   staleness-check) cmd_staleness_check "$@" ;;
+  sync) cmd_sync "$@" ;;
   *)
     echo "dotfiles: unknown command: $cmd" >&2
     echo "Run 'dotfiles --help' for usage." >&2
