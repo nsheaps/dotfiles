@@ -4,7 +4,6 @@ go = "latest"
 node = "lts"
 pipx = "latest"
 python = "latest"
-python3 = "latest"
 
 [hooks]
 preinstall = "echo 'I am about to install tools'"
