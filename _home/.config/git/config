@@ -1,7 +1,9 @@
-# Shared, non-identity git settings — symlinked to ~/.config/git/config by
-# `dotfiles wire`. See README.md in this directory for why user.name,
-# user.email, and credential settings are intentionally kept out of this
-# tracked file.
+# Shared, non-identity git settings — the machine-agnostic default that
+# `dotfiles wire` forks into config.<hostname> the first time it runs on a
+# given machine (see README.md in this directory). ~/.config/git/config
+# ends up symlinked to that per-machine fork, not to this file directly.
+# See README.md for why user.name, user.email, and credential settings are
+# intentionally kept out of both.
 
 [init]
   defaultBranch = main
