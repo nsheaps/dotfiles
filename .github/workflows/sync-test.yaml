@@ -45,9 +45,9 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-clean"
-          # sync treats a valid $DOTFILES_DIR as one with an _home/ directory
+          # sync treats a valid $DOTFILES_DIR as one with an internal/ directory
           # (see resolve_dotfiles_dir in bin/dotfiles).
-          mkdir -p "$SYNC_WORK/repo-clean/_home"
+          mkdir -p "$SYNC_WORK/repo-clean/internal"
           before="$(git -C "$SYNC_WORK/repo-clean" rev-parse HEAD)"
           DOTFILES_DIR="$SYNC_WORK/repo-clean" ./bin/dotfiles sync
           after="$(git -C "$SYNC_WORK/repo-clean" rev-parse HEAD)"
@@ -57,7 +57,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty"
-          mkdir -p "$SYNC_WORK/repo-dirty/_home"
+          mkdir -p "$SYNC_WORK/repo-dirty/internal"
           echo "local edit" >"$SYNC_WORK/repo-dirty/notes.txt"
 
           DOTFILES_DIR="$SYNC_WORK/repo-dirty" ./bin/dotfiles sync
@@ -72,7 +72,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-ahead"
-          mkdir -p "$SYNC_WORK/repo-ahead/_home"
+          mkdir -p "$SYNC_WORK/repo-ahead/internal"
           git -C "$SYNC_WORK/repo-ahead" commit -q --allow-empty -m "local-only commit"
 
           DOTFILES_DIR="$SYNC_WORK/repo-ahead" ./bin/dotfiles sync
@@ -86,7 +86,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-behind"
-          mkdir -p "$SYNC_WORK/repo-behind/_home"
+          mkdir -p "$SYNC_WORK/repo-behind/internal"
 
           # Someone else pushes to origin in the meantime.
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/pusher"
@@ -111,7 +111,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-conflict"
-          mkdir -p "$SYNC_WORK/repo-conflict/_home"
+          mkdir -p "$SYNC_WORK/repo-conflict/internal"
 
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/pusher2"
           echo "remote change" >"$SYNC_WORK/pusher2/conflict.txt"
@@ -135,7 +135,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-detached"
-          mkdir -p "$SYNC_WORK/repo-detached/_home"
+          mkdir -p "$SYNC_WORK/repo-detached/internal"
           git -C "$SYNC_WORK/repo-detached" checkout -q --detach
 
           if out=$(DOTFILES_DIR="$SYNC_WORK/repo-detached" ./bin/dotfiles sync 2>&1); then
@@ -148,7 +148,7 @@ jobs:
       - name: Non-git DOTFILES_DIR -> refuses with a clear error, exits non-zero
         run: |
           set -eux
-          mkdir -p "$SYNC_WORK/nongit/_home"
+          mkdir -p "$SYNC_WORK/nongit/internal"
 
           if out=$(DOTFILES_DIR="$SYNC_WORK/nongit" ./bin/dotfiles sync 2>&1); then
             echo "expected 'dotfiles sync' to fail on a non-git directory, but it succeeded" >&2
@@ -191,7 +191,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty"
-          mkdir -p "$SYNC_WORK/repo-dirty/_home"
+          mkdir -p "$SYNC_WORK/repo-dirty/internal"
           echo "local edit" >"$SYNC_WORK/repo-dirty/notes.txt"
 
           DOTFILES_DIR="$SYNC_WORK/repo-dirty" /bin/bash ./bin/dotfiles sync

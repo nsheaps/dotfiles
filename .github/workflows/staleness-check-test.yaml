@@ -56,7 +56,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-dirty"
-          mkdir -p "$STALENESS_WORK/repo-dirty/_home"
+          mkdir -p "$STALENESS_WORK/repo-dirty/internal"
           echo "local edit" >"$STALENESS_WORK/repo-dirty/notes.txt"
           out="$(DOTFILES_DIR="$STALENESS_WORK/repo-dirty" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-dirty" ./bin/dotfiles staleness-check --force 2>&1)"
           echo "$out"
@@ -67,7 +67,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-ahead"
-          mkdir -p "$STALENESS_WORK/repo-ahead/_home"
+          mkdir -p "$STALENESS_WORK/repo-ahead/internal"
           git -C "$STALENESS_WORK/repo-ahead" commit -q --allow-empty -m "local-only commit"
           out="$(DOTFILES_DIR="$STALENESS_WORK/repo-ahead" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-ahead" ./bin/dotfiles staleness-check --force 2>&1)"
           echo "$out"
@@ -78,7 +78,7 @@ jobs:
         run: |
           set -eux
           git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-dirty-ahead"
-          mkdir -p "$STALENESS_WORK/repo-dirty-ahead/_home"
+          mkdir -p "$STALENESS_WORK/repo-dirty-ahead/internal"
           git -C "$STALENESS_WORK/repo-dirty-ahead" commit -q --allow-empty -m "local-only commit"
           echo "local edit" >"$STALENESS_WORK/repo-dirty-ahead/notes.txt"
           out="$(DOTFILES_DIR="$STALENESS_WORK/repo-dirty-ahead" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-dirty-ahead" ./bin/dotfiles staleness-check --force 2>&1)"
