@@ -22,8 +22,14 @@ for script in "${DOTFILES_DIR}"/_home/profile.d/*.sh(N); do
   source "$script"
 done
 
-# Source all interactive.d scripts (functions, aliases) - only for TTY
+# Source interactive.d scripts (functions, aliases) - only for TTY.
+# internal/ first (dotfiles' own: antidote plugin loading, staleness check),
+# then _home/ (your personal functions), so plugins and fpath are set up
+# before your scripts run.
 if [[ -t 1 ]]; then
+  for script in "${DOTFILES_DIR}"/internal/interactive.d/*.sh(N); do
+    source "$script"
+  done
   for script in "${DOTFILES_DIR}"/_home/interactive.d/*.sh(N); do
     source "$script"
   done

@@ -41,8 +41,8 @@ jobs:
 
           git clone -q "$work/origin.git" "$work/repo"
           # staleness-check treats a valid $DOTFILES_DIR as one with an
-          # _home/ directory (see resolve_dotfiles_dir in bin/dotfiles).
-          mkdir -p "$work/repo/_home"
+          # internal/ directory (see resolve_dotfiles_dir in bin/dotfiles).
+          mkdir -p "$work/repo/internal"
 
           echo "STALENESS_WORK=$work" >> "$GITHUB_ENV"
 
@@ -154,7 +154,7 @@ jobs:
       - name: Non-git DOTFILES_DIR (e.g. Homebrew tarball install) -> silent no-op
         run: |
           set -eux
-          mkdir -p "$STALENESS_WORK/nongit/_home"
+          mkdir -p "$STALENESS_WORK/nongit/internal"
           out="$(DOTFILES_DIR="$STALENESS_WORK/nongit" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-g" ./bin/dotfiles staleness-check --force 2>&1)"
           test -z "$out"
 
@@ -186,7 +186,7 @@ jobs:
           rm -rf "$work/seed"
 
           git clone -q "$work/origin.git" "$work/repo"
-          mkdir -p "$work/repo/_home"
+          mkdir -p "$work/repo/internal"
 
           echo "STALENESS_WORK=$work" >> "$GITHUB_ENV"
 

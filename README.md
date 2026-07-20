@@ -8,12 +8,28 @@ Inspired by https://github.com/getantidote/zdotdir
 
 This repository uses a modular approach with:
 - **`_home/profile.d/`** - Login shell scripts (environment variables, paths)
-- **`_home/interactive.d/`** - Interactive shell scripts (functions, aliases)
+- **`_home/interactive.d/`** - Personal interactive shell scripts (functions, aliases)
 - **`_home/startup.d/`** - Safe, idempotent scripts run at Mac login
 - **`_home/update.d/`** - Potentially risky scripts run manually
 - **`bin/dotfiles`** - The `dotfiles` CLI that creates symlinks and injects managed sections (`dotfiles wire` / `dotfiles check` / `dotfiles sync`)
 
-All files in `_home/` are visible (no leading dots) for easier editing. The `dotfiles` CLI creates symlinks and injects managed sections into shell RC files.
+The repo separates two kinds of content:
+
+- **`internal/`** holds dotfiles' own mechanism — the shell rc loaders
+  (`zshrc`/`zprofile`/`zshenv`/`bashrc`/`bash_profile`) plus the antidote
+  plugin loader and the staleness-check drop-in. This is required for the
+  shell config to work at all, so it's always force-wired into `$HOME` (via
+  managed sections and forced symlinks) with no conflict prompt.
+- **`_home/`** holds personal content that mirrors `$HOME`'s own structure —
+  your plugin list (`zsh_plugins.txt`), your `profile.d`/`interactive.d`/
+  `startup.d`/`update.d` drop-in scripts, and `.config/`/`Library/`/
+  `.local/bin/`. The `.config`/`Library` files are wired with per-file
+  conflict detection (diff/prompt/merge), since they're the content most
+  likely to diverge between machines.
+
+All files in both directories are visible (no leading dots) for easier
+editing. The `dotfiles` CLI creates symlinks and injects managed sections
+into shell RC files.
 
 ## Quick Start
 
@@ -61,8 +77,8 @@ After making changes in the repo:
 ```bash
 cd ~/src/nsheaps/dotfiles
 
-# Edit files in _home/ directory
-vim _home/zshrc
+# Edit files in internal/ directory
+vim internal/zshrc
 
 # Commit changes
 git add .
@@ -97,21 +113,28 @@ dotfiles/
 │   └── bash/
 │       ├── rc.bash       # Template for ~/.bashrc managed section
 │       └── profile.bash  # Template for ~/.bash_profile managed section
-├── _home/
+├── internal/             # Dotfiles' own mechanism — always force-wired
+│   ├── zshrc             # Zsh interactive loader (sources the drop-in dirs)
+│   ├── zprofile          # Zsh login loader (Homebrew, mise shims)
+│   ├── zshenv            # Zsh environment loader (XDG, PATH)
+│   ├── bashrc            # Bash interactive loader
+│   ├── bash_profile      # Bash login loader
+│   └── interactive.d/
+│       ├── 00-antidote.sh       # Antidote plugin-loading engine
+│       └── staleness-check.sh   # Warns if the dotfiles checkout is stale (dotfiles staleness-check)
+├── _home/                # Personal content mirroring $HOME
 │   ├── profile.d/        # Login shell scripts (symlinked to ~/.profile.d)
-│   ├── interactive.d/    # Interactive shell scripts (symlinked to ~/.interactive.d)
+│   ├── interactive.d/    # Personal interactive scripts (symlinked to ~/.interactive.d)
 │   │   ├── claude.sh     # Claude CLI helper functions
-│   │   ├── iterm-auto-profile.sh
+│   │   ├── iterm2.sh     # Automatic iTerm2 profile switching
 │   │   ├── open-iterm.sh
-│   │   └── staleness-check.sh  # Warns if the dotfiles checkout is stale (dotfiles staleness-check)
+│   │   └── shell-utils.sh
 │   ├── startup.d/        # Mac login scripts (symlinked to ~/.startup.d)
 │   ├── update.d/         # Manual update scripts (symlinked to ~/.update.d)
-│   ├── zshrc             # Zsh interactive config
-│   ├── zprofile          # Zsh login config
-│   ├── zshenv            # Zsh environment config
-│   ├── bashrc            # Bash interactive config
-│   ├── bash_profile      # Bash login config
-│   └── zsh_plugins.txt   # Antidote plugin declarations
+│   ├── zsh_plugins.txt   # Antidote plugin declarations (your choices)
+│   ├── .config/          # XDG config (symlinked file-by-file to ~/.config, conflict-aware)
+│   ├── Library/          # macOS app support files (symlinked to ~/Library, conflict-aware)
+│   └── .local/bin/       # Personal scripts (symlinked to ~/.local/bin)
 ├── rc.d/
 │   └── 00_setup_symlinks.sh  # Direnv setup (for repo development)
 └── .envrc                # Direnv configuration
@@ -123,12 +146,18 @@ dotfiles/
 
 `dotfiles wire` sets up your shell environment:
 
-1. **Creates symlinks** for script directories:
+1. **Creates symlinks** for the drop-in script directories (always
+   force-relinked — the symlink is machinery, so there's no conflict prompt;
+   the files it points at are your personal `_home/` content):
    - `~/.dotfiles` → this repo (or, see below, a real checkout if you used `--repo`)
    - `~/.profile.d` → `_home/profile.d`
    - `~/.interactive.d` → `_home/interactive.d`
    - `~/.startup.d` → `_home/startup.d`
    - `~/.update.d` → `_home/update.d`
+
+   (dotfiles' own drop-ins in `internal/interactive.d` — antidote loading and
+   the staleness check — aren't symlinked into `~`; the rc loaders source them
+   directly from the repo, so they always load.)
 
 **`dotfiles wire --repo <url>`** — instead of symlinking `~/.dotfiles` to
 wherever this CLI is currently running from (e.g. the Homebrew-managed
@@ -148,20 +177,24 @@ checkout, or a checkout of a *different* repo.
    ```bash
    # BEGIN: Managed by dotfiles wire
    export DOTFILES_DIR="/path/to/dotfiles"
-   source "$DOTFILES_DIR/_home/zshrc"
+   source "$DOTFILES_DIR/internal/zshrc"
    # END: Managed by dotfiles wire
    ```
+
+3. **Symlinks `.config`/`Library` files** from `_home/` into `~/.config`/`~/Library`,
+   file-by-file, with conflict detection (diff/prompt/merge) — see
+   `.claude/rules/architecture.md` for the full flow.
 
 ### Shell Initialization Flow
 
 When you start a shell:
 1. Shell loads `~/.zshrc` (or `~/.bashrc`)
-2. The managed section sources `_home/zshrc`
-3. `_home/zshrc` loads antidote plugins and sources `profile.d/` and `interactive.d/`
+2. The managed section sources `internal/zshrc`
+3. `internal/zshrc` sources `_home/profile.d/`, then `internal/interactive.d/` (antidote plugin loading + staleness check), then your `_home/interactive.d/` scripts
 
 ### Configuration Management
 
-- **Edit**: Make changes in `_home/` directory
+- **Edit**: Make changes in `internal/` only for the mechanism (rc loaders, antidote/staleness drop-ins); make personal changes in `_home/` (plugin list, `profile.d`/`interactive.d`/`startup.d`/`update.d` scripts, `.config`/`Library`/`.local/bin`)
 - **Script directories**: Changes are immediate (symlinked)
 - **RC files**: Run `dotfiles wire` after changing templates
 - **Check**: Run `dotfiles check` to confirm `$HOME` is fully wired
@@ -193,7 +226,7 @@ When you start a shell:
 ### Staleness Check
 
 Every new interactive shell runs `dotfiles staleness-check` (via
-`_home/interactive.d/staleness-check.sh`). At most once every 16 hours (tracked
+`internal/interactive.d/staleness-check.sh`). At most once every 16 hours (tracked
 in `$XDG_CACHE_HOME/dotfiles/last-staleness-check`), it checks `$DOTFILES_DIR`
 against the last-fetched remote state — no network access, so it never blocks
 shell startup — and prints a warning to stderr if:

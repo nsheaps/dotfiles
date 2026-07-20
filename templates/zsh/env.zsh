@@ -1,1 +1,1 @@
-source "$DOTFILES_DIR/_home/zshenv"
+source "$DOTFILES_DIR/internal/zshenv"
