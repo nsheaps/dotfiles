@@ -4,7 +4,7 @@
 
 A shell function to open iTerm2 tabs with optional directory targeting and unique-tab detection.
 
-**Target file:** `~/_home/interactive.d/open-iterm.sh`
+**Target file:** `_home/interactive.d/open-iterm.sh`
 **Status:** Implemented
 
 ## Requirements

@@ -14,8 +14,9 @@ Example: After updating `.ai/scratch/` files (todo.md, questions.md, plan.md), t
 ## Making Changes to Dotfiles
 
 When modifying dotfiles:
-- Edit files in the `_home/` directory (these are the canonical versions)
-- Or edit the symlinks in `$HOME` directly (changes will be reflected in `_home/`)
+- Edit files in `internal/` only for dotfiles' own mechanism — the shell rc loaders (`zshrc`/`zprofile`/`zshenv`/`bashrc`/`bash_profile`) and the two machinery drop-ins (`interactive.d/00-antidote.sh`, `interactive.d/staleness-check.sh`). These are always force-wired.
+- Edit files in `_home/` for personal content — your plugin list (`zsh_plugins.txt`), personal `profile.d`/`interactive.d`/`startup.d`/`update.d` scripts, and `.config/`/`Library/`/`.local/bin/`. New personal shell scripts go in `_home/interactive.d/` (or `profile.d/`), not `internal/`.
+- Or edit the symlinks in `$HOME` directly (changes will be reflected back into `internal/`/`_home/`)
 - The `00_setup_symlinks.sh` script will warn if files have diverged and need manual reconciliation
 
 ## Testing Changes
@@ -32,7 +33,7 @@ direnv allow .
 
 ## Adding New Plugins
 
-Add plugin declarations to `_home/.zsh_plugins.txt`, then reload:
+Add plugin declarations to `_home/zsh_plugins.txt`, then reload:
 ```bash
 source ~/.zshrc  # Antidote will regenerate ~/.zsh_plugins.zsh
 ```
