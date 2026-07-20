@@ -59,8 +59,31 @@ jobs:
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshrc"
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zshenv"
           grep -q '# BEGIN: Managed by dotfiles wire' "$HOME/.zprofile"
-          # .config files (e.g. git config) are symlinked in by link_home_dir.
+          # ~/.config/git/config is wired to a per-hostname FORK of
+          # _home/.config/git/config, not to that shared file directly (see
+          # wire_git_config in bin/dotfiles) -- it must be a symlink into a
+          # config.<hostname> file, and that fork must exist and start out
+          # identical to the shared default.
           test -L "$HOME/.config/git/config"
+          git_config_target="$(readlink "$HOME/.config/git/config")"
+          case "$git_config_target" in
+          */_home/.config/git/config.*) ;;
+          *)
+            echo "expected ~/.config/git/config to point at a config.<hostname> fork, got: $git_config_target" >&2
+            exit 1
+            ;;
+          esac
+          test -f "$git_config_target"
+          diff -q "$git_config_target" _home/.config/git/config
+
+      - name: Diverge the per-machine git config fork
+        run: |
+          set -eux
+          export HOME="$RUNNER_TEMP/fake-home"
+          # Simulate the user editing their machine's own fork after the
+          # first wire -- re-wiring below must never clobber this.
+          git_config_target="$(readlink "$HOME/.config/git/config")"
+          echo '# wire-test: local-only divergence' >>"$git_config_target"
 
       - name: Re-wire (idempotency, system /bin/bash)
         run: |
@@ -81,3 +104,15 @@ jobs:
             test "$begins" -eq 1
             test "$ends" -eq 1
           done
+          # Re-wiring must not re-fork (and so clobber) an existing
+          # config.<hostname> -- the divergence from the previous step must
+          # still be there, and the symlink must still point at the same fork.
+          git_config_target="$(readlink "$HOME/.config/git/config")"
+          case "$git_config_target" in
+          */_home/.config/git/config.*) ;;
+          *)
+            echo "expected ~/.config/git/config to still point at a config.<hostname> fork, got: $git_config_target" >&2
+            exit 1
+            ;;
+          esac
+          grep -q '# wire-test: local-only divergence' "$git_config_target"
