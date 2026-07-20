@@ -218,6 +218,22 @@ When you start a shell:
 - **Antidote** - Zsh plugin manager (static loading for faster startup)
 - **Homebrew** - Package manager
 
+### Git Configuration
+
+`~/.config/git/config` is symlinked to a **per-hostname fork** of
+`_home/.config/git/config`, not to that shared file directly. The first
+time `dotfiles wire` runs on a machine, it forks `_home/.config/git/config`
+(the shared, non-identity default — aliases, `pull`/`push`/`fetch`
+behavior, etc.) into `_home/.config/git/config.<hostname>`, then symlinks
+`~/.config/git/config` to that fork. Every machine starts from the same
+baseline but can diverge afterward (e.g. a work-only proxy setting) without
+affecting any other machine wired from the same checkout. Re-running `wire`
+never re-forks or overwrites an existing fork. `user.name`, `user.email`,
+and credential/signing settings are intentionally **not** tracked in either
+file — set those in your own `~/.gitconfig` (untracked, per-machine); Git
+reads it after the XDG file and lets it win, so the two layer without
+conflicting. See `_home/.config/git/README.md` for details.
+
 ### Startup & Update Scripts
 
 - **`dotfiles startup`** - Run safe, idempotent startup scripts. Add as a Mac login item. (Delegates to `bin/run-startup.sh`.)

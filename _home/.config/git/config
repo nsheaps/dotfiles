@@ -1,0 +1,34 @@
+# Shared, non-identity git settings — the machine-agnostic default that
+# `dotfiles wire` forks into config.<hostname> the first time it runs on a
+# given machine (see README.md in this directory). ~/.config/git/config
+# ends up symlinked to that per-machine fork, not to this file directly.
+# See README.md for why user.name, user.email, and credential settings are
+# intentionally kept out of both.
+
+[init]
+  defaultBranch = main
+
+[pull]
+  rebase = false
+
+[push]
+  autoSetupRemote = true
+
+[fetch]
+  prune = true
+
+[rerere]
+  enabled = true
+
+[color]
+  ui = auto
+
+[diff]
+  colorMoved = default
+
+[alias]
+  st = status
+  co = checkout
+  br = branch
+  ci = commit
+  lg = log --graph --oneline --decorate --all
