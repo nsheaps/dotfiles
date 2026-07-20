@@ -128,6 +128,25 @@ create_symlink() {
   fi
 }
 
+# Short (unqualified) hostname of the current machine — used by
+# wire_git_config to fork a per-machine git config. No hostname-detection
+# helper exists anywhere else in this repo yet, so this is it going forward;
+# reuse it rather than adding a second way to ask for the hostname.
+#
+# Prefers bash's own $HOSTNAME (set by bash itself on both macOS and Linux,
+# no external command needed) over the `hostname` binary, since a minimal
+# container image (e.g. the wire-test CI image) may not have the latter
+# installed. `uname -n` is the last-resort fallback.
+dotfiles_hostname() {
+  local host="${HOSTNAME:-}"
+  if [[ -z "$host" ]]; then
+    host="$(hostname 2>/dev/null || uname -n 2>/dev/null || true)"
+  fi
+  # Strip any domain suffix so "laptop.local"/"laptop.lan" etc. all fork the
+  # same file as plain "laptop".
+  printf '%s\n' "${host%%.*}"
+}
+
 # Inject or update a managed section in a file.
 # Usage: inject_managed_section <target_file> <template_file>
 inject_managed_section() {
@@ -193,13 +212,36 @@ link_home_file() {
   # Tilde is intentional for display, not expansion
   # shellcheck disable=SC2088
   local display_path="~/$home_subdir/$rel_path"
-  local dest_dir
-  dest_dir="$(dirname "$dest")"
 
   # Skip README files - they're for documentation only
   if [[ "$(basename "$rel_path")" == "README.md" ]]; then
     return 0
   fi
+
+  # git/config and its per-hostname forks (config.<hostname>) are wired by
+  # wire_git_config, not this generic sweep -- see wire_git_config for why
+  # (fork-on-first-use per machine instead of one shared symlink target).
+  if [[ "$repo_subdir" == "_home/.config" && "$rel_path" == git/config* ]]; then
+    return 0
+  fi
+
+  link_file_with_conflict_check "$src" "$dest" "$display_path"
+}
+
+# Symlink src to dest, handling the not-yet-linked/already-linked/conflicting
+# cases. Shared by link_home_file (whose src/dest are both derived from the
+# same rel_path) and wire_git_config (whose src is a per-hostname fork named
+# differently from its dest).
+link_file_with_conflict_check() {
+  local src="$1"
+  local dest="$2"
+  local display_path="$3"
+  local dest_dir
+  dest_dir="$(dirname "$dest")"
+  # Used in the "h"/"k" conflict-resolution commit messages below; derived
+  # from src rather than taken as a parameter since it's just src relative
+  # to the repo root.
+  local repo_relative_label="${src#"$DOTFILES_DIR"/}"
 
   # Create destination directory if needed
   if [[ ! -d "$dest_dir" ]]; then
@@ -277,7 +319,7 @@ link_home_file() {
       rm -f "$dest"
       ln -s "$src" "$dest"
       git -C "$DOTFILES_DIR" add "$src"
-      git -C "$DOTFILES_DIR" commit -m "sync: update $repo_subdir/$rel_path from HOME"
+      git -C "$DOTFILES_DIR" commit -m "sync: update $repo_relative_label from HOME"
       echo "  Updated repo and symlinked $display_path"
       break
       ;;
@@ -306,7 +348,7 @@ link_home_file() {
       rm -f "$dest"
       ln -s "$src" "$dest"
       git -C "$DOTFILES_DIR" add "$src"
-      git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_subdir/$rel_path with HOME"
+      git -C "$DOTFILES_DIR" commit -m "sync: merge $repo_relative_label with HOME"
       echo "  Merged, committed, and symlinked"
       break
       ;;
@@ -397,6 +439,50 @@ link_home_dir() {
     rel_path="${file#"$repo_path"/}"
     link_home_file "$repo_subdir" "$home_subdir" "$rel_path"
   done 3< <(find "$repo_path" -type f -print0)
+}
+
+# Symlink ~/.config/git/config to a per-machine fork of the shared default,
+# creating that fork the first time `wire` runs on this machine.
+#
+# _home/.config/git/config is the shared, identity-free default (safe to
+# check in -- see _home/.config/git/README.md for why user.name, user.email,
+# and credential/signing settings never belong in it). _home/.config/git/
+# config.<hostname> is this machine's own copy of that default: seeded from
+# it the first time wire runs here, then free to diverge afterward (e.g. a
+# machine-specific proxy or credential-helper reference) without touching
+# any other machine wired from the same checkout. Every machine starts from
+# the same baseline but can grow its own settings on top.
+#
+# Excluded from the generic `link_home_dir "_home/.config" ".config"` sweep
+# above (see link_home_file's git/config* skip) since this is the only place
+# that decides what ~/.config/git/config actually points at.
+wire_git_config() {
+  local git_dir="$DOTFILES_DIR/_home/.config/git"
+  local default_config="$git_dir/config"
+
+  if [[ ! -f "$default_config" ]]; then
+    return 0
+  fi
+
+  echo ""
+  echo "Wiring per-machine git config..."
+
+  local host
+  host="$(dotfiles_hostname)"
+  if [[ -z "$host" ]]; then
+    echo "  Warning: could not determine hostname; leaving ~/.config/git/config as-is." >&2
+    return 0
+  fi
+
+  local host_config="$git_dir/config.$host"
+  if [[ ! -f "$host_config" ]]; then
+    cp "$default_config" "$host_config"
+    echo "  Forked config.$host from the shared default (first wire on this machine)"
+  fi
+
+  # Tilde is intentional for display, not expansion
+  # shellcheck disable=SC2088
+  link_file_with_conflict_check "$host_config" "$HOME_DIR/.config/git/config" "~/.config/git/config (→ config.$host)"
 }
 
 # Clone $1 into $HOME_DIR/.dotfiles as a REAL git checkout, instead of the
@@ -623,6 +709,7 @@ cmd_wire() {
   # .config and Library file symlinks
   # ---------------------------------------------------------------------------
   link_home_dir "_home/.config" ".config"
+  wire_git_config
   link_home_dir "_home/Library" "Library"
   ensure_local_bin
 
