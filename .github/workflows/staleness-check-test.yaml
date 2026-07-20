@@ -2,9 +2,9 @@ name: staleness-check-test
 
 # Exercise `dotfiles staleness-check` against synthetic git repos: a repo
 # up to date with its "origin", one on the wrong branch, one with a detached
-# HEAD, and one behind origin as of the last fetch. Also covers the
-# once-per-interval rate limiting and the two escape hatches
-# (DOTFILES_SKIP_STALENESS_CHECK, --force).
+# HEAD, one behind origin as of the last fetch, one with uncommitted changes,
+# and one with unpushed commits. Also covers the once-per-interval rate
+# limiting and the two escape hatches (DOTFILES_SKIP_STALENESS_CHECK, --force).
 
 on:
   push:
@@ -51,6 +51,39 @@ jobs:
           set -eux
           out="$(DOTFILES_DIR="$STALENESS_WORK/repo" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-a" ./bin/dotfiles staleness-check --force 2>&1)"
           test -z "$out"
+
+      - name: Uncommitted changes -> warns and suggests dotfiles sync
+        run: |
+          set -eux
+          git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-dirty"
+          mkdir -p "$STALENESS_WORK/repo-dirty/internal"
+          echo "local edit" >"$STALENESS_WORK/repo-dirty/notes.txt"
+          out="$(DOTFILES_DIR="$STALENESS_WORK/repo-dirty" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-dirty" ./bin/dotfiles staleness-check --force 2>&1)"
+          echo "$out"
+          echo "$out" | grep -q "has uncommitted changes"
+          echo "$out" | grep -q "dotfiles sync"
+
+      - name: Unpushed commit -> warns and suggests dotfiles sync
+        run: |
+          set -eux
+          git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-ahead"
+          mkdir -p "$STALENESS_WORK/repo-ahead/internal"
+          git -C "$STALENESS_WORK/repo-ahead" commit -q --allow-empty -m "local-only commit"
+          out="$(DOTFILES_DIR="$STALENESS_WORK/repo-ahead" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-ahead" ./bin/dotfiles staleness-check --force 2>&1)"
+          echo "$out"
+          echo "$out" | grep -q "has 1 unpushed commit(s)"
+          echo "$out" | grep -q "dotfiles sync"
+
+      - name: Uncommitted changes AND unpushed commit -> combined warning
+        run: |
+          set -eux
+          git clone -q "$STALENESS_WORK/origin.git" "$STALENESS_WORK/repo-dirty-ahead"
+          mkdir -p "$STALENESS_WORK/repo-dirty-ahead/internal"
+          git -C "$STALENESS_WORK/repo-dirty-ahead" commit -q --allow-empty -m "local-only commit"
+          echo "local edit" >"$STALENESS_WORK/repo-dirty-ahead/notes.txt"
+          out="$(DOTFILES_DIR="$STALENESS_WORK/repo-dirty-ahead" DOTFILES_STALENESS_STATE_FILE="$STALENESS_WORK/state-dirty-ahead" ./bin/dotfiles staleness-check --force 2>&1)"
+          echo "$out"
+          echo "$out" | grep -q "has uncommitted changes and 1 unpushed commit(s)"
 
       - name: On a feature branch -> warns with branch name
         run: |

@@ -1,0 +1,201 @@
+name: sync-test
+
+# Exercise `dotfiles sync` against synthetic git repos: a clean checkout
+# (no-op), uncommitted changes (committed and pushed), an unpushed commit
+# (pushed as-is), a checkout behind origin with a local uncommitted change
+# (rebased cleanly), a genuine rebase conflict (stops with a clear error),
+# a detached HEAD, and a non-git $DOTFILES_DIR.
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  sync-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Build synthetic origin
+        run: |
+          set -eux
+          git config --global user.email "test@example.com"
+          git config --global user.name "test"
+
+          work="$RUNNER_TEMP/sync"
+          mkdir -p "$work"
+          git init --bare -q -b main "$work/origin.git"
+
+          git clone -q "$work/origin.git" "$work/seed"
+          git -C "$work/seed" commit -q --allow-empty -m init
+          git -C "$work/seed" push -q -u origin main
+          rm -rf "$work/seed"
+
+          echo "SYNC_WORK=$work" >>"$GITHUB_ENV"
+
+      - name: Clean checkout -> silent no-op, HEAD unchanged
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-clean"
+          # sync treats a valid $DOTFILES_DIR as one with an internal/ directory
+          # (see resolve_dotfiles_dir in bin/dotfiles).
+          mkdir -p "$SYNC_WORK/repo-clean/internal"
+          before="$(git -C "$SYNC_WORK/repo-clean" rev-parse HEAD)"
+          DOTFILES_DIR="$SYNC_WORK/repo-clean" ./bin/dotfiles sync
+          after="$(git -C "$SYNC_WORK/repo-clean" rev-parse HEAD)"
+          test "$before" = "$after"
+
+      - name: Uncommitted changes -> committed with a sync message and pushed
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty"
+          mkdir -p "$SYNC_WORK/repo-dirty/internal"
+          echo "local edit" >"$SYNC_WORK/repo-dirty/notes.txt"
+
+          DOTFILES_DIR="$SYNC_WORK/repo-dirty" ./bin/dotfiles sync
+
+          test -z "$(git -C "$SYNC_WORK/repo-dirty" status --porcelain)"
+          git -C "$SYNC_WORK/repo-dirty" log -1 --format=%s | grep -q "^sync: local changes"
+
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty-verify"
+          test -f "$SYNC_WORK/repo-dirty-verify/notes.txt"
+
+      - name: Unpushed commit -> pushed as-is, no spurious sync commit added
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-ahead"
+          mkdir -p "$SYNC_WORK/repo-ahead/internal"
+          git -C "$SYNC_WORK/repo-ahead" commit -q --allow-empty -m "local-only commit"
+
+          DOTFILES_DIR="$SYNC_WORK/repo-ahead" ./bin/dotfiles sync
+
+          git -C "$SYNC_WORK/repo-ahead" log -1 --format=%s | grep -q "^local-only commit$"
+
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-ahead-verify"
+          git -C "$SYNC_WORK/repo-ahead-verify" log -1 --format=%s | grep -q "^local-only commit$"
+
+      - name: Remote ahead + local uncommitted change -> fetched, rebased, pushed
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-behind"
+          mkdir -p "$SYNC_WORK/repo-behind/internal"
+
+          # Someone else pushes to origin in the meantime.
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/pusher"
+          echo "remote change" >"$SYNC_WORK/pusher/remote.txt"
+          git -C "$SYNC_WORK/pusher" add remote.txt
+          git -C "$SYNC_WORK/pusher" commit -q -m "remote commit"
+          git -C "$SYNC_WORK/pusher" push -q origin main
+          rm -rf "$SYNC_WORK/pusher"
+
+          echo "local edit" >"$SYNC_WORK/repo-behind/notes.txt"
+          DOTFILES_DIR="$SYNC_WORK/repo-behind" ./bin/dotfiles sync
+
+          test -f "$SYNC_WORK/repo-behind/remote.txt"
+          test -f "$SYNC_WORK/repo-behind/notes.txt"
+          test -z "$(git -C "$SYNC_WORK/repo-behind" status --porcelain)"
+
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-behind-verify"
+          test -f "$SYNC_WORK/repo-behind-verify/notes.txt"
+          test -f "$SYNC_WORK/repo-behind-verify/remote.txt"
+
+      - name: Genuine rebase conflict -> stops with a clear error, exits non-zero
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-conflict"
+          mkdir -p "$SYNC_WORK/repo-conflict/internal"
+
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/pusher2"
+          echo "remote change" >"$SYNC_WORK/pusher2/conflict.txt"
+          git -C "$SYNC_WORK/pusher2" add conflict.txt
+          git -C "$SYNC_WORK/pusher2" commit -q -m "remote commit 2"
+          git -C "$SYNC_WORK/pusher2" push -q origin main
+          rm -rf "$SYNC_WORK/pusher2"
+
+          # Same new filename, different content -> the rebase below must conflict.
+          echo "conflicting local change" >"$SYNC_WORK/repo-conflict/conflict.txt"
+
+          if out=$(DOTFILES_DIR="$SYNC_WORK/repo-conflict" ./bin/dotfiles sync 2>&1); then
+            echo "expected 'dotfiles sync' to fail on a rebase conflict, but it succeeded" >&2
+            exit 1
+          fi
+          echo "$out"
+          echo "$out" | grep -q "rebase hit conflicts"
+          git -C "$SYNC_WORK/repo-conflict" rebase --abort
+
+      - name: Detached HEAD -> refuses with a clear error, exits non-zero
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-detached"
+          mkdir -p "$SYNC_WORK/repo-detached/internal"
+          git -C "$SYNC_WORK/repo-detached" checkout -q --detach
+
+          if out=$(DOTFILES_DIR="$SYNC_WORK/repo-detached" ./bin/dotfiles sync 2>&1); then
+            echo "expected 'dotfiles sync' to fail on a detached HEAD, but it succeeded" >&2
+            exit 1
+          fi
+          echo "$out"
+          echo "$out" | grep -q "detached HEAD"
+
+      - name: Non-git DOTFILES_DIR -> refuses with a clear error, exits non-zero
+        run: |
+          set -eux
+          mkdir -p "$SYNC_WORK/nongit/internal"
+
+          if out=$(DOTFILES_DIR="$SYNC_WORK/nongit" ./bin/dotfiles sync 2>&1); then
+            echo "expected 'dotfiles sync' to fail on a non-git directory, but it succeeded" >&2
+            exit 1
+          fi
+          echo "$out"
+          echo "$out" | grep -q "not a git checkout"
+
+  # As in wire-test.yaml / staleness-check-test.yaml: also exercise the CLI
+  # under macOS's system /bin/bash (frozen at 3.2, no mapfile, set -u errors
+  # on empty-array expansion) since that's what the Homebrew wrapper actually
+  # runs under.
+  sync-test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Show system bash version
+        run: /bin/bash --version | head -1
+
+      - name: Build synthetic origin
+        run: |
+          set -eux
+          git config --global user.email "test@example.com"
+          git config --global user.name "test"
+
+          work="$RUNNER_TEMP/sync"
+          mkdir -p "$work"
+          git init --bare -q -b main "$work/origin.git"
+
+          git clone -q "$work/origin.git" "$work/seed"
+          git -C "$work/seed" commit -q --allow-empty -m init
+          git -C "$work/seed" push -q -u origin main
+          rm -rf "$work/seed"
+
+          echo "SYNC_WORK=$work" >>"$GITHUB_ENV"
+
+      - name: Uncommitted changes, system /bin/bash -> committed and pushed
+        run: |
+          set -eux
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty"
+          mkdir -p "$SYNC_WORK/repo-dirty/internal"
+          echo "local edit" >"$SYNC_WORK/repo-dirty/notes.txt"
+
+          DOTFILES_DIR="$SYNC_WORK/repo-dirty" /bin/bash ./bin/dotfiles sync
+
+          test -z "$(git -C "$SYNC_WORK/repo-dirty" status --porcelain)"
+          git clone -q "$SYNC_WORK/origin.git" "$SYNC_WORK/repo-dirty-verify"
+          test -f "$SYNC_WORK/repo-dirty-verify/notes.txt"

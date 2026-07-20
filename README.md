@@ -11,7 +11,7 @@ This repository uses a modular approach with:
 - **`_home/interactive.d/`** - Personal interactive shell scripts (functions, aliases)
 - **`_home/startup.d/`** - Safe, idempotent scripts run at Mac login
 - **`_home/update.d/`** - Potentially risky scripts run manually
-- **`bin/dotfiles`** - The `dotfiles` CLI that creates symlinks and injects managed sections (`dotfiles wire` / `dotfiles check`)
+- **`bin/dotfiles`** - The `dotfiles` CLI that creates symlinks and injects managed sections (`dotfiles wire` / `dotfiles check` / `dotfiles sync`)
 
 The repo separates two kinds of content:
 
@@ -98,7 +98,7 @@ source ~/.zshrc  # or open new terminal
 ```
 dotfiles/
 ├── bin/
-│   ├── dotfiles          # The `dotfiles` CLI (wire, check, ensure-wired, startup, update)
+│   ├── dotfiles          # The `dotfiles` CLI (wire, check, ensure-wired, startup, update, sync)
 │   ├── run-startup.sh    # Runs startup.d scripts (for Mac login items)
 │   ├── run-updates.sh    # Runs update.d scripts (manual)
 │   └── lib/
@@ -245,14 +245,33 @@ Every new interactive shell runs `dotfiles staleness-check` (via
 `internal/interactive.d/staleness-check.sh`). At most once every 16 hours (tracked
 in `$XDG_CACHE_HOME/dotfiles/last-staleness-check`), it checks `$DOTFILES_DIR`
 against the last-fetched remote state — no network access, so it never blocks
-shell startup — and prints a warning to stderr if the checkout is on a
-different branch than the remote's default branch, or is behind it. A no-op
-if `$DOTFILES_DIR` isn't a git checkout (e.g. the Homebrew-installed copy).
+shell startup — and prints a warning to stderr if:
+- the checkout is on a different branch than the remote's default branch, or is behind it
+- the checkout has uncommitted changes, or has local commits not yet pushed to its upstream
+
+(the second warning can show up even if you never `cd` into the repo — `.config`
+files under `$DOTFILES_DIR` are symlinked into `$HOME`, not copied, so editing
+one of them through its `~/.config` symlink is enough to leave the checkout
+dirty). A no-op if `$DOTFILES_DIR` isn't a git checkout (e.g. the
+Homebrew-installed copy).
 
 ```bash
 dotfiles staleness-check --force   # check now, ignoring the interval
 DOTFILES_SKIP_STALENESS_CHECK=1    # disable entirely
 DOTFILES_STALENESS_CHECK_INTERVAL=3600   # override the interval (seconds)
+```
+
+### Sync (dotfiles sync)
+
+`dotfiles sync` clears the uncommitted/unpushed warning above: it commits any
+local changes in `$DOTFILES_DIR` (message `sync: local changes from <host>`),
+fetches, rebases onto the current branch's remote counterpart, then pushes
+(setting the upstream if none is configured yet). If the rebase hits
+conflicts, it stops and tells you to resolve them in `$DOTFILES_DIR` and
+re-run `dotfiles sync`.
+
+```bash
+dotfiles sync
 ```
 
 ## Customization
