@@ -13,14 +13,14 @@
 #   staleness-check Warn on stderr if this checkout is on the wrong branch or
 #                   behind the last-fetched remote HEAD. Rate-limited to once
 #                   per interval; called from shell startup (see
-#                   _home/interactive.d/staleness-check.sh).
+#                   internal/interactive.d/staleness-check.sh).
 #
 # This is the global entrypoint installed by the Homebrew formula. When you are
 # inside a checkout of the repo, direnv puts the repo's bin/ first on PATH so
 # this same script runs against your working copy instead of the installed one.
 #
 # The repo location is resolved into DOTFILES_DIR (see resolve_dotfiles_dir),
-# the single variable the shell config in _home/ relies on.
+# the single variable the shell config in internal/ relies on.
 
 set -euo pipefail
 
@@ -50,11 +50,17 @@ script_dir() {
 # Resolve the dotfiles repo root into DOTFILES_DIR. Priority:
 #   1. $DOTFILES_DIR if already set and valid (direnv exports this inside a
 #      checkout, so local development always wins over the installed copy).
-#   2. The script's own location (../_home). Covers both the in-repo copy and
-#      the Homebrew install (libexec/bin/dotfiles -> libexec/_home).
-#   3. ~/.dotfiles/_home (symlink created by a previous `wire`).
+#   2. The script's own location (../internal). Covers both the in-repo copy
+#      and the Homebrew install (libexec/bin/dotfiles -> libexec/internal).
+#   3. ~/.dotfiles/internal (symlink created by a previous `wire`).
+#
+# A checkout is considered valid if it has an internal/ directory: internal/
+# is dotfiles' own required mechanism (the shell rc loaders, plus the antidote
+# and staleness-check drop-ins) that every checkout ships with, unlike _home/
+# (personal .config/Library content and personal drop-in scripts), which a
+# fresh fork may not have populated yet.
 resolve_dotfiles_dir() {
-  if [[ -n "${DOTFILES_DIR:-}" && -d "$DOTFILES_DIR/_home" ]]; then
+  if [[ -n "${DOTFILES_DIR:-}" && -d "$DOTFILES_DIR/internal" ]]; then
     printf '%s\n' "$DOTFILES_DIR"
     return 0
   fi
@@ -66,7 +72,7 @@ resolve_dotfiles_dir() {
   # truth, not the Homebrew-managed bundle. This is what makes the --repo
   # choice "stick" across future invocations without needing a state file —
   # the presence of a real checkout at this path is itself the signal.
-  if [[ -d "$HOME/.dotfiles/.git" && ! -L "$HOME/.dotfiles" && -d "$HOME/.dotfiles/_home" ]]; then
+  if [[ -d "$HOME/.dotfiles/.git" && ! -L "$HOME/.dotfiles" && -d "$HOME/.dotfiles/internal" ]]; then
     (cd "$HOME/.dotfiles" && pwd -P)
     return 0
   fi
@@ -74,17 +80,17 @@ resolve_dotfiles_dir() {
   local sdir root
   sdir="$(script_dir)"
   root="$(cd "$sdir/.." && pwd)"
-  if [[ -d "$root/_home" ]]; then
+  if [[ -d "$root/internal" ]]; then
     printf '%s\n' "$root"
     return 0
   fi
 
-  if [[ -d "$HOME/.dotfiles/_home" ]]; then
+  if [[ -d "$HOME/.dotfiles/internal" ]]; then
     (cd "$HOME/.dotfiles" && pwd -P)
     return 0
   fi
 
-  echo "dotfiles: error: could not locate the dotfiles repo (no _home/ found)." >&2
+  echo "dotfiles: error: could not locate the dotfiles repo (no internal/ found)." >&2
   echo "         Set DOTFILES_DIR to your dotfiles checkout and try again." >&2
   return 1
 }
@@ -587,6 +593,12 @@ cmd_wire() {
     echo "  $HOME_DIR/.dotfiles → $DOTFILES_DIR"
   fi
 
+  # These four ~/.*.d symlinks point at the _home/ drop-in dirs — that's where
+  # personal scripts live and where a user adds new ones. (internal/'s own
+  # interactive.d — antidote, staleness-check — is sourced directly by the rc
+  # loaders via $DOTFILES_DIR, not exposed as a mutable ~ location.) The
+  # symlink itself is still force-created; only the files it points at are
+  # personal.
   create_symlink "$DOTFILES_DIR/_home/profile.d" "$HOME_DIR/.profile.d"
   create_symlink "$DOTFILES_DIR/_home/interactive.d" "$HOME_DIR/.interactive.d"
   create_symlink "$DOTFILES_DIR/_home/startup.d" "$HOME_DIR/.startup.d"

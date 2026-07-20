@@ -42,7 +42,7 @@ jobs:
           bash --version | head -1
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: First wire (non-interactive)
         run: ./bin/dotfiles wire --yes

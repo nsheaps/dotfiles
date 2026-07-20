@@ -17,9 +17,9 @@ class Dotfiles < Formula
   depends_on 'mise'
 
   def install
-    # Bundle the whole repo so `dotfiles wire` can symlink _home/ and templates/
-    # out of a version-stable location instead of a separate clone.
-    libexec.install 'bin', '_home', 'templates'
+    # Bundle the whole repo so `dotfiles wire` can symlink internal/, _home/,
+    # and templates/ out of a version-stable location instead of a separate clone.
+    libexec.install 'bin', 'internal', '_home', 'templates'
 
     # Install a thin wrapper on PATH that just execs the real CLI at the
     # version-stable opt path. Deliberately does NOT export a DOTFILES_DIR

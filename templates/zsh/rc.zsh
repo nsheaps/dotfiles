@@ -1,1 +1,1 @@
-source "$DOTFILES_DIR/_home/zshrc"
+source "$DOTFILES_DIR/internal/zshrc"

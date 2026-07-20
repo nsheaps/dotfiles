@@ -1,1 +1,1 @@
-source "$DOTFILES_DIR/_home/bashrc"
+source "$DOTFILES_DIR/internal/bashrc"

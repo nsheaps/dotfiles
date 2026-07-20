@@ -1,1 +1,1 @@
-source "$DOTFILES_DIR/_home/bash_profile"
+source "$DOTFILES_DIR/internal/bash_profile"
