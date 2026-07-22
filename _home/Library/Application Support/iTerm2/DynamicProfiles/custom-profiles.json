@@ -830,6 +830,7 @@
       "Non Ascii Font": "Monaco 12",
       "Normal Font": "Monaco 12",
       "Prompt Before Closing 2": false,
+      "Rewritable": true,
       "Scrollback Lines": 1000,
       "Selected Text Color": {
         "Alpha Component": 1.0,
@@ -1093,6 +1094,7 @@
       "Non Ascii Font": "Monaco 12",
       "Normal Font": "Monaco 12",
       "Prompt Before Closing 2": false,
+      "Rewritable": true,
       "Screen": -1,
       "Selected Text Color": {
         "Alpha Component": 1.0,
@@ -1358,6 +1360,7 @@
       "Non Ascii Font": "Monaco 12",
       "Normal Font": "Monaco 12",
       "Prompt Before Closing 2": false,
+      "Rewritable": true,
       "Scrollback Lines": 1000,
       "Selected Text Color": {
         "Alpha Component": 1.0,
