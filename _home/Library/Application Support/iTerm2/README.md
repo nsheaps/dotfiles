@@ -61,6 +61,39 @@ that lands at `~/Library/Application Support/iTerm2/DynamicProfiles/custom-profi
 IS this repo's file (a real symlink), not a copy. iTerm2 automatically
 detects and reloads Dynamic Profiles when the file changes.
 
+### Known limitation: Dynamic Profiles here are currently inert
+
+Per [iTerm2's own Dynamic Profiles documentation][dynamic-profiles-docs]: "A
+Dynamic Profile with a Guid equal to an existing Guid of a regular profile
+will be ignored." `nsheaps`, `nsheaps-oura`, and `jouzen` all *also* exist as
+regular (non-Dynamic) profiles in `~/Library/Preferences/com.googlecode.iterm2.plist`
+("New Bookmarks") with the same Guids as their `custom-profiles.json`
+entries — so right now, iTerm2 loads and then silently discards the
+Dynamic Profile definitions below in favor of the regular ones. This file is
+currently documentation/backup, not the live source of truth; the regular
+profiles in the plist are what iTerm2 actually renders.
+
+Making the JSON authoritative (so UI edits write back here instead of only
+into the plist) requires adding `"Rewritable": true` to a profile's JSON
+entry *and* removing its same-Guid counterpart from the regular profile list
+— see the live-sync work tracked separately for that.
+
+### Regenerating this file
+
+`bin/iterm2-export-profiles.py` reads the *current* regular profiles out of
+`~/Library/Preferences/com.googlecode.iterm2.plist` ("New Bookmarks") and
+overwrites this file with a full, key-sorted export — sorted so a re-export
+after a no-op change in iTerm2 produces a clean diff (the plist's own
+on-disk key order is arbitrary and shifts between saves). Run it after
+changing a profile's settings in iTerm2's Preferences UI to bring this file
+back in sync:
+
+```bash
+bin/iterm2-export-profiles.py
+```
+
+[dynamic-profiles-docs]: https://iterm2.com/documentation-dynamic-profiles.html
+
 ## Automatic Profile Switching
 
 Handled by `_home/interactive.d/iterm2.sh` (sourced by the interactive-shell
