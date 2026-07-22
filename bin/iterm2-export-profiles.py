@@ -11,9 +11,18 @@ Keys are sorted alphabetically on write so re-running this after a
 no-op change in iTerm2 produces a clean diff (the plist's own on-disk key
 order is arbitrary and shifts between saves).
 
+The built-in "Default" profile (Guid "DEFAULT") is excluded by default.
+iTerm2 always keeps a regular (non-Dynamic) profile with that Guid, and a
+Dynamic Profile can never take it over the way a Rewritable custom profile
+can: iTerm2 permanently logs a Guid-conflict warning for any Dynamic
+Profile whose Guid collides with a regular profile's, and "DEFAULT"'s
+regular counterpart can't be removed the way a custom profile's can.
+Pass --include-default to export it anyway (e.g. for inspection).
+
 Usage:
-    bin/iterm2-export-profiles
-    bin/iterm2-export-profiles --plist <path> --output <path>
+    bin/iterm2-export-profiles.py
+    bin/iterm2-export-profiles.py --plist <path> --output <path>
+    bin/iterm2-export-profiles.py --include-default
 """
 
 import argparse
@@ -29,8 +38,15 @@ DEFAULT_OUTPUT = REPO_ROOT / (
     "/DynamicProfiles/custom-profiles.json"
 )
 
+# See the module docstring: this Guid always has a regular-profile
+# counterpart that can't be removed, so a same-Guid Dynamic Profile entry
+# can only ever be dead weight that logs a permanent conflict warning.
+EXCLUDED_GUIDS = {"DEFAULT"}
 
-def export_profiles(plist_path: Path, output_path: Path) -> dict:
+
+def export_profiles(
+    plist_path: Path, output_path: Path, include_default: bool = False
+) -> dict:
     """Read New Bookmarks from plist_path and write it as Dynamic Profiles JSON.
 
     Returns the parsed {"Profiles": [...]} dict that was written, so callers
@@ -40,6 +56,8 @@ def export_profiles(plist_path: Path, output_path: Path) -> dict:
         data = plistlib.load(f)
 
     profiles = data.get("New Bookmarks", [])
+    if not include_default:
+        profiles = [p for p in profiles if p.get("Guid") not in EXCLUDED_GUIDS]
     result = {"Profiles": profiles}
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,13 +82,19 @@ def main(argv=None) -> int:
         default=DEFAULT_OUTPUT,
         help=f"custom-profiles.json path to write (default: {DEFAULT_OUTPUT})",
     )
+    parser.add_argument(
+        "--include-default",
+        action="store_true",
+        help="Also export the built-in Default profile (Guid DEFAULT). "
+        "Excluded by default -- see the module docstring for why.",
+    )
     args = parser.parse_args(argv)
 
     if not args.plist.exists():
         print(f"error: plist not found: {args.plist}", file=sys.stderr)
         return 1
 
-    result = export_profiles(args.plist, args.output)
+    result = export_profiles(args.plist, args.output, args.include_default)
     count = len(result["Profiles"])
     names = ", ".join(p.get("Name", "<unnamed>") for p in result["Profiles"])
     print(f"Exported {count} profile(s) to {args.output}: {names}")
