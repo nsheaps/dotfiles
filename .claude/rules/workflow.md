@@ -9,7 +9,13 @@ When you see a `<CRITICAL>` reminder (especially about using `/commit`):
 - Follow through with the action immediately
 - Treat hook reminders as part of the task completion criteria
 
-Example: After updating `.ai/scratch/` files (todo.md, questions.md, plan.md), the hook will remind you to use `/commit`. You MUST follow through with the commit before moving on to the next task.
+Example: After updating a scratch/planning doc (`plan.md`, `todo.md`, `questions.md`, etc — see "Scratch and Planning Docs" below), the hook will remind you to use `/commit`. You MUST follow through with the commit before moving on to the next task.
+
+## Scratch and Planning Docs
+
+Working docs for a specific piece of work (a plan, a todo list, open questions) live under `docs/<slug>/`, one directory per task or ticket — e.g. `docs/iterm2-profile-sync-automation/plan.md`. Use a short slugified summary of the task as the directory name, or the ticket number if one exists (e.g. `docs/ADX-123/plan.md`). Put whichever of `plan.md`/`todo.md`/`questions.md`/etc are actually relevant to that task in its directory; don't create empty placeholders for the others.
+
+This replaced an earlier flat `.ai/scratch/{plan,todo,questions}.md` convention (a single global location shared across all in-flight work) — per-task directories under `docs/` keep each piece of work's scratch docs discoverable alongside whatever else lives in `docs/` for it, instead of accumulating in one shared, ever-growing folder.
 
 ## Making Changes to Dotfiles
 
