@@ -149,3 +149,7 @@ _real/
 
 # worktrees
 .dev/
+
+# Python bytecode cache (bin/iterm2-export-profiles.py and friends)
+__pycache__/
+*.pyc
