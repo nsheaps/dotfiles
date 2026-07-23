@@ -23,6 +23,14 @@ Usage:
     bin/iterm2-export-profiles.py
     bin/iterm2-export-profiles.py --plist <path> --output <path>
     bin/iterm2-export-profiles.py --include-default
+
+Untested by design: this script (including the DEFAULT-exclusion and
+--include-default filtering above) has no automated test coverage. It
+had a fixture-backed CI workflow at one point, but that was removed
+(along with the fixture) when a prior PR touching this file was merged,
+and this isn't reintroducing it -- a conscious call, not an oversight.
+Verify manually after changing this file: run it against a real plist (or
+a hand-made one) and inspect the output.
 """
 
 import argparse

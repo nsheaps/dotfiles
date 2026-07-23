@@ -75,14 +75,19 @@ the live source of truth.
 
 That's fixed now: those 3 profiles are marked `"Rewritable": true` in this
 file, and their same-Guid regular-profile counterparts have been removed
-from the plist's "New Bookmarks", so the Dynamic Profile definitions here
-are what iTerm2 actually loads. Per the docs, a Rewritable Dynamic Profile's
-settings CAN be edited through iTerm2's Preferences UI, and iTerm2 writes
-those changes back into this file on disk — since this file is a real
-symlink into the repo (see Installation above), a UI edit lands as a
-regular working-tree diff here, ready to be committed. `Default` is
-deliberately left alone (not Rewritable, no Guid removed) since it's the
-one profile we don't want Dynamic-Profile-managed.
+from the plist's "New Bookmarks" (confirmed on the machine this was fixed
+on by re-reading the plist directly — only the `DEFAULT` Guid remains),
+so the Dynamic Profile definitions here are what iTerm2 actually loads
+there. Per the docs, a Rewritable Dynamic Profile's settings CAN be
+edited through iTerm2's Preferences UI, and iTerm2 writes those changes
+back into this file on disk — since this file is a real symlink into the
+repo (see Installation above), a UI edit lands as a regular working-tree
+diff here, ready to be committed. Not independently re-confirmed: whether
+iTerm2's own conflict-warning log actually stopped, or a live
+UI-edit-round-trips-to-file check — see the corresponding PR/task history
+for what's been checked. `Default` is deliberately left alone (not
+Rewritable, no Guid removed) since it's the one profile we don't want
+Dynamic-Profile-managed.
 
 ### Regenerating this file
 
