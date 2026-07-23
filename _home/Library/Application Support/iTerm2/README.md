@@ -96,8 +96,18 @@ Dynamic-Profile-managed.
 overwrites this file with a full, key-sorted export — sorted so a re-export
 after a no-op change in iTerm2 produces a clean diff (the plist's own
 on-disk key order is arbitrary and shifts between saves). Run it after
-changing a profile's settings in iTerm2's Preferences UI to bring this file
-back in sync:
+changing `Default`'s settings in iTerm2's Preferences UI to bring this
+file back in sync (`Default` is still a regular plist bookmark, so this
+is the only way its changes get picked up here — see "Live sync" above
+for why `nsheaps`/`nsheaps-oura`/`jouzen` don't need this: iTerm2 already
+writes their UI edits straight into this file itself).
+
+`nsheaps`/`nsheaps-oura`/`jouzen` no longer have regular-profile
+counterparts in the plist at all (removed to let their Rewritable Dynamic
+Profile entries take over), so the script preserves any `"Rewritable":
+true` entry already in this file that's missing from the plist, rather
+than treating "not in New Bookmarks" as "delete it" — without that, a
+re-export would silently wipe them.
 
 ```bash
 bin/iterm2-export-profiles.py
