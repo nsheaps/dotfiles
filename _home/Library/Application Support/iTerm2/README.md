@@ -61,22 +61,33 @@ that lands at `~/Library/Application Support/iTerm2/DynamicProfiles/custom-profi
 IS this repo's file (a real symlink), not a copy. iTerm2 automatically
 detects and reloads Dynamic Profiles when the file changes.
 
-### Known limitation: Dynamic Profiles here are currently inert
+### Live sync: Rewritable Dynamic Profiles
 
 Per [iTerm2's own Dynamic Profiles documentation][dynamic-profiles-docs]: "A
 Dynamic Profile with a Guid equal to an existing Guid of a regular profile
-will be ignored." `nsheaps`, `nsheaps-oura`, and `jouzen` all *also* exist as
-regular (non-Dynamic) profiles in `~/Library/Preferences/com.googlecode.iterm2.plist`
-("New Bookmarks") with the same Guids as their `custom-profiles.json`
-entries — so right now, iTerm2 loads and then silently discards the
-Dynamic Profile definitions below in favor of the regular ones. This file is
-currently documentation/backup, not the live source of truth; the regular
-profiles in the plist are what iTerm2 actually renders.
+will be ignored." `nsheaps`, `nsheaps-oura`, and `jouzen` used to *also*
+exist as regular (non-Dynamic) profiles in
+`~/Library/Preferences/com.googlecode.iterm2.plist` ("New Bookmarks") with
+the same Guids as their `custom-profiles.json` entries, which meant iTerm2
+loaded and then silently discarded the Dynamic Profile definitions below in
+favor of the regular ones — this file was documentation/backup only, not
+the live source of truth.
 
-Making the JSON authoritative (so UI edits write back here instead of only
-into the plist) requires adding `"Rewritable": true` to a profile's JSON
-entry *and* removing its same-Guid counterpart from the regular profile list
-— see the live-sync work tracked separately for that.
+That's fixed now: those 3 profiles are marked `"Rewritable": true` in this
+file, and their same-Guid regular-profile counterparts have been removed
+from the plist's "New Bookmarks" (confirmed on the machine this was fixed
+on by re-reading the plist directly — only the `DEFAULT` Guid remains),
+so the Dynamic Profile definitions here are what iTerm2 actually loads
+there. Per the docs, a Rewritable Dynamic Profile's settings CAN be
+edited through iTerm2's Preferences UI, and iTerm2 writes those changes
+back into this file on disk — since this file is a real symlink into the
+repo (see Installation above), a UI edit lands as a regular working-tree
+diff here, ready to be committed. Not independently re-confirmed: whether
+iTerm2's own conflict-warning log actually stopped, or a live
+UI-edit-round-trips-to-file check — see the corresponding PR/task history
+for what's been checked. `Default` is deliberately left alone (not
+Rewritable, no Guid removed) since it's the one profile we don't want
+Dynamic-Profile-managed.
 
 ### Regenerating this file
 
@@ -85,8 +96,18 @@ entry *and* removing its same-Guid counterpart from the regular profile list
 overwrites this file with a full, key-sorted export — sorted so a re-export
 after a no-op change in iTerm2 produces a clean diff (the plist's own
 on-disk key order is arbitrary and shifts between saves). Run it after
-changing a profile's settings in iTerm2's Preferences UI to bring this file
-back in sync:
+changing `Default`'s settings in iTerm2's Preferences UI to bring this
+file back in sync (`Default` is still a regular plist bookmark, so this
+is the only way its changes get picked up here — see "Live sync" above
+for why `nsheaps`/`nsheaps-oura`/`jouzen` don't need this: iTerm2 already
+writes their UI edits straight into this file itself).
+
+`nsheaps`/`nsheaps-oura`/`jouzen` no longer have regular-profile
+counterparts in the plist at all (removed to let their Rewritable Dynamic
+Profile entries take over), so the script preserves any `"Rewritable":
+true` entry already in this file that's missing from the plist, rather
+than treating "not in New Bookmarks" as "delete it" — without that, a
+re-export would silently wipe them.
 
 ```bash
 bin/iterm2-export-profiles.py
