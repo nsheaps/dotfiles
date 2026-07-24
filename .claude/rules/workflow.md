@@ -53,3 +53,14 @@ mise ls
 
 # The mise_config.toml symlink tracks ~/.config/mise/config.toml
 ```
+
+## Editing This Repo's Own Claude Code Config (`.claude/`)
+
+This repo has its own project-scoped `.claude/agents/` and `.claude/rules/` (this file and `architecture.md`). If you're authoring or updating an agent, skill, rule, or plugin — here or elsewhere — the relevant guidance already exists as globally-available skills; don't re-derive it here:
+
+- **Writing a rule** (a file like this one): use the `writing-rules` skill.
+- **Writing a skill**, specifically whether it needs `context: fork` and a paired agent, or a plain skill with a `model:` override instead: use the `writing-fork-skills` skill.
+- **Deciding which resource type fits a need** (hook vs. agent vs. skill vs. rule vs. plugin): use the `workspace-maintenance` skill.
+- **Authoring or improving a skill/plugin generally**: use the `skill-creator` skill.
+
+These are globally available, not specific to this repo — invoke them directly.
