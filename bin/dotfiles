@@ -28,7 +28,7 @@
 
 set -euo pipefail
 
-DOTFILES_VERSION="0.1.0"
+DOTFILES_VERSION="0.0.1"
 
 # Managed section markers (kept identical across versions so old sections can be
 # found and replaced in place).
