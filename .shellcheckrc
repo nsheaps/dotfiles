@@ -1,7 +1,6 @@
 # ShellCheck configuration for nsheaps/dotfiles
 # https://www.shellcheck.net/wiki/
 
-
 # Default shell dialect — most scripts in this repo are bash.
 # Zsh-specific files (interactive.d/*.sh with #!/usr/bin/env zsh) are
 # excluded from ShellCheck via the CI workflow since ShellCheck does not

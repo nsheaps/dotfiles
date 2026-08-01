@@ -1247,7 +1247,7 @@
       "Custom Command": "No",
       "Custom Directory": "No",
       "Default Bookmark": "No",
-      "Description": "Default",
+      "Description": "Default (from custom profiles)",
       "Disable Window Resizing": true,
       "Flashing Bell": false,
       "Foreground Color": {
@@ -1270,7 +1270,7 @@
         "Green Component": 0.4823529411764706,
         "Red Component": 0.396078431372549
       },
-      "Guid": "DEFAULT",
+      "Guid": "DEFAULT-customized",
       "Horizontal Spacing": 1,
       "Idle Code": 0,
       "Jobs to Ignore": [
@@ -1316,7 +1316,7 @@
         "Red Component": 0.9969714283943176
       },
       "Mouse Reporting": true,
-      "Name": "Default",
+      "Name": "Default (from custom profiles)",
       "Non Ascii Font": "Monaco 12",
       "Non-ASCII Anti Aliased": true,
       "Normal Font": "Monaco 12",
