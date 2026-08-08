@@ -16,16 +16,13 @@ jobs:
       version: ${{ steps.release.outputs.version }}
       tag: ${{ steps.release.outputs.tag }}
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Authenticate as GitHub App
+      - name: Checkout and authenticate as GitHub App
         id: auth
-        uses: nsheaps/github-actions/.github/actions/github-app-auth@main
+        uses: nsheaps/github-actions/.github/actions/checkout-as-app@603052841cd49b9fdc99bc32979ff9c45c9b669e # checkout-as-app@main
         with:
           app-id: ${{ secrets.AUTOMATION_GITHUB_APP_ID }}
           private-key: ${{ secrets.AUTOMATION_GITHUB_APP_PRIVATE_KEY }}
+          fetch-depth: '0'
 
       - name: Fetch tags
         run: git fetch --tags --force
