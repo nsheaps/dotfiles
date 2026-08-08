@@ -12,9 +12,16 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - name: Checkout and authenticate as GitHub App
+        id: auth
+        uses: nsheaps/github-actions/.github/actions/checkout-as-app@603052841cd49b9fdc99bc32979ff9c45c9b669e # checkout-as-app@main
+        with:
+          app-id: ${{ secrets.AUTOMATION_GITHUB_APP_ID }}
+          private-key: ${{ secrets.AUTOMATION_GITHUB_APP_PRIVATE_KEY }}
+          ref: ${{ github.head_ref || github.ref }}
 
       - name: Install shfmt
         run: |
@@ -73,13 +80,21 @@ jobs:
           echo "Running ShellCheck on:$bash_files"
           shellcheck $bash_files
 
-      - name: shfmt check
+      - name: shfmt format
         if: steps.find-bash.outputs.files != ''
         run: |
           bash_files="${{ steps.find-bash.outputs.files }}"
           echo "Running shfmt on:$bash_files"
-          # -d shows diff; indent settings sourced from .editorconfig
-          shfmt -d $bash_files
+          # -w writes formatting fixes in place; indent settings sourced from .editorconfig
+          shfmt -w $bash_files
+
+      - name: Commit and push shfmt fixes
+        if: steps.find-bash.outputs.files != ''
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7
+        with:
+          commit_message: 'chore: `shfmt -w`'
+          commit_user_name: ${{ steps.auth.outputs.user-name }}
+          commit_user_email: ${{ steps.auth.outputs.user-email }}
 
       - name: EditorConfig check
         uses: editorconfig-checker/action-editorconfig-checker@main
