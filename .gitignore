@@ -146,6 +146,10 @@ vite.config.ts.timestamp-*
 _real/
 !_real/.gitkeep
 
+# Convenience symlink to ~/.config/mise/config.toml, created at repo root by
+# rc.d/00_setup_symlinks.sh (special case, not under _real/)
+/mise_config.toml
+
 # Claude Code hook state
 .repo/hashes.yaml
 .repo/last-reminder-time
