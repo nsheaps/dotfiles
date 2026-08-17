@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.6](https://github.com/nsheaps/dotfiles/compare/v0.0.5...v0.0.6) (2026-08-17)
+
+### Maintenance
+
+* **deps:** update nsheaps + squink github actions ([524445a](https://github.com/nsheaps/dotfiles/commit/524445a8623115fb9d0f15b2eba22d5402f4c520))
+
 ## [0.0.5](https://github.com/nsheaps/dotfiles/compare/v0.0.4...v0.0.5) (2026-08-13)
 
 ## [0.0.4](https://github.com/nsheaps/dotfiles/compare/v0.0.3...v0.0.4) (2026-08-13)
