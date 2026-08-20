@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.8](https://github.com/nsheaps/dotfiles/compare/v0.0.7...v0.0.8) (2026-08-20)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to 51887d0 ([d9df095](https://github.com/nsheaps/dotfiles/commit/d9df095ddfe0b4c2850a84175b87cf648df72138))
+
 ## [0.0.7](https://github.com/nsheaps/dotfiles/compare/v0.0.6...v0.0.7) (2026-08-19)
 
 ## [0.0.6](https://github.com/nsheaps/dotfiles/compare/v0.0.5...v0.0.6) (2026-08-17)
