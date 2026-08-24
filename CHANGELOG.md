@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.0.9](https://github.com/nsheaps/dotfiles/compare/v0.0.8...v0.0.9) (2026-08-24)
+
 ## [0.0.8](https://github.com/nsheaps/dotfiles/compare/v0.0.7...v0.0.8) (2026-08-20)
 
 ### Maintenance
