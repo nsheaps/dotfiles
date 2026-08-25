@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.10](https://github.com/nsheaps/dotfiles/compare/v0.0.9...v0.0.10) (2026-08-25)
+
+### Maintenance
+
+* **deps:** update dependency @release-it/conventional-changelog to v12 ([#40](https://github.com/nsheaps/dotfiles/issues/40)) ([f2b5056](https://github.com/nsheaps/dotfiles/commit/f2b505698ddf392939f21e1f553f49a9cddb681f)), references [#8203](https://github.com/nsheaps/dotfiles/issues/8203)
+
 ## [0.0.9](https://github.com/nsheaps/dotfiles/compare/v0.0.8...v0.0.9) (2026-08-24)
 
 ## [0.0.8](https://github.com/nsheaps/dotfiles/compare/v0.0.7...v0.0.8) (2026-08-20)
