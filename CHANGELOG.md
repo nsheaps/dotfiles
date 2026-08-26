@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.11](https://github.com/nsheaps/dotfiles/compare/v0.0.10...v0.0.11) (2026-08-26)
+
+### Maintenance
+
+* **deps:** update dependency release-it to v21 ([#41](https://github.com/nsheaps/dotfiles/issues/41)) ([8dda460](https://github.com/nsheaps/dotfiles/commit/8dda46034541723c601996cc32003c907c250ba7))
+
 ## [0.0.10](https://github.com/nsheaps/dotfiles/compare/v0.0.9...v0.0.10) (2026-08-25)
 
 ### Maintenance
