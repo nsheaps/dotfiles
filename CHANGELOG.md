@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.13](https://github.com/nsheaps/dotfiles/compare/v0.0.12...v0.0.13) (2026-08-28)
+
+### Maintenance
+
+* **deps:** update yarn to v4.18.0 ([#42](https://github.com/nsheaps/dotfiles/issues/42)) ([fedc384](https://github.com/nsheaps/dotfiles/commit/fedc3843e1fedf4aa4911b3c8b1515a22d7cd841))
+
 ## [0.0.12](https://github.com/nsheaps/dotfiles/compare/v0.0.11...v0.0.12) (2026-08-27)
 
 ### Maintenance
