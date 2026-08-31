@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.15](https://github.com/nsheaps/dotfiles/compare/v0.0.14...v0.0.15) (2026-08-31)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to 6063e61 ([#44](https://github.com/nsheaps/dotfiles/issues/44)) ([533e0bf](https://github.com/nsheaps/dotfiles/commit/533e0bf4bb1194d2ad1406f75f8883a2d083ed0e))
+
 ## [0.0.14](https://github.com/nsheaps/dotfiles/compare/v0.0.13...v0.0.14) (2026-08-30)
 
 ### Maintenance
