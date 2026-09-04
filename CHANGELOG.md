@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.17](https://github.com/nsheaps/dotfiles/compare/v0.0.16...v0.0.17) (2026-09-04)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to f7758df ([eb12f40](https://github.com/nsheaps/dotfiles/commit/eb12f40ff71ce40398f51cdf6319593f029f6013))
+
 ## [0.0.16](https://github.com/nsheaps/dotfiles/compare/v0.0.15...v0.0.16) (2026-09-02)
 
 ### Maintenance
