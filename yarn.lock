@@ -809,7 +809,7 @@ __metadata:
   resolution: "dotfiles@workspace:."
   dependencies:
     "@release-it/conventional-changelog": "npm:^12.0.0"
-    release-it: "npm:^21.0.1"
+    release-it: "npm:^21.0.2"
   languageName: unknown
   linkType: soft
 
@@ -1439,7 +1439,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"release-it@npm:^21.0.1":
+"release-it@npm:^21.0.2":
   version: 21.0.2
   resolution: "release-it@npm:21.0.2"
   dependencies:
