@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.18](https://github.com/nsheaps/dotfiles/compare/v0.0.17...v0.0.18) (2026-09-08)
+
+### Maintenance
+
+* **deps:** update dependency release-it to ^21.0.2 ([#45](https://github.com/nsheaps/dotfiles/issues/45)) ([73b877e](https://github.com/nsheaps/dotfiles/commit/73b877ee43fb7699a35035a09bcfcdeb6c367171))
+* **deps:** update nsheaps/agents digest to d77f2ee ([ba0b283](https://github.com/nsheaps/dotfiles/commit/ba0b283c6faf978dba465601e827e6923dede831))
+
 ## [0.0.17](https://github.com/nsheaps/dotfiles/compare/v0.0.16...v0.0.17) (2026-09-04)
 
 ### Maintenance
