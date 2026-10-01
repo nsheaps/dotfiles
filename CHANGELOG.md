@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.23](https://github.com/nsheaps/dotfiles/compare/v0.0.22...v0.0.23) (2026-10-01)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to dea197d ([db59228](https://github.com/nsheaps/dotfiles/commit/db5922802a82c1b79e6ef80661f5dbc6e8d89006))
+
 ## [0.0.22](https://github.com/nsheaps/dotfiles/compare/v0.0.21...v0.0.22) (2026-09-29)
 
 ### Maintenance
