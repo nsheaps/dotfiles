@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.26](https://github.com/nsheaps/dotfiles/compare/v0.0.25...v0.0.26) (2026-10-14)
+
+### Maintenance
+
+* **deps:** update all patch updates ([#46](https://github.com/nsheaps/dotfiles/issues/46)) ([dc8b402](https://github.com/nsheaps/dotfiles/commit/dc8b402d00fbf09441aaf74cbb343ffd92ab1757)), references [#8203](https://github.com/nsheaps/dotfiles/issues/8203)
+* **deps:** update nsheaps/agents digest to 45dd987 ([be929e7](https://github.com/nsheaps/dotfiles/commit/be929e7e4f0feb81aaf214fbd778de2d73ef3cd6))
+
 ## [0.0.25](https://github.com/nsheaps/dotfiles/compare/v0.0.24...v0.0.25) (2026-10-12)
 
 ### Maintenance
