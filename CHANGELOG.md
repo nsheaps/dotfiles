@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.27](https://github.com/nsheaps/dotfiles/compare/v0.0.26...v0.0.27) (2026-10-16)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to c431513 ([72541d9](https://github.com/nsheaps/dotfiles/commit/72541d9397e9f75a9a69497ca5fcabd2967267bf))
+
 ## [0.0.26](https://github.com/nsheaps/dotfiles/compare/v0.0.25...v0.0.26) (2026-10-14)
 
 ### Maintenance
