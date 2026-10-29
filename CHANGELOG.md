@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.34](https://github.com/nsheaps/dotfiles/compare/v0.0.33...v0.0.34) (2026-10-29)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to 31faa49 ([5b5a5cd](https://github.com/nsheaps/dotfiles/commit/5b5a5cd1e144dd9269ff3f162a85499a083b9cf5))
+
 ## [0.0.33](https://github.com/nsheaps/dotfiles/compare/v0.0.32...v0.0.33) (2026-10-29)
 
 ### Maintenance
