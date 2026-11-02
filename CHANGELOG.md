@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.0.35](https://github.com/nsheaps/dotfiles/compare/v0.0.34...v0.0.35) (2026-11-02)
+
+### Maintenance
+
+* **deps:** update nsheaps/agents digest to fa4067e ([05dcba8](https://github.com/nsheaps/dotfiles/commit/05dcba87540ebdbb2e38bdcafaf0ae347ac5d0f3))
+
 ## [0.0.34](https://github.com/nsheaps/dotfiles/compare/v0.0.33...v0.0.34) (2026-10-29)
 
 ### Maintenance
